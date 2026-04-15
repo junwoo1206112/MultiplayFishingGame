@@ -1,0 +1,19 @@
+schema: spec-driven
+
+context: |
+  Tech stack: Unity 6, C# 9.0, Mirror Networking v96.0.1, URP, New Input System
+  Architecture: Client-server multiplayer fishing game
+  Naming: PascalCase classes, camelCase fields (no underscore prefix for private)
+  Network patterns: [Command]=Cmd prefix, [ClientRpc]=Rpc prefix, [SyncVar(hook=nameof())]
+
+rules:
+  proposal:
+    - Mirror 네트워킹 제약사항 포함
+    - 클라이언트-서버 책임 분리 명시
+  specs:
+    - Given/When/Then 형식으로 시나리오 작성
+  design:
+    - NetworkMessage 구조체 정의 포함
+    - SyncVar 동기화 전략 명시
+  tasks:
+    - 각 태스크는 2시간 이내로 분할
