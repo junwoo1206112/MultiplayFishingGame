@@ -1,0 +1,178 @@
+using UnityEngine;
+using UnityEditor;
+using System.Collections;
+
+public class CreateIslandTerrain : EditorWindow
+{
+    [MenuItem("MCP/Create Island Terrain")]
+    static void CreateIsland()
+    {
+        // Create new scene
+        EditorApplication.NewScene();
+        
+        // Create Terrain
+        GameObject terrainObj = new GameObject("IslandTerrain");
+        Terrain terrain = terrainObj.AddComponent<Terrain>();
+        TerrainCollider collider = terrainObj.AddComponent<TerrainCollider>();
+        
+        // Configure terrain data
+        TerrainData terrainData = new TerrainData();
+        terrainData.heightmapResolution = 257;
+        terrainData.size = new Vector3(200, 50, 200);
+        terrain.terrainData = terrainData;
+        collider.terrainData = terrainData;
+        
+        // Create island shape - higher in center, lower at edges
+        float[,] heights = new float[257, 257];
+        for (int x = 0; x < 257; x++)
+        {
+            for (int y = 0; y < 257; y++)
+            {
+                float normalizedX = (x - 128) / 128f;
+                float normalizedY = (y - 128) / 128f;
+                float distance = Mathf.Sqrt(normalizedX * normalizedX + normalizedY * normalizedY);
+                
+                // Island shape: center high, edges low (beach)
+                float height = Mathf.Max(0, 1 - distance);
+                height = Mathf.Pow(height, 1.5f); // Smooth curve
+                
+                // Add some noise for natural look
+                height += Mathf.PerlinNoise(x * 0.03f, y * 0.03f) * 0.1f;
+                
+                heights[x, y] = height * 0.6f;
+            }
+        }
+        
+        terrainData.SetHeights(0, 0, heights);
+        
+        // Add terrain layers (if LowPolyEnviroPack exists)
+        AddLowPolyMaterials(terrain);
+        
+        // Create water plane
+        CreateWaterPlane();
+        
+        // Add lighting
+        AddLighting();
+        
+        // Place objects from LowPolyEnviroPack
+        PlaceLowPolyObjects();
+        
+        Debug.Log("✅ Island terrain created successfully!");
+    }
+    
+    static void AddLowPolyMaterials(Terrain terrain)
+    {
+        // Try to find LowPolyEnviroPack materials
+        string[] materialPaths = new string[]
+        {
+            "Assets/LowPolyEnviroPack_LITE/Materials",
+            "Packages/LowPolyEnviroPack_LITE/Materials"
+        };
+        
+        foreach (var path in materialPaths)
+        {
+            if (System.IO.Directory.Exists(path))
+            {
+                // Found the package, apply materials
+                Debug.Log("Found LowPolyEnviroPack at: " + path);
+                break;
+            }
+        }
+    }
+    
+    static void CreateWaterPlane()
+    {
+        GameObject water = GameObject.CreatePrimitive(PrimitiveType.Plane);
+        water.name = "Ocean";
+        water.transform.position = new Vector3(100, 5, 100);
+        water.transform.localScale = new Vector3(50, 1, 50);
+        
+        // Try to apply water material
+        Material waterMat = AssetDatabase.LoadAssetAtPath<Material>(
+            "Assets/LowPolyEnviroPack_LITE/Materials/Water.mat");
+        if (waterMat != null)
+        {
+            water.GetComponent<Renderer>().material = waterMat;
+        }
+        
+        DestroyImmediate(water.GetComponent<Collider>());
+    }
+    
+    static void AddLighting()
+    {
+        // Clear existing lights
+        Light[] existingLights = FindObjectsOfType<Light>();
+        foreach (var light in existingLights)
+        {
+            if (light.type == LightType.Directional)
+                DestroyImmediate(light.gameObject);
+        }
+        
+        // Create new directional light (sun)
+        GameObject sun = new GameObject("Sun");
+        Light sunLight = sun.AddComponent<Light>();
+        sunLight.type = LightType.Directional;
+        sunLight.intensity = 1.2f;
+        sunLight.color = new Color(1f, 0.95f, 0.8f);
+        sun.transform.rotation = Quaternion.Euler(50, -30, 0);
+        
+        // Enable shadows
+        sunLight.shadows = LightShadows.Soft;
+    }
+    
+    static void PlaceLowPolyObjects()
+    {
+        // Look for LowPolyEnviroPack prefabs
+        string[] prefabFolders = new string[]
+        {
+            "Assets/LowPolyEnviroPack_LITE/Prefabs",
+            "Packages/LowPolyEnviroPack_LITE/Prefabs"
+        };
+        
+        foreach (var folder in prefabFolders)
+        {
+            if (System.IO.Directory.Exists(folder))
+            {
+                PlaceObjectsFromFolder(folder);
+                break;
+            }
+        }
+    }
+    
+    static void PlaceObjectsFromFolder(string folder)
+    {
+        string[] guids = AssetDatabase.FindAssets("t:GameObject", new[] { folder });
+        
+        if (guids.Length == 0) return;
+        
+        System.Random rand = new System.Random(12345); // Seed for reproducibility
+        
+        for (int i = 0; i < 30; i++) // Place 30 objects
+        {
+            string guid = guids[rand.Next(guids.Length)];
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            
+            if (prefab != null)
+            {
+                // Random position on terrain
+                float x = 40 + rand.Next(120);
+                float z = 40 + rand.Next(120);
+                float y = 10 + rand.Next(20); // Height adjustment needed based on terrain
+                
+                GameObject instance = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
+                if (instance != null)
+                {
+                    instance.transform.position = new Vector3(x, y, z);
+                    
+                    // Random scale and rotation
+                    float scale = 0.8f + (float)rand.NextDouble() * 0.4f;
+                    instance.transform.localScale = new Vector3(scale, scale, scale);
+                    instance.transform.rotation = Quaternion.Euler(0, rand.Next(360), 0);
+                }
+            }
+        }
+        
+        Debug.Log($"Placed objects from {folder}");
+    }
+}
