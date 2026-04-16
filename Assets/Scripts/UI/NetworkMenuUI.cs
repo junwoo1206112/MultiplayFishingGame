@@ -12,6 +12,7 @@ namespace MultiplayFishing.UI
         [SerializeField] private Button hostButton;
         [SerializeField] private Button joinButton;
         [SerializeField] private Button disconnectButton;
+        [SerializeField] private Button copyIPButton;
 
         [Header("Input")]
         [SerializeField] private TMP_InputField addressInput;
@@ -41,6 +42,9 @@ namespace MultiplayFishing.UI
             if (disconnectButton != null)
                 disconnectButton.onClick.AddListener(OnDisconnectClicked);
 
+            if (copyIPButton != null)
+                copyIPButton.onClick.AddListener(OnCopyIPClicked);
+
             FishingNetworkManager.NetworkStateChanged += Refresh;
             Refresh();
         }
@@ -55,6 +59,9 @@ namespace MultiplayFishing.UI
 
             if (disconnectButton != null)
                 disconnectButton.onClick.RemoveListener(OnDisconnectClicked);
+
+            if (copyIPButton != null)
+                copyIPButton.onClick.RemoveListener(OnCopyIPClicked);
 
             FishingNetworkManager.NetworkStateChanged -= Refresh;
         }
@@ -95,6 +102,13 @@ namespace MultiplayFishing.UI
                     manager.StopServer();
                     break;
             }
+        }
+
+        void OnCopyIPClicked()
+        {
+            string ip = FishingNetworkManager.GetLocalIPAddress();
+            GUIUtility.systemCopyBuffer = ip;
+            Debug.Log($"[NetworkMenuUI] IP 복사 완료: {ip}");
         }
 
         #endregion
@@ -141,6 +155,9 @@ namespace MultiplayFishing.UI
 
             if (disconnectButton != null)
                 disconnectButton.interactable = !offline;
+
+            if (copyIPButton != null)
+                copyIPButton.gameObject.SetActive(manager.mode == NetworkManagerMode.Host);
 
             UpdateStatusText();
             UpdateConnectionInfo();
