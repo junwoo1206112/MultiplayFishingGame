@@ -147,6 +147,12 @@ private void OnDestroy()
 }
 ```
 
+## Movement & Physics System
+
+- **Standard Controller**: Always use Mirror's built-in **`PlayerController (Reliable)`** for player movement.
+- **Custom Movement**: Do NOT write custom movement scripts unless specifically required by game mechanics.
+- **Camera Follow**: Use the `FishingCameraFollow` helper script to link Cinemachine with the spawned player.
+
 ## Forbidden Patterns
 
 - `GameObject.Find()` → use references, singletons, or `FindFirstObjectByType<T>()`

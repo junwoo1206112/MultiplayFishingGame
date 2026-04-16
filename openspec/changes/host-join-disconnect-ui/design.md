@@ -47,6 +47,10 @@ MultiplayFishingGame은 Mirror Networking v96.0.1 기반 멀티플레이 낚시 
 
 ### 4. Mirror 네트워킹 패턴
 
+**표준 컨트롤러 사용**: 커스텀 이동 스크립트 대신 Mirror 예제의 `PlayerController (Reliable)`를 사용한다. 이는 물리 충돌과 네트워크 권한 처리에 있어 검증된 안정성을 제공하기 위함이다.
+
+**카메라 자동화**: 플레이어 스폰 시 시네머신과의 연결은 `FishingCameraFollow` 보조 스크립트가 담당한다.
+
 **SyncVar 사용 안 함**: UI 상태는 NetworkBehaviour가 아니므로 SyncVar 불필요. NetworkManager.mode와 NetworkServer/Client 상태로 직접 판별.
 
 **Command/Rpc 사용 안 함**: 연결/해제는 NetworkManager.StartHost/StartClient/StopHost/StopClient로 처리. 서버-클라이언트 간 추가 메시지 불필요.

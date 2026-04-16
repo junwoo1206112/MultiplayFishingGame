@@ -13,7 +13,11 @@ namespace MultiplayFishing.Network
         [SerializeField] private int maxPlayers = 4;
 
         public int MaxPlayers => maxPlayers;
-        public int ConnectedClientCount => NetworkServer.connections.Count;
+        
+        // 서버면 연결된 수를, 클라이언트면 씬에 있는 플레이어(NetworkIdentity 중 내 캐릭터가 아닌 것 포함)를 반환
+        public int ConnectedClientCount => NetworkServer.active 
+            ? NetworkServer.connections.Count 
+            : FindObjectsByType<NetworkIdentity>(FindObjectsSortMode.None).Length;
 
         public string ModeText => mode switch
         {
@@ -32,15 +36,16 @@ namespace MultiplayFishing.Network
         public event Action<NetworkConnectionToClient> OnPlayerLeftEvent;
 
         #region Server System Callbacks
-
-        public override void OnServerConnect(NetworkConnectionToClient conn)
-        {
-            if (NetworkServer.connections.Count >= maxPlayers)
-            {
-                conn.Disconnect();
-                Debug.LogWarning($"[FishingNetworkManager] 연결 거부: 최대 플레이어 수({maxPlayers}) 도달");
-            }
-        }
+public override void OnServerConnect(NetworkConnectionToClient conn)
+{
+    // 현재 연결된 수(호스트 포함)가 최대 플레이어 수보다 '클 때'만 거부
+    // 이렇게 해야 4명(0, 1, 2, 3번째 연결)까지 안전하게 들어옵니다.
+    if (NetworkServer.connections.Count > maxPlayers)
+    {
+        conn.Disconnect();
+        Debug.LogWarning($"[FishingNetworkManager] 연결 거부: 최대 플레이어 수({maxPlayers}) 초과");
+    }
+}
 
         public override void OnServerAddPlayer(NetworkConnectionToClient conn)
         {

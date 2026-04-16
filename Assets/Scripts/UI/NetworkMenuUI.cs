@@ -68,6 +68,8 @@ namespace MultiplayFishing.UI
 
         void Update()
         {
+            // 빌드 환경에서는 상태 변화를 놓칠 수 있으므로 정기적으로 Refresh를 확인합니다.
+            // 하지만 성능을 위해 모드가 바뀔 때만 호출되는 이벤트를 더 신뢰합니다.
             Refresh();
         }
 
@@ -156,6 +158,7 @@ namespace MultiplayFishing.UI
             if (disconnectButton != null)
                 disconnectButton.interactable = !offline;
 
+            // 호스트일 때만 '내 IP 복사' 버튼을 보여줌
             if (copyIPButton != null)
                 copyIPButton.gameObject.SetActive(manager.mode == NetworkManagerMode.Host);
 

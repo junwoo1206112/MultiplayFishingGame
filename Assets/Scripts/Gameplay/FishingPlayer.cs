@@ -4,11 +4,15 @@ using Mirror;
 
 namespace MultiplayFishing.Gameplay
 {
+    /// <summary>
+    /// 플레이어의 상태(이름, 점수, 색상 등)를 관리하고 모든 클라이언트에 동기화합니다.
+    /// </summary>
     public class FishingPlayer : NetworkBehaviour
     {
         public event Action<string> OnPlayerNameChangedEvent;
         public event Action<int> OnScoreChangedEvent;
         public event Action<bool> OnReadyChangedEvent;
+        public event Action<Color> OnPlayerColorChangedEvent;
 
         static readonly System.Collections.Generic.List<FishingPlayer> playersList = new System.Collections.Generic.List<FishingPlayer>();
 
@@ -22,13 +26,24 @@ namespace MultiplayFishing.Gameplay
         [SyncVar(hook = nameof(OnReadyChanged))]
         public bool isReady = false;
 
+        [SyncVar(hook = nameof(OnPlayerColorChanged))]
+        public Color playerColor = Color.white;
+
+        [Header("References")]
+        [SerializeField] private Renderer characterRenderer; // 색상을 적용할 메쉬 렌더러
+
         #region Server
 
         public override void OnStartServer()
         {
             base.OnStartServer();
             playersList.Add(this);
+            
+            // 이름 부여
             playerName = $"낚시꾼 {playersList.Count}";
+            
+            // 랜덤 색상 부여 (서버에서 결정)
+            playerColor = Color.HSVToRGB(UnityEngine.Random.value, 0.7f, 0.9f);
         }
 
         [Command]
@@ -70,9 +85,11 @@ namespace MultiplayFishing.Gameplay
 
         public override void OnStartClient()
         {
+            // 초기 상태 적용
             OnPlayerNameChangedEvent?.Invoke(playerName);
             OnScoreChangedEvent?.Invoke(score);
             OnReadyChangedEvent?.Invoke(isReady);
+            UpdateCharacterColor(playerColor);
         }
 
         public override void OnStartLocalPlayer()
@@ -85,21 +102,30 @@ namespace MultiplayFishing.Gameplay
             OnPlayerNameChangedEvent = null;
             OnScoreChangedEvent = null;
             OnReadyChangedEvent = null;
+            OnPlayerColorChangedEvent = null;
         }
 
-        void OnPlayerNameChanged(string oldValue, string newValue)
+        // SyncVar Hook 함수들
+        void OnPlayerNameChanged(string oldValue, string newValue) => OnPlayerNameChangedEvent?.Invoke(newValue);
+        void OnScoreChanged(int oldValue, int newValue) => OnScoreChangedEvent?.Invoke(newValue);
+        void OnReadyChanged(bool oldValue, bool newValue) => OnReadyChangedEvent?.Invoke(newValue);
+        
+        void OnPlayerColorChanged(Color oldColor, Color newColor)
         {
-            OnPlayerNameChangedEvent?.Invoke(newValue);
+            UpdateCharacterColor(newColor);
+            OnPlayerColorChangedEvent?.Invoke(newColor);
         }
 
-        void OnScoreChanged(int oldValue, int newValue)
+        /// <summary>
+        /// 실제 캐릭터 모델의 색상을 변경합니다.
+        /// </summary>
+        void UpdateCharacterColor(Color color)
         {
-            OnScoreChangedEvent?.Invoke(newValue);
-        }
-
-        void OnReadyChanged(bool oldValue, bool newValue)
-        {
-            OnReadyChangedEvent?.Invoke(newValue);
+            if (characterRenderer != null)
+            {
+                // 공유 머티리얼이 아닌 개별 인스턴스 머티리얼 색상을 변경합니다.
+                characterRenderer.material.color = color;
+            }
         }
 
         #endregion
@@ -108,18 +134,12 @@ namespace MultiplayFishing.Gameplay
 
         public void SetPlayerName(string name)
         {
-            if (isLocalPlayer)
-            {
-                CmdSetPlayerName(name);
-            }
+            if (isLocalPlayer) CmdSetPlayerName(name);
         }
 
         public void SetReady(bool ready)
         {
-            if (isLocalPlayer)
-            {
-                CmdSetReady(ready);
-            }
+            if (isLocalPlayer) CmdSetReady(ready);
         }
 
         #endregion

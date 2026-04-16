@@ -3,7 +3,8 @@
     "rootNamespace": "MultiplayFishing.Gameplay",
     "references": [
         "MultiplayFishing.Network",
-        "Mirror"
+        "Mirror",
+        "Unity.Cinemachine"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
