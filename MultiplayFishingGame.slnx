@@ -13,8 +13,8 @@
   <Project Path="EncryptionTransportEditor.csproj" />
   <Project Path="Telepathy.csproj" />
   <Project Path="Assembly-CSharp-Editor.csproj" />
+  <Project Path="Assembly-CSharp.csproj" />
   <Project Path="MultiplayFishing.UI.csproj" />
   <Project Path="Mirror.CompilerSymbols.csproj" />
   <Project Path="MultiplayFishing.Gameplay.csproj" />
-  <Project Path="Assembly-CSharp.csproj" />
 </Solution>

@@ -7,20 +7,47 @@
 [Pp]ackages/
 Logs/
 UserSettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
 
-# Visual Studio
+# Visual Studio / VS Code
 .vs/
 *.sln
 *.suo
 *.user
 *.userosscache
 *.sln.docstates
-
-# VS Code
 .vscode/
+.gradle/
+ExportedObj/
+.consulo/
+*.csproj
+*.unityproj
+*.tmp
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# Unity3D generated meta files
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+sysinfo.txt
+
+# Builds
+*.apk
+*.aab
+*.unitypackage
+*.app
 
 # JetBrains
 .idea/
+/[Aa]ssets/Plugins/Editor/JetBrains*
 
 # OS
 .DS_Store
