@@ -4,7 +4,7 @@
 PlayerSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 28
-  productGUID: 32c0be6ec4b6497448eb16d6c8f4b08e
+  productGUID: df96066059003684eb5e763d2cabb80b
   AndroidProfiler: 0
   AndroidFilterTouchesWhenObscured: 0
   AndroidEnableSustainedPerformanceMode: 0
@@ -13,7 +13,7 @@ PlayerSettings:
   useOnDemandResources: 0
   accelerometerFrequency: 60
   companyName: DefaultCompany
-  productName: My project
+  productName: MultiplayFishingGame
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902, a: 1}
@@ -524,7 +524,10 @@ PlayerSettings:
       m_Height: 720
       m_Kind: 1
       m_SubKind: 
-  m_BuildTargetBatching: []
+  m_BuildTargetBatching:
+  - m_BuildTarget: Standalone
+    m_StaticBatching: 1
+    m_DynamicBatching: 0
   m_BuildTargetShaderSettings: []
   m_BuildTargetGraphicsJobs: []
   m_BuildTargetGraphicsJobMode: []
@@ -826,7 +829,7 @@ PlayerSettings:
   webWasm2023: 0
   webEnableSubmoduleStrippingCompatibility: 0
   scriptingDefineSymbols:
-    Standalone: CREST_OCEAN
+    Standalone: MIRROR;MIRROR_89_OR_NEWER;MIRROR_90_OR_NEWER;MIRROR_93_OR_NEWER;MIRROR_96_OR_NEWER;EDGEGAP_PLUGIN_SERVERS
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:
@@ -847,14 +850,14 @@ PlayerSettings:
   editorAssembliesCompatibilityLevel: 1
   m_RenderingPath: 1
   m_MobileRenderingPath: 1
-  metroPackageName: My project
+  metroPackageName: MultiplayFishingGame
   metroPackageVersion: 
   metroCertificatePath: 
   metroCertificatePassword: 
   metroCertificateSubject: 
   metroCertificateIssuer: 
   metroCertificateNotAfter: 0000000000000000
-  metroApplicationDescription: My project
+  metroApplicationDescription: MultiplayFishingGame
   wsaImages: {}
   metroTileShortName: 
   metroTileShowName: 0
@@ -923,13 +926,13 @@ PlayerSettings:
   qnxGraphicConfPath: 
   apiCompatibilityLevel: 6
   captureStartupLogs: {}
-  activeInputHandler: 1
+  activeInputHandler: 2
   windowsGamepadBackendHint: 0
-  cloudProjectId: dbde3bc2-a169-426c-87d4-e66abfb0fe51
+  cloudProjectId: 8ccf6264-1537-4ed2-baa9-0fa8259202c5
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: My project 2026-04-15_09-24-06
-  organizationId: dmsdn0352
+  projectName: MultiplayFishingGame
+  organizationId: kimjunwoo1206112
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
   hmiLoadingImage: {fileID: 0}
