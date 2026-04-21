@@ -152,8 +152,8 @@
     <Compile Include="Assets\Mirror\Examples\CharacterSelection\Scripts\ScriptAnimations.cs" />
     <Compile Include="Assets\Mirror\Examples\AdditiveLevels\Scripts\Portal.cs" />
     <Compile Include="Assets\Mirror\Examples\EdgegapLobby\Scripts\UILobbyList.cs" />
-    <Compile Include="Assets\Mirror\Examples\AdditiveLevels\Scripts\LookAtMainCamera.cs" />
     <Compile Include="Assets\Mirror\Examples\_Common\Controllers\TankController\TankTurretHybrid.cs" />
+    <Compile Include="Assets\Mirror\Examples\AdditiveLevels\Scripts\LookAtMainCamera.cs" />
     <Compile Include="Assets\Mirror\Examples\RigidbodyBenchmark\Scripts\AddForce.cs" />
     <Compile Include="Assets\Mirror\Examples\_Common\Controllers\ControllerUIBase.cs" />
     <Compile Include="Assets\Mirror\Examples\_Common\Controllers\FlyerController\FlyerControllerUnreliable.cs" />

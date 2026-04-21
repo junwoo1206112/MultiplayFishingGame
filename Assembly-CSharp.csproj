@@ -49,8 +49,13 @@
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.3.10f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\GogoGaga\OptimizedRopesAndCables\Script\RopeMesh.cs" />
     <Compile Include="Assets\Scripts\WaterWaves.cs" />
+    <Compile Include="Assets\GogoGaga\OptimizedRopesAndCables\Script\RopeWindEffect.cs" />
+    <Compile Include="Assets\GogoGaga\OptimizedRopesAndCables\Example\Scripts\PointsAssignExample.cs" />
     <Compile Include="Assets\TutorialInfo\Scripts\Readme.cs" />
+    <Compile Include="Assets\GogoGaga\OptimizedRopesAndCables\Example\Scripts\CameraMove.cs" />
+    <Compile Include="Assets\GogoGaga\OptimizedRopesAndCables\Script\Rope.cs" />
     <Compile Include="Assets\IgniteCoders\Simple Water Shader\Resources\WaterReflection.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -67,6 +72,7 @@
     <None Include="Assets\ScriptTemplates\56-Mirror__Network Discovery-NewNetworkDiscovery.cs.txt" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF SSD.shader" />
     <None Include="Assets\ScriptTemplates\51-Mirror__Network Manager With Actions-NewNetworkManagerWithActions.cs.txt" />
+    <None Include="Assets\GogoGaga\OptimizedRopesAndCables\Third-Party Notices.txt" />
     <None Include="Assets\ScriptTemplates\53-Mirror__Network Behaviour With Actions-NewNetworkBehaviourWithActions.cs.txt" />
     <None Include="Assets\Mirror\Plugins\Mono.Cecil\Mono.CecilX.Rocks.dll" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Surface-Mobile.shader" />

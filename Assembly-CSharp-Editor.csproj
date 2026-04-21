@@ -50,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\TutorialInfo\Scripts\Editor\ReadmeEditor.cs" />
+    <Compile Include="Assets\GogoGaga\OptimizedRopesAndCables\Script\Editor\RopeEditor.cs" />
     <Compile Include="Assets\ScriptTemplates\Editor\MoveToAssetsFolder.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -1448,6 +1449,7 @@
     <ProjectReference Include="kcp2k.csproj" />
     <ProjectReference Include="Edgegap.csproj" />
     <ProjectReference Include="EncryptionTransportEditor.csproj" />
+    <ProjectReference Include="UnityCliConnector.Editor.csproj" />
     <ProjectReference Include="MultiplayFishing.Network.csproj" />
     <ProjectReference Include="SimpleWebTransport.csproj" />
     <ProjectReference Include="Mirror.Transports.csproj" />

@@ -49,8 +49,14 @@
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.3.10f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\Gameplay\SampleSceneLocalPlayerController.cs" />
+    <Compile Include="Assets\Scripts\Gameplay\FishingSplashEffect.cs" />
+    <Compile Include="Assets\Scripts\Gameplay\FishingRopeController.cs" />
     <Compile Include="Assets\Scripts\Gameplay\FishingCameraFollow.cs" />
     <Compile Include="Assets\Scripts\Gameplay\FishingPlayer.cs" />
+    <Compile Include="Assets\Scripts\Gameplay\FishingLineVisual.cs" />
+    <Compile Include="Assets\Scripts\Gameplay\FishingWaterSurfaceResolver.cs" />
+    <Compile Include="Assets\Scripts\Gameplay\FishingSplashController.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Scripts\Gameplay\MultiplayFishing.Gameplay.asmdef" />
@@ -1178,6 +1184,10 @@
     </Reference>
     <Reference Include="Unity.Cinemachine">
       <HintPath>Library\ScriptAssemblies\Unity.Cinemachine.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.InputSystem">
+      <HintPath>Library\ScriptAssemblies\Unity.InputSystem.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEditor.UI">
