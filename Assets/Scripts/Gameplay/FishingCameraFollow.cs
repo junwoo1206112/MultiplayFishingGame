@@ -5,78 +5,89 @@ using Unity.Cinemachine;
 namespace MultiplayFishing.Gameplay
 {
     /// <summary>
-    /// 로컬 플레이어의 시네머신 카메라 연결 및 마우스 상하 시선 처리(Look Up/Down)를 담당합니다.
+    /// 시네머신의 모든 자동 기능을 차단하고, 수학적으로 3인칭 시점을 강제 고정합니다.
     /// </summary>
-    public class FishingCameraFollow : NetworkBehaviour
+    public class FishingCameraFollow : MonoBehaviour
     {
-        [Header("Camera Target")]
-        [Tooltip("카메라가 추적할 지점 (보통 플레이어 머리 위치의 빈 오브젝트)")]
-        [SerializeField] private Transform cameraTarget;
+        [Header("Simple 3rd Person Settings")]
+        [SerializeField] private float distance = 8.0f;    // 뒤로 떨어진 거리
+        [SerializeField] private float height = 5.0f;      // 기본 높이 (verticalAngle로 대체됨)
+        [SerializeField] private float lookAtHeight = 1.5f; // 캐릭터의 어디를 쳐다볼지 (머리 높이)
+        
+        [Header("Vertical Rotation Settings")]
+        [SerializeField] private float mouseSensitivity = 3f;
+        [SerializeField] private float minVerticalAngle = -10f; // 위를 볼 때의 제한 (내려다보기)
+        [SerializeField] private float maxVerticalAngle = 60f;  // 아래를 볼 때의 제한 (올려다보기)
+        [SerializeField] private float defaultVerticalAngle = 20f; // 기본 내려다보는 각도
 
-        [Header("Rotation Settings")]
-        [SerializeField] private float mouseSensitivity = 2f;
-        [SerializeField] private float minPitch = -40f; // 아래로 보는 제한
-        [SerializeField] private float maxPitch = 60f;  // 위로 보는 제한
+        private float currentVerticalAngle;
+        private CinemachineCamera vcam;
 
-        private float _currentPitch = 0f;
-        private CinemachineCamera _vcam;
-
-        public override void OnStartLocalPlayer()
+        void Awake()
         {
-            base.OnStartLocalPlayer();
+            vcam = GetComponent<CinemachineCamera>();
+            currentVerticalAngle = defaultVerticalAngle;
             
-            // 씬의 시네머신 카메라 찾기
-            _vcam = FindFirstObjectByType<CinemachineCamera>();
-
-            if (_vcam != null)
+            // 시네머신의 자동 기능을 모두 끕니다. (우리가 직접 제어하기 위함)
+            if (vcam != null)
             {
-                Transform target = cameraTarget != null ? cameraTarget : transform;
-                _vcam.Follow = target;
-                _vcam.LookAt = target;
+                vcam.Follow = null;
+                vcam.LookAt = null;
                 
-                Debug.Log($"[FishingCameraFollow] 시네머신 카메라 연결 완료: {target.name}");
+                // 기존 시네머신 추적 컴포넌트들을 모두 비활성화
+                foreach (var comp in vcam.GetComponents<CinemachineComponentBase>())
+                {
+                    comp.enabled = false;
+                }
             }
-
-            // 마우스 커서 잠금
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
         }
 
-        private void LateUpdate()
+        void LateUpdate()
         {
-            // 내 플레이어일 때만 시선 처리를 수행 (시점은 로컬에서만 중요)
-            if (!isLocalPlayer) return;
+            // 1. 로컬 플레이어 확인
+            if (NetworkClient.localPlayer == null) return;
 
-            HandlePitchRotation();
-        }
-
-        /// <summary>
-        /// 마우스 Y축 입력을 받아 시각적인 상하 회전을 처리합니다.
-        /// </summary>
-        private void HandlePitchRotation()
-        {
-            if (cameraTarget == null) return;
-
-            // 마우스 Y축 이동값 읽기
-            float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
-
-            // 현재 각도에서 마우스 이동값 반영 (마우스 올리면 고개 들기)
-            _currentPitch -= mouseY;
-            
-            // 각도 제한 적용 (Clamping)
-            _currentPitch = Mathf.Clamp(_currentPitch, minPitch, maxPitch);
-
-            // 카메라 타겟에 회전 적용
-            cameraTarget.localRotation = Quaternion.Euler(_currentPitch, 0, 0);
-        }
-
-        private void OnApplicationFocus(bool hasFocus)
-        {
-            if (hasFocus && isLocalPlayer)
+            // 2. 가상 카메라 참조 확인 및 자동 할당
+            if (vcam == null)
             {
-                Cursor.lockState = CursorLockMode.Locked;
-                Cursor.visible = false;
+                vcam = GetComponent<CinemachineCamera>();
+                if (vcam == null)
+                {
+                    vcam = Object.FindFirstObjectByType<CinemachineCamera>();
+                }
+                
+                if (vcam == null) return; 
             }
+
+            Transform player = NetworkClient.localPlayer.transform;
+
+            // 3. 마우스 입력 처리 (수직 회전)
+            if (Cursor.lockState == CursorLockMode.Locked)
+            {
+                float mouseY = Input.GetAxis("Mouse Y");
+                currentVerticalAngle -= mouseY * mouseSensitivity;
+                currentVerticalAngle = Mathf.Clamp(currentVerticalAngle, minVerticalAngle, maxVerticalAngle);
+            }
+
+            // 4. 카메라 위치 계산
+            // 캐릭터의 LookAt 포인트 설정
+            Vector3 lookAtPos = player.position + (Vector3.up * lookAtHeight);
+            
+            // 플레이어의 방향(forward)을 기준으로 수직 각도를 적용한 뒤쪽 방향 계산
+            // 플레이어의 right 축을 기준으로 회전시킵니다.
+            Quaternion verticalRotation = Quaternion.AngleAxis(currentVerticalAngle, player.right);
+            Vector3 backwardDirection = -player.forward;
+            Vector3 rotatedBackward = verticalRotation * backwardDirection;
+            
+            // 최종 위치: LookAt 지점에서 회전된 방향으로 distance만큼 떨어진 곳
+            Vector3 targetPos = lookAtPos + (rotatedBackward * distance);
+            
+            // 5. 카메라 위치 및 회전 강제 적용
+            vcam.transform.position = targetPos;
+            vcam.transform.LookAt(lookAtPos);
+
+            // 6. 시네머신 브레인에게 위치 갱신 알림
+            vcam.OnTargetObjectWarped(player, Vector3.zero);
         }
     }
 }

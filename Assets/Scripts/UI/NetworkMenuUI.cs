@@ -8,6 +8,9 @@ namespace MultiplayFishing.UI
 {
     public class NetworkMenuUI : MonoBehaviour
     {
+        [Header("Dependency")]
+        [SerializeField] private FishingRoomManager manager;
+
         [Header("Buttons")]
         [SerializeField] private Button hostButton;
         [SerializeField] private Button joinButton;
@@ -16,203 +19,113 @@ namespace MultiplayFishing.UI
 
         [Header("Input")]
         [SerializeField] private TMP_InputField addressInput;
+        [SerializeField] private TMP_InputField nameInput;
 
         [Header("Display")]
         [SerializeField] private GameObject offlineControlsRoot;
         [SerializeField] private GameObject onlineControlsRoot;
         [SerializeField] private TMP_Text statusText;
         [SerializeField] private TMP_Text connectionInfoText;
-        [SerializeField] private string defaultAddress = "127.0.0.1";
 
-        FishingNetworkManager manager;
+        private const string PlayerNameKey = "PlayerName";
 
-        void Awake()
+        void Start()
         {
-            manager = FindFirstObjectByType<FishingNetworkManager>();
-        }
+            if (manager == null) manager = FindAnyObjectByType<FishingRoomManager>();
 
-        void OnEnable()
-        {
-            if (hostButton != null)
-                hostButton.onClick.AddListener(OnHostClicked);
+            if (hostButton != null) hostButton.onClick.AddListener(OnHostClicked);
+            if (joinButton != null) joinButton.onClick.AddListener(OnJoinClicked);
+            if (disconnectButton != null) disconnectButton.onClick.AddListener(OnDisconnectClicked);
+            if (copyIPButton != null) copyIPButton.onClick.AddListener(OnCopyIPClicked);
 
-            if (joinButton != null)
-                joinButton.onClick.AddListener(OnJoinClicked);
+            if (nameInput != null)
+            {
+                nameInput.text = PlayerPrefs.GetString(PlayerNameKey, $"낚시꾼 {Random.Range(100, 999)}");
+                nameInput.onEndEdit.AddListener(SavePlayerName);
+            }
 
-            if (disconnectButton != null)
-                disconnectButton.onClick.AddListener(OnDisconnectClicked);
-
-            if (copyIPButton != null)
-                copyIPButton.onClick.AddListener(OnCopyIPClicked);
-
-            FishingNetworkManager.NetworkStateChanged += Refresh;
+            SetupUIPositions();
             Refresh();
         }
 
-        void OnDisable()
+        private void SavePlayerName(string name)
         {
-            if (hostButton != null)
-                hostButton.onClick.RemoveListener(OnHostClicked);
-
-            if (joinButton != null)
-                joinButton.onClick.RemoveListener(OnJoinClicked);
-
-            if (disconnectButton != null)
-                disconnectButton.onClick.RemoveListener(OnDisconnectClicked);
-
-            if (copyIPButton != null)
-                copyIPButton.onClick.RemoveListener(OnCopyIPClicked);
-
-            FishingNetworkManager.NetworkStateChanged -= Refresh;
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                PlayerPrefs.SetString(PlayerNameKey, name.Trim());
+                PlayerPrefs.Save();
+            }
         }
 
-        void Update()
+        private void SetupUIPositions()
         {
-            // 빌드 환경에서는 상태 변화를 놓칠 수 있으므로 정기적으로 Refresh를 확인합니다.
-            // 하지만 성능을 위해 모드가 바뀔 때만 호출되는 이벤트를 더 신뢰합니다.
-            Refresh();
+            if (onlineControlsRoot != null)
+            {
+                RectTransform rect = onlineControlsRoot.GetComponent<RectTransform>();
+                if (rect != null)
+                {
+                    rect.anchorMin = new Vector2(1, 1);
+                    rect.anchorMax = new Vector2(1, 1);
+                    rect.pivot = new Vector2(1, 1);
+                    rect.anchoredPosition = new Vector2(-20, -20);
+                }
+            }
+
+            if (connectionInfoText != null)
+            {
+                connectionInfoText.alignment = TextAlignmentOptions.Center;
+                RectTransform rect = connectionInfoText.GetComponent<RectTransform>();
+                if (rect != null)
+                {
+                    rect.anchorMin = new Vector2(0.5f, 1f);
+                    rect.anchorMax = new Vector2(0.5f, 1f);
+                    rect.pivot = new Vector2(0.5f, 1f);
+                    rect.anchoredPosition = new Vector2(-940, -20);
+                    rect.sizeDelta = new Vector2(400, 50);
+                }
+            }
         }
 
-        #region Button Handlers
+        void OnEnable() { FishingRoomManager.NetworkStateChanged += Refresh; Refresh(); }
+        void OnDisable() { FishingRoomManager.NetworkStateChanged -= Refresh; }
 
-        void OnHostClicked()
-        {
-            if (!CanStartNetwork()) return;
-            manager.StartHost();
-        }
-
+        void OnHostClicked() { if (manager != null) manager.StartHost(); }
         void OnJoinClicked()
         {
-            if (!CanStartNetwork()) return;
-            manager.networkAddress = GetAddress();
+            if (manager == null) return;
+            string addr = (addressInput != null && !string.IsNullOrWhiteSpace(addressInput.text)) ? addressInput.text.Trim() : "localhost";
+            manager.networkAddress = addr;
             manager.StartClient();
         }
 
         void OnDisconnectClicked()
         {
             if (manager == null) return;
-
-            switch (manager.mode)
-            {
-                case NetworkManagerMode.Host:
-                    manager.StopHost();
-                    break;
-                case NetworkManagerMode.ClientOnly:
-                    manager.StopClient();
-                    break;
-                case NetworkManagerMode.ServerOnly:
-                    manager.StopServer();
-                    break;
-            }
+            if (NetworkServer.active && NetworkClient.isConnected) manager.StopHost();
+            else if (NetworkClient.isConnected) manager.StopClient();
         }
 
-        void OnCopyIPClicked()
-        {
-            string ip = FishingNetworkManager.GetLocalIPAddress();
-            GUIUtility.systemCopyBuffer = ip;
-            Debug.Log($"[NetworkMenuUI] IP 복사 완료: {ip}");
-        }
-
-        #endregion
-
-        #region Helpers
-
-        string GetAddress()
-        {
-            if (addressInput != null && !string.IsNullOrWhiteSpace(addressInput.text))
-                return addressInput.text.Trim();
-            return defaultAddress;
-        }
-
-        bool CanStartNetwork()
-        {
-            return manager != null && manager.mode == NetworkManagerMode.Offline;
-        }
-
-        #endregion
-
-        #region UI Refresh
+        void OnCopyIPClicked() { GUIUtility.systemCopyBuffer = FishingRoomManager.GetLocalIPAddress(); }
 
         void Refresh()
         {
             if (manager == null) return;
+            bool isOffline = manager.mode == NetworkManagerMode.Offline;
+            if (offlineControlsRoot != null) offlineControlsRoot.SetActive(isOffline);
+            if (onlineControlsRoot != null) onlineControlsRoot.SetActive(!isOffline);
+            
+            if (copyIPButton != null) copyIPButton.gameObject.SetActive(manager.mode == NetworkManagerMode.Host);
 
-            bool offline = manager.mode == NetworkManagerMode.Offline;
-            bool canStart = offline;
-
-            if (offlineControlsRoot != null)
-                offlineControlsRoot.SetActive(offline);
-
-            if (onlineControlsRoot != null)
-                onlineControlsRoot.SetActive(!offline);
-
-            if (hostButton != null)
-                hostButton.interactable = canStart;
-
-            if (joinButton != null)
-                joinButton.interactable = canStart;
-
-            if (addressInput != null)
-                addressInput.interactable = canStart;
-
-            if (disconnectButton != null)
-                disconnectButton.interactable = !offline;
-
-            // 호스트일 때만 '내 IP 복사' 버튼을 보여줌
-            if (copyIPButton != null)
-                copyIPButton.gameObject.SetActive(manager.mode == NetworkManagerMode.Host);
-
-            UpdateStatusText();
-            UpdateConnectionInfo();
+            if (statusText != null) statusText.text = isOffline ? "오프라인" : $"{manager.ModeText} 모드";
         }
 
-        void UpdateStatusText()
+        void Update()
         {
-            if (statusText == null) return;
-
-            if (manager.mode == NetworkManagerMode.Offline)
+            // 실시간으로 씬 내의 플레이어 오브젝트 수를 세어서 표시
+            if (manager != null && manager.mode != NetworkManagerMode.Offline && connectionInfoText != null)
             {
-                statusText.text = "오프라인";
-            }
-            else if (NetworkClient.active && !NetworkClient.isConnected)
-            {
-                statusText.text = $"{manager.networkAddress}에 연결 중...";
-            }
-            else
-            {
-                statusText.text = $"{manager.ModeText} | {Transport.active}";
+                connectionInfoText.text = $"[ 인원: {manager.ConnectedClientCount}/{manager.maxConnections} ]";
             }
         }
-
-        void UpdateConnectionInfo()
-        {
-            if (connectionInfoText == null) return;
-
-            if (manager.mode == NetworkManagerMode.Offline)
-            {
-                connectionInfoText.text = "";
-                return;
-            }
-
-            if (manager.mode == NetworkManagerMode.Host)
-            {
-                string localIP = FishingNetworkManager.GetLocalIPAddress();
-                connectionInfoText.text = $"내 IP: {localIP}\n다른 플레이어가 이 IP로 접속 가능\n접속 인원: {manager.ConnectedClientCount}/{manager.MaxPlayers}";
-            }
-            else if (manager.mode == NetworkManagerMode.ClientOnly)
-            {
-                if (NetworkClient.isConnected)
-                    connectionInfoText.text = $"{manager.networkAddress}에 연결됨\n접속 인원: {manager.ConnectedClientCount}/{manager.MaxPlayers}";
-                else
-                    connectionInfoText.text = "연결 중...";
-            }
-            else if (manager.mode == NetworkManagerMode.ServerOnly)
-            {
-                string localIP = FishingNetworkManager.GetLocalIPAddress();
-                connectionInfoText.text = $"서버 IP: {localIP}\n접속 인원: {manager.ConnectedClientCount}/{manager.MaxPlayers}";
-            }
-        }
-
-        #endregion
     }
 }

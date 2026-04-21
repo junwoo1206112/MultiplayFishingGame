@@ -1,147 +1,113 @@
 using System;
 using UnityEngine;
 using Mirror;
+using System.Collections;
 
 namespace MultiplayFishing.Gameplay
 {
-    /// <summary>
-    /// 플레이어의 상태(이름, 점수, 색상 등)를 관리하고 모든 클라이언트에 동기화합니다.
-    /// </summary>
     public class FishingPlayer : NetworkBehaviour
     {
         public event Action<string> OnPlayerNameChangedEvent;
-        public event Action<int> OnScoreChangedEvent;
-        public event Action<bool> OnReadyChangedEvent;
         public event Action<Color> OnPlayerColorChangedEvent;
 
-        static readonly System.Collections.Generic.List<FishingPlayer> playersList = new System.Collections.Generic.List<FishingPlayer>();
+        [Header("Player Identification")]
+        [SyncVar(hook = nameof(OnPlayerNameChanged))] public string playerName = "";
+        [SyncVar(hook = nameof(OnPlayerColorChanged))] public Color playerColor = Color.white;
 
-        [Header("Player Info")]
-        [SyncVar(hook = nameof(OnPlayerNameChanged))]
-        public string playerName = "";
+        [Header("Setup References")]
+        [SerializeField] private Renderer characterRenderer;
 
-        [SyncVar(hook = nameof(OnScoreChanged))]
-        public int score = 0;
-
-        [SyncVar(hook = nameof(OnReadyChanged))]
-        public bool isReady = false;
-
-        [SyncVar(hook = nameof(OnPlayerColorChanged))]
-        public Color playerColor = Color.white;
-
-        [Header("References")]
-        [SerializeField] private Renderer characterRenderer; // 색상을 적용할 메쉬 렌더러
-
-        #region Server
+        private void Awake()
+        {
+            // 인스펙터 할당 누락 대비
+            if (characterRenderer == null) characterRenderer = GetComponentInChildren<Renderer>();
+        }
 
         public override void OnStartServer()
         {
             base.OnStartServer();
-            playersList.Add(this);
             
-            // 이름 부여
-            playerName = $"낚시꾼 {playersList.Count}";
-            
-            // 랜덤 색상 부여 (서버에서 결정)
-            playerColor = Color.HSVToRGB(UnityEngine.Random.value, 0.7f, 0.9f);
-        }
-
-        [Command]
-        void CmdSetPlayerName(string newName)
-        {
-            if (string.IsNullOrWhiteSpace(newName)) return;
-            if (newName.Length > 20) return;
-            playerName = newName;
-        }
-
-        [Command]
-        void CmdSetReady(bool ready)
-        {
-            isReady = ready;
-        }
-
-        [ServerCallback]
-        internal static void ResetPlayerNumbers()
-        {
-            for (int i = 0; i < playersList.Count; i++)
+            // 이미 설정된 이름이 없다면(빈 문자열) 랜덤한 이름 부여
+            if (string.IsNullOrEmpty(playerName))
             {
-                if (playersList[i] != null)
-                {
-                    playersList[i].playerName = $"낚시꾼 {i + 1}";
-                }
+                playerName = $"낚시꾼 {UnityEngine.Random.Range(100, 999)}";
             }
+            
+            playerColor = Color.HSVToRGB(UnityEngine.Random.value, 0.8f, 1.0f);
         }
-
-        public override void OnStopServer()
-        {
-            playersList.Remove(this);
-            ResetPlayerNumbers();
-            base.OnStopServer();
-        }
-
-        #endregion
-
-        #region Client
 
         public override void OnStartClient()
         {
-            // 초기 상태 적용
-            OnPlayerNameChangedEvent?.Invoke(playerName);
-            OnScoreChangedEvent?.Invoke(score);
-            OnReadyChangedEvent?.Invoke(isReady);
+            base.OnStartClient();
             UpdateCharacterColor(playerColor);
         }
 
-        public override void OnStartLocalPlayer()
-        {
-            Debug.Log($"[FishingPlayer] 로컬 플레이어 시작: {playerName}");
-        }
-
-        public override void OnStopClient()
-        {
-            OnPlayerNameChangedEvent = null;
-            OnScoreChangedEvent = null;
-            OnReadyChangedEvent = null;
-            OnPlayerColorChangedEvent = null;
-        }
-
-        // SyncVar Hook 함수들
         void OnPlayerNameChanged(string oldValue, string newValue) => OnPlayerNameChangedEvent?.Invoke(newValue);
-        void OnScoreChanged(int oldValue, int newValue) => OnScoreChangedEvent?.Invoke(newValue);
-        void OnReadyChanged(bool oldValue, bool newValue) => OnReadyChangedEvent?.Invoke(newValue);
         
-        void OnPlayerColorChanged(Color oldColor, Color newColor)
-        {
-            UpdateCharacterColor(newColor);
-            OnPlayerColorChangedEvent?.Invoke(newColor);
+        void OnPlayerColorChanged(Color oldColor, Color newColor) 
+        { 
+            UpdateCharacterColor(newColor); 
+            OnPlayerColorChangedEvent?.Invoke(newColor); 
         }
 
-        /// <summary>
-        /// 실제 캐릭터 모델의 색상을 변경합니다.
-        /// </summary>
-        void UpdateCharacterColor(Color color)
+        private void UpdateCharacterColor(Color color)
         {
-            if (characterRenderer != null)
+            if (characterRenderer != null) 
             {
-                // 공유 머티리얼이 아닌 개별 인스턴스 머티리얼 색상을 변경합니다.
                 characterRenderer.material.color = color;
             }
         }
 
-        #endregion
-
-        #region Public Client API
-
-        public void SetPlayerName(string name)
+        public override void OnStartLocalPlayer()
         {
-            if (isLocalPlayer) CmdSetPlayerName(name);
+            base.OnStartLocalPlayer();
+            StartCoroutine(SmartEscapeRoutine());
+            
+            // 로컬에 저장된 이름을 불러와서 서버로 전송
+            string savedName = PlayerPrefs.GetString("PlayerName", $"낚시꾼 {UnityEngine.Random.Range(100, 999)}");
+            CmdUpdatePlayerName(savedName);
         }
 
-        public void SetReady(bool ready)
+        [Command]
+        public void CmdUpdatePlayerName(string newName)
         {
-            if (isLocalPlayer) CmdSetReady(ready);
+            if (string.IsNullOrWhiteSpace(newName)) return;
+
+            string oldName = playerName;
+            playerName = newName;
+            Debug.Log($"[Server] 이름 변경 요청: '{oldName}' -> '{newName}'");
+
+            // 알림 조건: 이전 이름이 비어있거나, 새로 설정된 이름이 이전과 다를 때 (처음 한 번만)
+            // 중복 알림을 방지하기 위해 서버에서 체크
+            RpcBroadcastSystemMessage($"{newName}님이 입장하셨습니다.");
+            Debug.Log($"[Server] RpcBroadcastSystemMessage 호출 완료: {newName}");
         }
 
-        #endregion
+        [ClientRpc]
+        private void RpcBroadcastSystemMessage(string message)
+        {
+            Debug.Log($"[Client] Rpc 수신됨: {message}");
+            if (MultiplayFishing.UI.NotificationUI.Instance != null)
+            {
+                MultiplayFishing.UI.NotificationUI.Instance.ShowMessage(message);
+            }
+            else
+            {
+                // 이 로그가 뜬다면 하이어라키에 NotificationUI 오브젝트가 없는 것입니다.
+                Debug.LogError("[Client] NotificationUI 인스턴스를 찾을 수 없습니다! 하이어라키를 확인하세요.");
+            }
+        }
+
+        private IEnumerator SmartEscapeRoutine()
+        {
+            CharacterController cc = GetComponent<CharacterController>();
+            if (cc != null)
+            {
+                cc.enabled = false;
+                transform.position += Vector3.up * 0.2f; 
+                yield return new WaitForFixedUpdate();
+                cc.enabled = true;
+            }
+        }
     }
 }
