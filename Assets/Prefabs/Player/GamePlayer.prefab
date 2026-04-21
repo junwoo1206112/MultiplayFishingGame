@@ -97,7 +97,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 0799a1e95665ef14f8fe2cbcd4ba3dc4, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -506,7 +506,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
   sceneId: 0
-  _assetId: 190688859
+  _assetId: 1576261546
   serverOnly: 0
   visibility: 0
   hasSpawned: 0
@@ -607,8 +607,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b54773aee58b2bc4c87b37ff06655f04, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MultiplayFishing.Gameplay::MultiplayFishing.Gameplay.FishingCameraFollow
-  distance: 8
-  height: 5
+  orbitSpeed: 3
+  minPitch: -10
+  maxPitch: 60
+  defaultPitch: 20
+  cameraDistance: 8
   lookAtHeight: 1.5
 --- !u!114 &4128923795601785347
 MonoBehaviour:

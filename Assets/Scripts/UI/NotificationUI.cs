@@ -2,6 +2,7 @@ using UnityEngine;
 using TMPro;
 using System.Collections;
 using System.Collections.Generic;
+using MultiplayFishing.Gameplay;
 
 namespace MultiplayFishing.UI
 {
@@ -17,6 +18,16 @@ namespace MultiplayFishing.UI
         {
             if (Instance == null) Instance = this;
             else Destroy(gameObject);
+        }
+
+        private void OnEnable()
+        {
+            FishingPlayer.OnSystemMessage += ShowMessage;
+        }
+
+        private void OnDisable()
+        {
+            FishingPlayer.OnSystemMessage -= ShowMessage;
         }
 
         public void ShowMessage(string message)

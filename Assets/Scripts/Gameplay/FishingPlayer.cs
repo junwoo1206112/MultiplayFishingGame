@@ -9,6 +9,7 @@ namespace MultiplayFishing.Gameplay
     {
         public event Action<string> OnPlayerNameChangedEvent;
         public event Action<Color> OnPlayerColorChangedEvent;
+        public static event Action<string> OnSystemMessage;
 
         [Header("Player Identification")]
         [SyncVar(hook = nameof(OnPlayerNameChanged))] public string playerName = "";
@@ -87,15 +88,7 @@ namespace MultiplayFishing.Gameplay
         private void RpcBroadcastSystemMessage(string message)
         {
             Debug.Log($"[Client] Rpc 수신됨: {message}");
-            if (MultiplayFishing.UI.NotificationUI.Instance != null)
-            {
-                MultiplayFishing.UI.NotificationUI.Instance.ShowMessage(message);
-            }
-            else
-            {
-                // 이 로그가 뜬다면 하이어라키에 NotificationUI 오브젝트가 없는 것입니다.
-                Debug.LogError("[Client] NotificationUI 인스턴스를 찾을 수 없습니다! 하이어라키를 확인하세요.");
-            }
+            OnSystemMessage?.Invoke(message);
         }
 
         private IEnumerator SmartEscapeRoutine()
