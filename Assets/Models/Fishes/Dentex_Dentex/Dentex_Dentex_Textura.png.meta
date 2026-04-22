@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/Models/Fishes/Dentex_Dentex/Dentex_Dentex_Textura.png.meta
 guid: 12189f1701acd634fb6dcc7da9caf198
+========
+guid: a59df2ba5144dc742961c56011e026ea
+>>>>>>>> master:Assets/Screenshots/codex_game_view_after_wait.png.meta
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -104,6 +108,7 @@ TextureImporter:
     allowsAlphaSplitting: 0
     overridden: 0
     ignorePlatformSupport: 0
+<<<<<<<< HEAD:Assets/Models/Fishes/Dentex_Dentex/Dentex_Dentex_Textura.png.meta
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
@@ -117,6 +122,8 @@ TextureImporter:
     allowsAlphaSplitting: 0
     overridden: 0
     ignorePlatformSupport: 0
+========
+>>>>>>>> master:Assets/Screenshots/codex_game_view_after_wait.png.meta
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
