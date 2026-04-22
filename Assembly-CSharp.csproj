@@ -1429,6 +1429,7 @@
     <ProjectReference Include="SimpleWebTransport.csproj" />
     <ProjectReference Include="Mirror.Transports.csproj" />
     <ProjectReference Include="MultiplayFishing.Gameplay.csproj" />
+    <ProjectReference Include="UnityCliConnector.Editor.csproj" />
     <ProjectReference Include="Mirror.Editor.csproj" />
     <ProjectReference Include="MultiplayFishing.UI.csproj" />
     <ProjectReference Include="Mirror.Authenticators.csproj" />
