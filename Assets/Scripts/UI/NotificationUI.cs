@@ -2,26 +2,15 @@ using UnityEngine;
 using TMPro;
 using System.Collections;
 using MultiplayFishing.Gameplay;
+using MultiplayFishing.Core;
 
 namespace MultiplayFishing.UI
 {
-    public class NotificationUI : MonoBehaviour
+    public class NotificationUI : MonoBehaviour, INotificationService
     {
-        public static NotificationUI Instance { get; private set; }
-
         [SerializeField] private GameObject messagePrefab;
         [SerializeField] private Transform container;
         [SerializeField] private float displayDuration = 5f;
-
-        private void Awake()
-        {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
-        }
 
         private void OnEnable()
         {
@@ -36,6 +25,7 @@ namespace MultiplayFishing.UI
         public void ShowMessage(string message)
         {
             if (messagePrefab == null || container == null) return;
+            if (!gameObject.activeInHierarchy) return; // 씬에 활성화된 경우만 실행
             StartCoroutine(CreateMessageRoutine(message));
         }
 

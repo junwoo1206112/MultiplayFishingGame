@@ -3,6 +3,7 @@
     "rootNamespace": "MultiplayFishing.Gameplay",
     "references": [
         "MultiplayFishing.Network",
+        "MultiplayFishing.Core",
         "Mirror",
         "Unity.Cinemachine",
         "Unity.InputSystem"

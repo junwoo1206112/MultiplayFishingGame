@@ -1,0 +1,16 @@
+{
+    "name": "MultiplayFishing.Core",
+    "rootNamespace": "MultiplayFishing.Core",
+    "references": [
+        "MultiplayFishing.Data"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
