@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 7aab1a8c7fa523042831fbd6b21fdae1
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 303983
+  packageName: ocean&lake shaders | URP
+  packageVersion: 1.0
+  assetPath: Assets/ocean&lakeShaderPack/prefab/lakePrefab.prefab
+  uploadId: 717021

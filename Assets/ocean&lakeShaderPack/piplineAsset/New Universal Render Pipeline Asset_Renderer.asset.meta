@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: e83601ba3e05b8a43992a471106de971
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 303983
+  packageName: ocean&lake shaders | URP
+  packageVersion: 1.0
+  assetPath: Assets/ocean&lakeShaderPack/piplineAsset/New Universal Render Pipeline
+    Asset_Renderer.asset
+  uploadId: 717021
