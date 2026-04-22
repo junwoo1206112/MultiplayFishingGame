@@ -1,7 +1,7 @@
 using System;
-using UnityEngine;
-using Mirror;
 using System.Collections;
+using Mirror;
+using UnityEngine;
 
 namespace MultiplayFishing.Gameplay
 {
@@ -11,7 +11,7 @@ namespace MultiplayFishing.Gameplay
         public event Action<Color> OnPlayerColorChangedEvent;
 
         [Header("Player Identification")]
-        [SyncVar(hook = nameof(OnPlayerNameChanged))] public string playerName = "";
+        [SyncVar(hook = nameof(OnPlayerNameChanged))] public string playerName = string.Empty;
         [SyncVar(hook = nameof(OnPlayerColorChanged))] public Color playerColor = Color.white;
 
         [Header("Setup References")]
@@ -19,20 +19,21 @@ namespace MultiplayFishing.Gameplay
 
         private void Awake()
         {
-            // 인스펙터 할당 누락 대비
-            if (characterRenderer == null) characterRenderer = GetComponentInChildren<Renderer>();
+            if (characterRenderer == null)
+            {
+                characterRenderer = GetComponentInChildren<Renderer>();
+            }
         }
 
         public override void OnStartServer()
         {
             base.OnStartServer();
-            
-            // 이미 설정된 이름이 없다면(빈 문자열) 랜덤한 이름 부여
+
             if (string.IsNullOrEmpty(playerName))
             {
-                playerName = $"낚시꾼 {UnityEngine.Random.Range(100, 999)}";
+                playerName = $"낚시꾼{UnityEngine.Random.Range(100, 999)}";
             }
-            
+
             playerColor = Color.HSVToRGB(UnityEngine.Random.value, 0.8f, 1.0f);
         }
 
@@ -42,17 +43,20 @@ namespace MultiplayFishing.Gameplay
             UpdateCharacterColor(playerColor);
         }
 
-        void OnPlayerNameChanged(string oldValue, string newValue) => OnPlayerNameChangedEvent?.Invoke(newValue);
-        
-        void OnPlayerColorChanged(Color oldColor, Color newColor) 
-        { 
-            UpdateCharacterColor(newColor); 
-            OnPlayerColorChangedEvent?.Invoke(newColor); 
+        private void OnPlayerNameChanged(string oldValue, string newValue)
+        {
+            OnPlayerNameChangedEvent?.Invoke(newValue);
+        }
+
+        private void OnPlayerColorChanged(Color oldColor, Color newColor)
+        {
+            UpdateCharacterColor(newColor);
+            OnPlayerColorChangedEvent?.Invoke(newColor);
         }
 
         private void UpdateCharacterColor(Color color)
         {
-            if (characterRenderer != null) 
+            if (characterRenderer != null)
             {
                 characterRenderer.material.color = color;
             }
@@ -62,40 +66,61 @@ namespace MultiplayFishing.Gameplay
         {
             base.OnStartLocalPlayer();
             StartCoroutine(SmartEscapeRoutine());
-            
-            // 로컬에 저장된 이름을 불러와서 서버로 전송
-            string savedName = PlayerPrefs.GetString("PlayerName", $"낚시꾼 {UnityEngine.Random.Range(100, 999)}");
+
+            string savedName = PlayerPrefs.GetString("PlayerName", $"낚시꾼{UnityEngine.Random.Range(100, 999)}");
             CmdUpdatePlayerName(savedName);
         }
 
         [Command]
         public void CmdUpdatePlayerName(string newName)
         {
-            if (string.IsNullOrWhiteSpace(newName)) return;
+            if (string.IsNullOrWhiteSpace(newName))
+            {
+                return;
+            }
 
             string oldName = playerName;
             playerName = newName;
             Debug.Log($"[Server] 이름 변경 요청: '{oldName}' -> '{newName}'");
 
-            // 알림 조건: 이전 이름이 비어있거나, 새로 설정된 이름이 이전과 다를 때 (처음 한 번만)
-            // 중복 알림을 방지하기 위해 서버에서 체크
-            RpcBroadcastSystemMessage($"{newName}님이 입장하셨습니다.");
+            RpcBroadcastSystemMessage($"{newName}님이 입장했습니다.");
             Debug.Log($"[Server] RpcBroadcastSystemMessage 호출 완료: {newName}");
         }
 
         [ClientRpc]
         private void RpcBroadcastSystemMessage(string message)
         {
-            Debug.Log($"[Client] Rpc 수신됨: {message}");
-            if (MultiplayFishing.UI.NotificationUI.Instance != null)
+            Debug.Log($"[Client] Rpc 수신: {message}");
+
+            if (!TryShowNotification(message))
             {
-                MultiplayFishing.UI.NotificationUI.Instance.ShowMessage(message);
+                Debug.LogError("[Client] NotificationUI 인스턴스를 찾을 수 없습니다. 씬 구성을 확인하세요.");
             }
-            else
+        }
+
+        private static bool TryShowNotification(string message)
+        {
+            Type notificationType = Type.GetType("MultiplayFishing.UI.NotificationUI, MultiplayFishing.UI");
+            if (notificationType == null)
             {
-                // 이 로그가 뜬다면 하이어라키에 NotificationUI 오브젝트가 없는 것입니다.
-                Debug.LogError("[Client] NotificationUI 인스턴스를 찾을 수 없습니다! 하이어라키를 확인하세요.");
+                return false;
             }
+
+            var instanceProperty = notificationType.GetProperty("Instance");
+            object instance = instanceProperty?.GetValue(null);
+            if (instance == null)
+            {
+                return false;
+            }
+
+            var showMessageMethod = notificationType.GetMethod("ShowMessage", new[] { typeof(string) });
+            if (showMessageMethod == null)
+            {
+                return false;
+            }
+
+            showMessageMethod.Invoke(instance, new object[] { message });
+            return true;
         }
 
         private IEnumerator SmartEscapeRoutine()
@@ -104,7 +129,7 @@ namespace MultiplayFishing.Gameplay
             if (cc != null)
             {
                 cc.enabled = false;
-                transform.position += Vector3.up * 0.2f; 
+                transform.position += Vector3.up * 0.2f;
                 yield return new WaitForFixedUpdate();
                 cc.enabled = true;
             }
