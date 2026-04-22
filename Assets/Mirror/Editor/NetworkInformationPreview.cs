@@ -22,12 +22,20 @@ namespace Mirror
 
         class Styles
         {
-            public GUIStyle labelStyle = new GUIStyle(EditorStyles.label);
-            public GUIStyle componentName = new GUIStyle(EditorStyles.boldLabel);
-            public GUIStyle disabledName = new GUIStyle(EditorStyles.miniLabel);
+            public GUIStyle labelStyle;
+            public GUIStyle componentName;
+            public GUIStyle disabledName;
 
             public Styles()
             {
+                GUIStyle baseLabel = EditorStyles.label ?? GUI.skin?.label ?? new GUIStyle();
+                GUIStyle baseBoldLabel = EditorStyles.boldLabel ?? GUI.skin?.label ?? baseLabel;
+                GUIStyle baseMiniLabel = EditorStyles.miniLabel ?? GUI.skin?.label ?? baseLabel;
+
+                labelStyle = new GUIStyle(baseLabel);
+                componentName = new GUIStyle(baseBoldLabel);
+                disabledName = new GUIStyle(baseMiniLabel);
+
                 Color fontColor = new Color(0.7f, 0.7f, 0.7f);
                 labelStyle.padding.right += 20;
                 labelStyle.normal.textColor = fontColor;
@@ -60,7 +68,7 @@ namespace Mirror
         }
 
         GUIContent title;
-        Styles styles = new Styles();
+        Styles styles;
 
         public override GUIContent GetPreviewTitle()
         {

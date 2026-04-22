@@ -20,12 +20,26 @@ namespace MultiplayFishing.Gameplay
 
         [Header("Animation")]
         [SerializeField] private Animator animator;
-        [SerializeField] private string walkParameter = "Walk";
+        [SerializeField] private string walkParameter = "WalkSpeed";
         [SerializeField] private string fishingParameter = "fishing";
-        [SerializeField] private float walkThreshold = 0.01f;
+        [SerializeField] private string hasFishParameter = "HasFish";
+        [SerializeField] private float walkAnimDampTime = 0.15f;
 
         [Header("Fishing Visual")]
         [SerializeField] private FishingLineVisual fishingLineVisual;
+
+        [Header("Fish Catch Mechanics")]
+        [SerializeField] private GameObject biteSignalPrefab;
+        [SerializeField] private GameObject fishPrefab;
+        [SerializeField] private Transform handsPoint;    
+        [SerializeField] private GameObject rodModel;     
+        [SerializeField] private float minBiteWaitTime = 2f;
+        [SerializeField] private float maxBiteWaitTime = 5f;
+        [SerializeField] private float biteWindowDuration = 1.5f;
+        [SerializeField] private Vector3 biteSignalOffset = new Vector3(0f, 2.5f, 0f);
+        [SerializeField] private float reelDurationWithFish = 1.2f;
+        [SerializeField] private float fishWiggleAmount = 12f;    
+        [SerializeField] private float fishWiggleSpeed = 15f;     
 
         [Header("Fishing Cast")]
         [SerializeField] private GameObject fishingRopeObject;
@@ -61,12 +75,13 @@ namespace MultiplayFishing.Gameplay
         private Component fishingRopeComponent;
         private Coroutine hookMoveRoutine;
         private Vector3 velocity;
-        private Vector3 lastPosition;
         private Vector2 movementInput;
         private int walkParameterHash;
         private int fishingParameterHash;
+        private int hasFishParameterHash;
         private bool hasWalkParameter;
         private bool hasFishingParameter;
+        private bool hasHasFishParameter;
         private bool isFishingActive;
         private bool hasLastWaterHitPoint;
         private Vector3 lastWaterHitPoint;
@@ -74,72 +89,49 @@ namespace MultiplayFishing.Gameplay
         private FishingRopeController fishingRopeController;
         private FishingSplashController fishingSplashController;
 
+        private GameObject activeBiteSignal;
+        private bool isBiteActive;
+        private Coroutine biteWaitRoutine;
+        private Coroutine biteWindowRoutine;
+
         private void Awake()
         {
             characterController = GetComponent<CharacterController>();
-
-            if (animator == null)
-            {
-                animator = GetComponent<Animator>();
-            }
-
+            if (animator == null) animator = GetComponent<Animator>();
             walkParameterHash = Animator.StringToHash(walkParameter);
             fishingParameterHash = Animator.StringToHash(fishingParameter);
+            hasFishParameterHash = Animator.StringToHash(hasFishParameter);
             CacheAnimatorParameter();
 
-            if (playerCamera == null)
-            {
-                playerCamera = GetComponentInChildren<Camera>();
-            }
-
+            if (playerCamera == null) playerCamera = GetComponentInChildren<Camera>();
             if (fishingRopeObject == null)
             {
                 Transform fishingRopeTransform = transform.Find("FishingRope");
-                if (fishingRopeTransform != null)
-                {
-                    fishingRopeObject = fishingRopeTransform.gameObject;
-                }
+                if (fishingRopeTransform != null) fishingRopeObject = fishingRopeTransform.gameObject;
             }
 
             if (fishingRopeComponent == null && fishingRopeObject != null)
-            {
                 fishingRopeComponent = fishingRopeObject.GetComponent("Rope");
-            }
 
-            waterSurfaceResolver = new FishingWaterSurfaceResolver(
-                playerCamera,
-                tipPoint,
-                waterSurfaceTransform,
-                waterLayerMask,
-                waterRayStartHeight,
-                downwardCastBias,
-                maxCastDistance);
+            waterSurfaceResolver = new FishingWaterSurfaceResolver(playerCamera, tipPoint, waterSurfaceTransform, waterLayerMask, waterRayStartHeight, downwardCastBias, maxCastDistance);
             fishingRopeController = new FishingRopeController(tipPoint, hookPoint, fishingRopeObject, fishingRopeComponent);
             fishingSplashController = new FishingSplashController(fishingSplashParticle);
 
             if (fishingLineVisual != null && !fishingLineVisual.IsConfiguredForRuntime)
-            {
                 fishingLineVisual.enabled = false;
-            }
         }
 
         private void Start()
         {
-            lastPosition = transform.position;
             if (fishingRopeController != null && fishingRopeController.IsConfigured)
-            {
                 fishingRopeController.SetHookPosition(GetIdleHookPosition());
-            }
 
             fishingSplashController?.Reset();
-
             fishingRopeController?.SetVisible(false);
             fishingRopeController?.SetRopeLength(GetDesiredRopeLength(GetIdleHookPosition(), idleRopeLength, idleRopeSlack));
 
             if (fishingLineVisual != null && !UsesHookCasting())
-            {
                 fishingLineVisual.SetFishingActive(isFishingActive);
-            }
         }
 
         private void Update()
@@ -152,38 +144,37 @@ namespace MultiplayFishing.Gameplay
 
         private void HandleFishingInput()
         {
-            if (Mouse.current == null || !hasFishingParameter || animator == null)
-            {
-                return;
-            }
+            if (Mouse.current == null || !hasFishingParameter || animator == null) return;
+            if (!Mouse.current.leftButton.wasPressedThisFrame) return;
 
-            if (!Mouse.current.leftButton.wasPressedThisFrame)
+            if (isBiteActive)
             {
+                CatchFish();
                 return;
             }
 
             isFishingActive = !isFishingActive;
             animator.SetBool(fishingParameterHash, isFishingActive);
 
+            if (isFishingActive) StopBiteLogic();
+
             if (UsesHookCasting())
             {
-                if (hookMoveRoutine != null)
-                {
-                    StopCoroutine(hookMoveRoutine);
-                }
+                if (hookMoveRoutine != null) StopCoroutine(hookMoveRoutine);
 
                 Vector3 targetPosition = isFishingActive ? GetCastTargetPosition() : GetIdleHookPosition();
                 if (!isFishingActive)
                 {
                     float ropeLength = GetDesiredRopeLength(targetPosition, idleRopeLength, idleRopeSlack);
                     fishingRopeController?.SetRopeLength(ropeLength);
+                    StopBiteLogic();
                 }
 
                 float ropeSlack = isFishingActive ? castRopeSlack : idleRopeSlack;
                 float minimumRopeLength = isFishingActive ? castRopeLength : idleRopeLength;
                 float waterSurfaceY = 0f;
-                bool stopAtWaterSurface = isFishingActive && waterSurfaceResolver != null
-                    && waterSurfaceResolver.TryGetSurfaceHeight(out waterSurfaceY);
+                bool stopAtWaterSurface = isFishingActive && waterSurfaceResolver != null && waterSurfaceResolver.TryGetSurfaceHeight(out waterSurfaceY);
+                
                 if (stopAtWaterSurface)
                 {
                     float hookTargetWaterY = waterSurfaceY - hookWaterSubmergeDepth;
@@ -196,268 +187,201 @@ namespace MultiplayFishing.Gameplay
                     isFishingActive ? castStartDelay : 0f,
                     isFishingActive ? castDuration : reelDuration,
                     isFishingActive ? castArcHeight : reelArcHeight,
-                    ropeSlack,
-                    minimumRopeLength,
-                    true,
-                    !isFishingActive,
-                    true,
-                    stopAtWaterSurface,
-                    waterSurfaceY,
-                    isFishingActive && useLegacySplashEffect));
+                    ropeSlack, minimumRopeLength, true, !isFishingActive, true, stopAtWaterSurface, waterSurfaceY, isFishingActive && useLegacySplashEffect));
             }
-            else if (fishingLineVisual != null)
+        }
+
+        private void StopBiteLogic()
+        {
+            if (biteWaitRoutine != null) StopCoroutine(biteWaitRoutine);
+            if (biteWindowRoutine != null) StopCoroutine(biteWindowRoutine);
+            isBiteActive = false;
+            if (activeBiteSignal != null) Destroy(activeBiteSignal);
+            biteWaitRoutine = null;
+            biteWindowRoutine = null;
+        }
+
+        private void CatchFish()
+        {
+            Debug.Log("<color=yellow>Fish Caught!</color>");
+            StopBiteLogic();
+
+            if (hasHasFishParameter) animator.SetBool(hasFishParameterHash, true);
+
+            if (fishPrefab != null && hookPoint != null)
             {
-                fishingRopeController?.SetRopeLength(isFishingActive ? castRopeLength : idleRopeLength);
-                fishingLineVisual.SetFishingActive(isFishingActive);
+                GameObject caughtFish = Instantiate(fishPrefab, hookPoint.position, Quaternion.identity);
+                caughtFish.transform.SetParent(hookPoint);
+                
+                StartCoroutine(AnimateCaughtFish(caughtFish, reelDurationWithFish));
+                
+                Destroy(caughtFish, 4f);
             }
+
+            isFishingActive = false;
+            animator.SetBool(fishingParameterHash, false);
+            
+            if (hookMoveRoutine != null) StopCoroutine(hookMoveRoutine);
+            
+            Vector3 targetPosition = GetIdleHookPosition();
+            float ropeLength = GetDesiredRopeLength(targetPosition, idleRopeLength, idleRopeSlack);
+            fishingRopeController?.SetRopeLength(ropeLength);
+
+            hookMoveRoutine = StartCoroutine(RunHookMove(
+                targetPosition, 0f, reelDurationWithFish, reelArcHeight, idleRopeSlack, idleRopeLength, true, true, true, false, 0f, false));
+        }
+
+        private IEnumerator AnimateCaughtFish(GameObject fish, float reelTime)
+        {
+            float elapsed = 0f;
+            Quaternion hangRotation = Quaternion.Euler(90f, 0f, 0f); 
+
+            while (elapsed < reelTime && fish != null)
+            {
+                elapsed += Time.deltaTime;
+                float wiggleElapsed = elapsed * fishWiggleSpeed;
+                float wiggleX = Mathf.Sin(wiggleElapsed) * fishWiggleAmount;
+                float wiggleZ = Mathf.Cos(wiggleElapsed * 0.8f) * (fishWiggleAmount * 0.5f);
+                
+                if (fish.transform.parent == hookPoint)
+                {
+                    fish.transform.localRotation = hangRotation * Quaternion.Euler(wiggleX, 0f, wiggleZ);
+                }
+
+                if (elapsed >= reelTime * 0.9f && fish.transform.parent == hookPoint)
+                {
+                    if (rodModel != null) rodModel.SetActive(false);
+                    if (handsPoint != null)
+                    {
+                        fish.transform.SetParent(handsPoint);
+                        StartCoroutine(DropToHands(fish));
+                    }
+                }
+                yield return null;
+            }
+
+            while (fish != null) yield return null;
+
+            if (hasHasFishParameter) animator.SetBool(hasFishParameterHash, false);
+
+            if (rodModel != null) rodModel.SetActive(true);
+        }
+
+        private IEnumerator DropToHands(GameObject fish)
+        {
+            float dropTime = 0.25f;
+            float elapsed = 0f;
+            Vector3 startLocalPos = new Vector3(0, 0.3f, 0); 
+            Quaternion startLocalRot = fish.transform.localRotation;
+
+            while (elapsed < dropTime && fish != null)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / dropTime;
+                fish.transform.localPosition = Vector3.Lerp(startLocalPos, Vector3.zero, t);
+                fish.transform.localRotation = Quaternion.Slerp(startLocalRot, Quaternion.identity, t);
+                yield return null;
+            }
+            if (fish != null)
+            {
+                fish.transform.localPosition = Vector3.zero;
+                fish.transform.localRotation = Quaternion.identity;
+            }
+        }
+
+        private IEnumerator WaitForBite()
+        {
+            float waitTime = Random.Range(minBiteWaitTime, maxBiteWaitTime);
+            yield return new WaitForSeconds(waitTime);
+            if (isFishingActive) biteWindowRoutine = StartCoroutine(BiteWindow());
+        }
+
+        private IEnumerator BiteWindow()
+        {
+            isBiteActive = true;
+            Debug.Log("<color=red>BITE!</color>");
+            if (biteSignalPrefab != null)
+            {
+                activeBiteSignal = Instantiate(biteSignalPrefab, transform.position + biteSignalOffset, Quaternion.identity);
+                activeBiteSignal.transform.SetParent(transform);
+            }
+            yield return new WaitForSeconds(biteWindowDuration);
+            isBiteActive = false;
+            if (activeBiteSignal != null) Destroy(activeBiteSignal);
+            if (isFishingActive) biteWaitRoutine = StartCoroutine(WaitForBite());
         }
 
         private void HandleRotation()
         {
-            if (Mouse.current == null)
-            {
-                return;
-            }
-
-            if (isFishingActive && !allowRotationWhileFishing)
-            {
-                return;
-            }
-
+            if (Mouse.current == null || (isFishingActive && !allowRotationWhileFishing)) return;
             float mouseDeltaX = Mouse.current.delta.ReadValue().x;
-            if (Mathf.Approximately(mouseDeltaX, 0f))
-            {
-                return;
-            }
-
-            transform.Rotate(Vector3.up, mouseDeltaX * rotationSpeed * Time.deltaTime, Space.World);
+            if (!Mathf.Approximately(mouseDeltaX, 0f))
+                transform.Rotate(Vector3.up, mouseDeltaX * rotationSpeed * Time.deltaTime, Space.World);
         }
 
         private void HandleMovement()
         {
-            // 디버깅: Fishing 상태
-            if (isFishingActive)
-            {
-                movementInput = Vector2.zero;
-                Debug.Log("[WalkDebug] FishingActive - Movement stopped");
-                return;
-            }
-
-            // 디버깅: Keyboard null 체크
-            if (Keyboard.current == null)
-            {
-                movementInput = Vector2.zero;
-                Debug.LogWarning("[WalkDebug] Keyboard.current is NULL!");
-                return;
-            }
-
-            Vector2 previousInput = movementInput;
+            if (isFishingActive || Keyboard.current == null) { movementInput = Vector2.zero; return; }
             movementInput = Vector2.zero;
-
-            if (Keyboard.current.wKey.isPressed)
-            {
-                movementInput.y += 1f;
-            }
-
-            if (Keyboard.current.sKey.isPressed)
-            {
-                movementInput.y -= 1f;
-            }
-
-            if (Keyboard.current.aKey.isPressed)
-            {
-                movementInput.x -= 1f;
-            }
-
-            if (Keyboard.current.dKey.isPressed)
-            {
-                movementInput.x += 1f;
-            }
-            
-            // 디버깅: 입력값 변화 로그
-            if (movementInput != previousInput)
-            {
-                Debug.Log($"[WalkDebug] Input changed: {previousInput} -> {movementInput}");
-            }
-
-            // 실제 이동 처리
+            if (Keyboard.current.wKey.isPressed) movementInput.y += 1f;
+            if (Keyboard.current.sKey.isPressed) movementInput.y -= 1f;
+            if (Keyboard.current.aKey.isPressed) movementInput.x -= 1f;
+            if (Keyboard.current.dKey.isPressed) movementInput.x += 1f;
             Vector3 move = (transform.right * movementInput.x) + (transform.forward * movementInput.y);
-            if (move.sqrMagnitude > 1f)
-            {
-                move.Normalize();
-            }
-
-            if (characterController.isGrounded && velocity.y < 0f)
-            {
-                velocity.y = groundedVelocity;
-            }
-
+            if (move.sqrMagnitude > 1f) move.Normalize();
+            if (characterController.isGrounded && velocity.y < 0f) velocity.y = groundedVelocity;
             velocity.y += gravity * Time.deltaTime;
-
-            Vector3 motion = (move * moveSpeed) + Vector3.up * velocity.y;
-            characterController.Move(motion * Time.deltaTime);
+            characterController.Move(((move * moveSpeed) + Vector3.up * velocity.y) * Time.deltaTime);
         }
 
         private void UpdateWalkAnimation()
         {
-            // Animator 파라미터가 아직 캐싱되지 않았다면 다시 시도
-            if (!hasWalkParameter && animator != null)
-            {
-                CacheAnimatorParameter();
-            }
-            
-            Vector3 delta = transform.position - lastPosition;
-            delta.y = 0f;
-
-            bool hasInput = movementInput.sqrMagnitude > 0.01f;
-            bool isWalking = !isFishingActive && (hasInput || delta.magnitude > walkThreshold);
-            
-            // 디버깅: Walk 상태 로그
-            if (hasWalkParameter && animator != null)
-            {
-                bool currentWalk = animator.GetBool(walkParameterHash);
-                if (currentWalk != isWalking)
-                {
-                    Debug.Log($"[WalkDebug] Walk state changed: {currentWalk} -> {isWalking} (hasInput={hasInput}, isFishing={isFishingActive}, delta={delta.magnitude:F3})");
-                }
-            }
-            
-            // Walk 파라미터 설정 (파라미터가 없어도 오류 발생 안함)
-            if (animator != null && hasWalkParameter)
-            {
-                animator.SetBool(walkParameterHash, isWalking);
-            }
-
-            lastPosition = transform.position;
+            if (!hasWalkParameter && animator != null) CacheAnimatorParameter();
+            float targetSpeed = isFishingActive ? 0f : Mathf.Clamp01(movementInput.magnitude);
+            if (animator != null && hasWalkParameter) animator.SetFloat(walkParameterHash, targetSpeed, walkAnimDampTime, Time.deltaTime);
         }
 
         private void CacheAnimatorParameter()
         {
-            hasWalkParameter = false;
-            hasFishingParameter = false;
-
-            if (animator == null)
+            hasWalkParameter = hasFishingParameter = hasHasFishParameter = false;
+            if (animator == null) return;
+            foreach (var p in animator.parameters)
             {
-                return;
-            }
-
-            foreach (AnimatorControllerParameter parameter in animator.parameters)
-            {
-                if (parameter.type == AnimatorControllerParameterType.Bool &&
-                    parameter.nameHash == walkParameterHash)
-                {
-                    hasWalkParameter = true;
-                }
-
-                if (parameter.type == AnimatorControllerParameterType.Bool &&
-                    parameter.nameHash == fishingParameterHash)
-                {
-                    hasFishingParameter = true;
-                }
+                if (p.nameHash == walkParameterHash) hasWalkParameter = true;
+                if (p.nameHash == fishingParameterHash) hasFishingParameter = true;
+                if (p.nameHash == hasFishParameterHash) hasHasFishParameter = true;
             }
         }
 
-        private bool UsesHookCasting()
-        {
-            return fishingRopeController != null && fishingRopeController.IsConfigured;
-        }
+        private bool UsesHookCasting() => fishingRopeController != null && fishingRopeController.IsConfigured;
 
         private Vector3 GetCastTargetPosition()
         {
-            if (waterSurfaceResolver == null)
-            {
-                hasLastWaterHitPoint = false;
-                return GetFallbackCastTargetPosition();
-            }
-
-            Vector3 targetPosition = waterSurfaceResolver.ResolveCastTarget(
-                transform,
-                castTargetOffset,
-                fallbackCastDistance,
-                out hasLastWaterHitPoint,
-                out lastWaterHitPoint);
+            if (waterSurfaceResolver == null) { hasLastWaterHitPoint = false; return GetFallbackCastTargetPosition(); }
+            Vector3 targetPosition = waterSurfaceResolver.ResolveCastTarget(transform, castTargetOffset, fallbackCastDistance, out hasLastWaterHitPoint, out lastWaterHitPoint);
             waterSurfaceTransform = waterSurfaceResolver.WaterSurfaceTransform;
             return targetPosition;
         }
 
-        private Vector3 GetIdleHookPosition()
-        {
-            return fishingRopeController != null
-                ? fishingRopeController.GetIdleHookPosition(transform, idleHookOffset)
-                : transform.position;
-        }
+        private Vector3 GetIdleHookPosition() => fishingRopeController != null ? fishingRopeController.GetIdleHookPosition(transform, idleHookOffset) : transform.position;
+        private Vector3 GetFallbackCastTargetPosition() => GetIdleHookPosition() + transform.forward * fallbackCastDistance;
+        private float GetDesiredRopeLength(Vector3 targetPos, float minLen, float slack) => fishingRopeController != null ? fishingRopeController.GetDesiredRopeLength(targetPos, minLen, slack) : minLen;
 
-        private Vector3 GetFallbackCastTargetPosition()
+        private IEnumerator RunHookMove(Vector3 targetPos, float startDelay, float duration, float arcHeight, float ropeSlack, float minRopeLen, bool showRope, bool hideRope, bool useArc, bool stopAtWater, float waterY, bool playSplash)
         {
-            return GetIdleHookPosition()
-                + transform.forward * fallbackCastDistance
-                + transform.right * castTargetOffset.x
-                + transform.up * castTargetOffset.y
-                + transform.forward * castTargetOffset.z;
-        }
-
-        private float GetDesiredRopeLength(Vector3 targetPosition, float minimumLength, float slack)
-        {
-            return fishingRopeController != null
-                ? fishingRopeController.GetDesiredRopeLength(targetPosition, minimumLength, slack)
-                : minimumLength;
-        }
-
-        private IEnumerator RunHookMove(
-            Vector3 targetPosition,
-            float startDelay,
-            float duration,
-            float arcHeight,
-            float ropeSlack,
-            float minimumRopeLength,
-            bool showRopeOnStart,
-            bool hideRopeOnComplete,
-            bool useArcPath,
-            bool stopAtWaterSurface,
-            float waterSurfaceY,
-            bool playSplashOnComplete)
-        {
-            // 물에 닿을 때 스플래시를 재생하는 콜백
             System.Action onWaterHit = null;
-            if (playSplashOnComplete && fishingSplashController != null)
+            if (playSplash && fishingSplashController != null)
+                onWaterHit = () => { fishingSplashController.UpdatePendingPosition(hasLastWaterHitPoint, lastWaterHitPoint, targetPos, splashWorldOffset, clampSplashToWaterSurface, minimumSplashHeightOffset); fishingSplashController.Play(); };
+
+            yield return fishingRopeController.MoveHook(targetPos, startDelay, duration, arcHeight, ropeSlack, minRopeLen, showRope, hideRope, useArc, stopAtWater, waterY, onWaterHit, fishingLineVisual);
+
+            if (isFishingActive && stopAtWater) biteWaitRoutine = StartCoroutine(WaitForBite());
+            if (hideRope && fishingRopeController != null)
             {
-                onWaterHit = () =>
-                {
-                    fishingSplashController.UpdatePendingPosition(
-                        hasLastWaterHitPoint,
-                        lastWaterHitPoint,
-                        targetPosition,
-                        splashWorldOffset,
-                        clampSplashToWaterSurface,
-                        minimumSplashHeightOffset);
-                    
-                    fishingSplashController.Play();
-                };
+                Vector3 idlePos = GetIdleHookPosition();
+                fishingRopeController.RestoreHookToRod(idlePos);
+                fishingRopeController.SetRopeLength(GetDesiredRopeLength(idlePos, idleRopeLength, idleRopeSlack));
             }
-
-            yield return fishingRopeController.MoveHook(
-                targetPosition,
-                startDelay,
-                duration,
-                arcHeight,
-                ropeSlack,
-                minimumRopeLength,
-                showRopeOnStart,
-                hideRopeOnComplete,
-                useArcPath,
-                stopAtWaterSurface,
-                waterSurfaceY,
-                onWaterHit,
-                fishingLineVisual);
-
-            if (hideRopeOnComplete && fishingRopeController != null)
-            {
-                Vector3 idleHookPosition = GetIdleHookPosition();
-                fishingRopeController.RestoreHookToRod(idleHookPosition);
-                fishingRopeController.SetRopeLength(
-                    GetDesiredRopeLength(idleHookPosition, idleRopeLength, idleRopeSlack));
-            }
-
             hookMoveRoutine = null;
         }
     }

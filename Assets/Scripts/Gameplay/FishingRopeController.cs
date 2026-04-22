@@ -96,10 +96,25 @@ namespace MultiplayFishing.Gameplay
                 return;
             }
 
-            hookPoint.SetParent(originalHookParent, false);
+            // keepWorldPosition=true: 부모 변경 시 순간 스냅 방지.
+            // 이후 hookPoint.position으로 원하는 world 위치를 덮어씀.
+            hookPoint.SetParent(originalHookParent, true);
             hookPoint.localRotation = originalHookLocalRotation;
             hookPoint.localScale = originalHookLocalScale;
             hookPoint.position = worldPosition;
+        }
+
+        public void AttachHookToAnchor(Transform anchorPoint)
+        {
+            if (hookPoint == null || anchorPoint == null)
+            {
+                return;
+            }
+
+            hookPoint.SetParent(anchorPoint, false);
+            hookPoint.localPosition = Vector3.zero;
+            hookPoint.localRotation = Quaternion.identity;
+            hookPoint.localScale = Vector3.one;
         }
 
         public void SetVisible(bool visible)
@@ -144,7 +159,41 @@ namespace MultiplayFishing.Gameplay
             bool stopAtWaterSurface,
             float waterSurfaceY,
             System.Action onWaterHit = null,
-            FishingLineVisual lineVisual = null)
+            FishingLineVisual lineVisual = null,
+            Transform completionAnchor = null)
+        {
+            return MoveHookDynamic(
+                targetPosition,
+                () => startDelay,
+                () => duration,
+                () => arcHeight,
+                () => ropeSlack,
+                () => minimumRopeLength,
+                showRopeOnStart,
+                hideRopeOnComplete,
+                useArcPath,
+                stopAtWaterSurface,
+                () => waterSurfaceY,
+                onWaterHit,
+                lineVisual,
+                completionAnchor);
+        }
+
+        public IEnumerator MoveHookDynamic(
+            Vector3 targetPosition,
+            System.Func<float> startDelayProvider,
+            System.Func<float> durationProvider,
+            System.Func<float> arcHeightProvider,
+            System.Func<float> ropeSlackProvider,
+            System.Func<float> minimumRopeLengthProvider,
+            bool showRopeOnStart,
+            bool hideRopeOnComplete,
+            bool useArcPath,
+            bool stopAtWaterSurface,
+            System.Func<float> waterSurfaceYProvider,
+            System.Action onWaterHit = null,
+            FishingLineVisual lineVisual = null,
+            Transform completionAnchor = null)
         {
             if (!IsConfigured)
             {
@@ -156,14 +205,25 @@ namespace MultiplayFishing.Gameplay
 
             try
             {
-                if (startDelay > 0f)
+                float delayElapsed = 0f;
+                while (true)
                 {
-                    yield return new WaitForSeconds(startDelay);
+                    float currentStartDelay = Mathf.Max(0f, startDelayProvider != null ? startDelayProvider() : 0f);
+                    if (delayElapsed >= currentStartDelay)
+                    {
+                        break;
+                    }
+
+                    delayElapsed += Time.deltaTime;
+                    yield return null;
                 }
+
+                Vector3 launchStartPosition = tipPoint != null ? tipPoint.position : hookPoint.position;
 
                 if (!hideRopeOnComplete)
                 {
                     DetachHookFromRod();
+                    hookPoint.position = launchStartPosition;
                 }
 
                 if (showRopeOnStart)
@@ -173,27 +233,44 @@ namespace MultiplayFishing.Gameplay
 
                 // Apply the cast rope target only when the throw actually begins,
                 // so the lure does not appear to snap toward the water on click.
-                SetRopeLength(GetDesiredRopeLength(targetPosition, minimumRopeLength, ropeSlack));
+                float initialMinimumRopeLength = minimumRopeLengthProvider != null ? minimumRopeLengthProvider() : 0f;
+                float initialRopeSlack = ropeSlackProvider != null ? ropeSlackProvider() : 0f;
+                SetRopeLength(GetDesiredRopeLength(targetPosition, initialMinimumRopeLength, initialRopeSlack));
 
-                Vector3 startPosition = hookPoint.position;
-                Vector3 controlPoint = GetArcControlPoint(startPosition, targetPosition, arcHeight);
+                Vector3 startPosition = launchStartPosition;
                 float elapsed = 0f;
-                float safeDuration = Mathf.Max(0.01f, duration);
                 bool hasHitWater = false;
+                float lastT = 0f;
 
-                while (elapsed < safeDuration)
+                while (lastT < 1f)
                 {
-                    elapsed += Time.deltaTime;
-                    float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / safeDuration));
+                    float currentDuration = durationProvider != null ? durationProvider() : 0f;
+                    float currentArcHeight = arcHeightProvider != null ? arcHeightProvider() : 0f;
+                    float currentRopeSlack = ropeSlackProvider != null ? ropeSlackProvider() : 0f;
+                    float currentMinimumRopeLength = minimumRopeLengthProvider != null ? minimumRopeLengthProvider() : 0f;
+                    float currentWaterSurfaceY = waterSurfaceYProvider != null ? waterSurfaceYProvider() : 0f;
+                    Vector3 controlPoint = GetArcControlPoint(startPosition, targetPosition, currentArcHeight);
+
+                    if (currentDuration <= 0f)
+                    {
+                        lastT = 1f;
+                    }
+                    else
+                    {
+                        elapsed += Time.deltaTime;
+                        lastT = Mathf.Clamp01(elapsed / currentDuration);
+                    }
+
+                    float t = Mathf.SmoothStep(0f, 1f, lastT);
 
                     Vector3 nextPosition = useArcPath
                         ? EvaluateQuadraticBezier(startPosition, controlPoint, targetPosition, t)
                         : Vector3.Lerp(startPosition, targetPosition, t);
 
                     // Clamp to the water surface so the hook does not keep sinking.
-                    if (stopAtWaterSurface && nextPosition.y < waterSurfaceY)
+                    if (stopAtWaterSurface && nextPosition.y < currentWaterSurfaceY)
                     {
-                        nextPosition.y = waterSurfaceY;
+                        nextPosition.y = currentWaterSurfaceY;
 
                         // Trigger the splash only on the first water contact.
                         if (!hasHitWater)
@@ -204,27 +281,40 @@ namespace MultiplayFishing.Gameplay
                     }
 
                     hookPoint.position = nextPosition;
-                    SetRopeLength(GetDesiredRopeLength(nextPosition, minimumRopeLength, ropeSlack));
+                    SetRopeLength(GetDesiredRopeLength(nextPosition, currentMinimumRopeLength, currentRopeSlack));
                     yield return null;
                 }
 
                 // Apply the final evaluated position after the motion completes.
+                float finalArcHeight = arcHeightProvider != null ? arcHeightProvider() : 0f;
+                float finalMinimumRopeLength = minimumRopeLengthProvider != null ? minimumRopeLengthProvider() : 0f;
+                float finalRopeSlack = ropeSlackProvider != null ? ropeSlackProvider() : 0f;
+                float finalWaterSurfaceY = waterSurfaceYProvider != null ? waterSurfaceYProvider() : 0f;
+                Vector3 finalControlPoint = GetArcControlPoint(startPosition, targetPosition, finalArcHeight);
                 Vector3 finalPosition = useArcPath
-                    ? EvaluateQuadraticBezier(startPosition, controlPoint, targetPosition, 1f)
+                    ? EvaluateQuadraticBezier(startPosition, finalControlPoint, targetPosition, 1f)
                     : targetPosition;
 
                 // Keep the final position from ending below the water surface clamp.
-                if (stopAtWaterSurface && finalPosition.y < waterSurfaceY)
+                if (stopAtWaterSurface && finalPosition.y < finalWaterSurfaceY)
                 {
-                    finalPosition.y = waterSurfaceY;
+                    finalPosition.y = finalWaterSurfaceY;
                 }
 
                 hookPoint.position = finalPosition;
-                SetRopeLength(GetDesiredRopeLength(finalPosition, minimumRopeLength, ropeSlack));
+                SetRopeLength(GetDesiredRopeLength(finalPosition, finalMinimumRopeLength, finalRopeSlack));
 
                 if (hideRopeOnComplete)
                 {
-                    RestoreHookToRod();
+                    if (completionAnchor != null)
+                    {
+                        AttachHookToAnchor(completionAnchor);
+                    }
+                    else
+                    {
+                        RestoreHookToRod();
+                    }
+
                     SetVisible(false);
                 }
             }
@@ -238,12 +328,7 @@ namespace MultiplayFishing.Gameplay
         private Vector3 GetArcControlPoint(Vector3 startPosition, Vector3 targetPosition, float baseArcHeight)
         {
             Vector3 controlPoint = Vector3.Lerp(startPosition, targetPosition, 0.5f);
-            float horizontalDistance = Vector3.Distance(
-                new Vector3(startPosition.x, 0f, startPosition.z),
-                new Vector3(targetPosition.x, 0f, targetPosition.z));
-
-            float dynamicArcHeight = Mathf.Max(baseArcHeight, horizontalDistance * 0.2f);
-            controlPoint.y = Mathf.Max(startPosition.y, targetPosition.y) + dynamicArcHeight;
+            controlPoint.y = Mathf.Max(startPosition.y, targetPosition.y) + baseArcHeight;
             return controlPoint;
         }
 
