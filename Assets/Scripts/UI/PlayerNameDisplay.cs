@@ -9,19 +9,38 @@ namespace MultiplayFishing.UI
         [SerializeField] private FishingPlayer player;
         [SerializeField] private TMP_Text nameText;
         [SerializeField] private Transform targetCamera;
+        private Canvas parentCanvas;
 
         private void Awake()
         {
-            if (player == null) player = GetComponentInParent<FishingPlayer>();
-            if (nameText == null) nameText = GetComponent<TMP_Text>();
+            FindReferences();
+        }
+
+        private void FindReferences()
+        {
+            if (player == null)
+            {
+                player = GetComponentInParent<FishingPlayer>();
+            }
+
+            if (nameText == null)
+            {
+                nameText = GetComponentInChildren<TMP_Text>();
+            }
+
+            if (parentCanvas == null)
+            {
+                parentCanvas = GetComponentInParent<Canvas>();
+            }
         }
 
         private void OnEnable()
         {
+            FindReferences();
+
             if (player != null)
             {
                 player.OnPlayerNameChangedEvent += UpdateName;
-                // 초기값 설정
                 UpdateName(player.playerName);
             }
         }
@@ -36,9 +55,22 @@ namespace MultiplayFishing.UI
 
         private void Start()
         {
+            TryAssignCamera();
+        }
+
+        private void TryAssignCamera()
+        {
             if (targetCamera == null && Camera.main != null)
             {
                 targetCamera = Camera.main.transform;
+            }
+
+            if (parentCanvas != null && parentCanvas.renderMode == RenderMode.WorldSpace && parentCanvas.worldCamera == null)
+            {
+                if (Camera.main != null)
+                {
+                    parentCanvas.worldCamera = Camera.main;
+                }
             }
         }
 
@@ -52,14 +84,10 @@ namespace MultiplayFishing.UI
 
         private void LateUpdate()
         {
-            // 카메라를 바라보게 함 (Billboarding)
+            TryAssignCamera();
             if (targetCamera != null)
             {
                 transform.LookAt(transform.position + targetCamera.forward);
-            }
-            else if (Camera.main != null)
-            {
-                targetCamera = Camera.main.transform;
             }
         }
     }

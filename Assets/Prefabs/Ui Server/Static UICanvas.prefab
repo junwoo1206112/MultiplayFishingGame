@@ -175,6 +175,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Panel_Offline
       objectReference: {fileID: 0}
+    - target: {fileID: 5037366727815515424, guid: 5043810815686be4e98996a39c210f15, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -89
+      objectReference: {fileID: 0}
+    - target: {fileID: 5037366727815515424, guid: 5043810815686be4e98996a39c210f15, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -93
+      objectReference: {fileID: 0}
     - target: {fileID: 8473588491315348213, guid: 5043810815686be4e98996a39c210f15, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5

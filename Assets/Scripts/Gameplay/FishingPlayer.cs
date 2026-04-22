@@ -5,6 +5,7 @@ using System.Collections;
 
 namespace MultiplayFishing.Gameplay
 {
+    [DefaultExecutionOrder(200)]
     public class FishingPlayer : NetworkBehaviour
     {
         public event Action<string> OnPlayerNameChangedEvent;
@@ -17,23 +18,26 @@ namespace MultiplayFishing.Gameplay
 
         [Header("Setup References")]
         [SerializeField] private Renderer characterRenderer;
+        [SerializeField] private float walkStopDelay = 0.3f;
+
+        private Animator animator;
+        private CharacterController characterController;
+        private int walkParamHash;
+        private bool hasWalkParam;
+        private float walkStopTimer;
+        private Vector3 lastPosition;
 
         private void Awake()
         {
-            // 인스펙터 할당 누락 대비
             if (characterRenderer == null) characterRenderer = GetComponentInChildren<Renderer>();
+            animator = GetComponent<Animator>();
+            characterController = GetComponent<CharacterController>();
+            CacheWalkParam();
         }
 
         public override void OnStartServer()
         {
             base.OnStartServer();
-            
-            // 이미 설정된 이름이 없다면(빈 문자열) 랜덤한 이름 부여
-            if (string.IsNullOrEmpty(playerName))
-            {
-                playerName = $"낚시꾼 {UnityEngine.Random.Range(100, 999)}";
-            }
-            
             playerColor = Color.HSVToRGB(UnityEngine.Random.value, 0.8f, 1.0f);
         }
 
@@ -41,6 +45,10 @@ namespace MultiplayFishing.Gameplay
         {
             base.OnStartClient();
             UpdateCharacterColor(playerColor);
+            if (!string.IsNullOrEmpty(playerName))
+            {
+                OnPlayerNameChangedEvent?.Invoke(playerName);
+            }
         }
 
         void OnPlayerNameChanged(string oldValue, string newValue) => OnPlayerNameChangedEvent?.Invoke(newValue);
@@ -64,8 +72,8 @@ namespace MultiplayFishing.Gameplay
             base.OnStartLocalPlayer();
             StartCoroutine(SmartEscapeRoutine());
             
-            // 로컬에 저장된 이름을 불러와서 서버로 전송
             string savedName = PlayerPrefs.GetString("PlayerName", $"낚시꾼 {UnityEngine.Random.Range(100, 999)}");
+            OnPlayerNameChangedEvent?.Invoke(savedName);
             CmdUpdatePlayerName(savedName);
         }
 
@@ -74,20 +82,18 @@ namespace MultiplayFishing.Gameplay
         {
             if (string.IsNullOrWhiteSpace(newName)) return;
 
-            string oldName = playerName;
+            bool isFirstName = string.IsNullOrEmpty(playerName);
             playerName = newName;
-            Debug.Log($"[Server] 이름 변경 요청: '{oldName}' -> '{newName}'");
 
-            // 알림 조건: 이전 이름이 비어있거나, 새로 설정된 이름이 이전과 다를 때 (처음 한 번만)
-            // 중복 알림을 방지하기 위해 서버에서 체크
-            RpcBroadcastSystemMessage($"{newName}님이 입장하셨습니다.");
-            Debug.Log($"[Server] RpcBroadcastSystemMessage 호출 완료: {newName}");
+            if (isFirstName)
+            {
+                RpcBroadcastSystemMessage($"{newName}님이 입장하셨습니다.");
+            }
         }
 
         [ClientRpc]
         private void RpcBroadcastSystemMessage(string message)
         {
-            Debug.Log($"[Client] Rpc 수신됨: {message}");
             OnSystemMessage?.Invoke(message);
         }
 
@@ -101,6 +107,54 @@ namespace MultiplayFishing.Gameplay
                 yield return new WaitForFixedUpdate();
                 cc.enabled = true;
             }
+        }
+
+        private void CacheWalkParam()
+        {
+            hasWalkParam = false;
+            if (animator == null) return;
+
+            foreach (AnimatorControllerParameter param in animator.parameters)
+            {
+                if (param.type == AnimatorControllerParameterType.Bool && param.name == "Walk")
+                {
+                    hasWalkParam = true;
+                    walkParamHash = param.nameHash;
+                    break;
+                }
+            }
+        }
+
+        private void Start()
+        {
+            CacheWalkParam();
+            lastPosition = transform.position;
+        }
+
+        private void Update()
+        {
+            UpdateWalkAnimation();
+        }
+
+        private void UpdateWalkAnimation()
+        {
+            if (animator == null || !hasWalkParam) return;
+
+            Vector3 delta = transform.position - lastPosition;
+            delta.y = 0f;
+            float moveSpeed = delta.sqrMagnitude / (Time.deltaTime * Time.deltaTime);
+
+            if (moveSpeed > 0.1f)
+            {
+                walkStopTimer = walkStopDelay;
+            }
+            else
+            {
+                walkStopTimer -= Time.deltaTime;
+            }
+
+            animator.SetBool(walkParamHash, walkStopTimer > 0f);
+            lastPosition = transform.position;
         }
     }
 }
