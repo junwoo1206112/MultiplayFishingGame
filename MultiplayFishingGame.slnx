@@ -4,10 +4,11 @@
   <Project Path="Mirror.Components.csproj" />
   <Project Path="Mirror.Editor.csproj" />
   <Project Path="Mirror.Examples.csproj" />
+  <Project Path="MultiplayFishing.Core.csproj" />
   <Project Path="kcp2k.csproj" />
   <Project Path="MultiplayFishing.Network.csproj" />
   <Project Path="UnityCliConnector.Editor.csproj" />
-  <Project Path="Assembly-CSharp-Editor.csproj" />
+  <Project Path="MultiplayFishing.Editor.csproj" />
   <Project Path="Mirror.csproj" />
   <Project Path="MultiplayFishing.Gameplay.csproj" />
   <Project Path="SimpleWebTransport.csproj" />
@@ -16,6 +17,7 @@
   <Project Path="EncryptionTransportEditor.csproj" />
   <Project Path="Telepathy.csproj" />
   <Project Path="Assembly-CSharp.csproj" />
+  <Project Path="Assembly-CSharp-Editor.csproj" />
   <Project Path="MultiplayFishing.UI.csproj" />
   <Project Path="Mirror.CompilerSymbols.csproj" />
   <Project Path="MultiplayFishing.Data.csproj" />

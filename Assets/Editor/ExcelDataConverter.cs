@@ -32,6 +32,7 @@ namespace MultiplayFishing.Editor
             headerRow.CreateCell(3).SetCellValue("Chance (%)");
             headerRow.CreateCell(4).SetCellValue("Price (Gold)");
             headerRow.CreateCell(5).SetCellValue("Length (cm)");
+            headerRow.CreateCell(6).SetCellValue("Description");
 
             // 예시 로우
             IRow exampleRow = sheet.CreateRow(1);
@@ -41,6 +42,7 @@ namespace MultiplayFishing.Editor
             exampleRow.CreateCell(3).SetCellValue(25.0f);
             exampleRow.CreateCell(4).SetCellValue(100);
             exampleRow.CreateCell(5).SetCellValue(30.5f);
+            exampleRow.CreateCell(6).SetCellValue("A common, fast-swimming blue-backed fish.");
 
             using (FileStream file = new FileStream(ExcelPath, FileMode.Create, FileAccess.Write))
             {
@@ -92,6 +94,7 @@ namespace MultiplayFishing.Editor
                     fishData.catchChance = (float)(row.GetCell(3)?.NumericCellValue ?? 0f);
                     fishData.sellPrice = (int)(row.GetCell(4)?.NumericCellValue ?? 0);
                     fishData.lengthCm = (float)(row.GetCell(5)?.NumericCellValue ?? 0f);
+                    fishData.description = row.GetCell(6)?.StringCellValue ?? "";
 
                     EditorUtility.SetDirty(fishData);
                 }

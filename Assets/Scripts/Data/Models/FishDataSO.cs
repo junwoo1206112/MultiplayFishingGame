@@ -11,5 +11,7 @@ namespace MultiplayFishing.Data.Models
         public float catchChance; // %
         public int sellPrice; // Gold
         public float lengthCm; // cm
+        [TextArea(3, 10)]
+        public string description;
     }
 }
