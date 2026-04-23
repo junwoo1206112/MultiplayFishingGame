@@ -4,6 +4,7 @@
     "references": [
         "MultiplayFishing.Network",
         "MultiplayFishing.Core",
+        "MultiplayFishing.Data",
         "Mirror",
         "Unity.Cinemachine",
         "Unity.InputSystem"

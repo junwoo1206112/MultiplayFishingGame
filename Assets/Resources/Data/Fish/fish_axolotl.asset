@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55edd068559bb2b4db49f5287642932a, type: 3}
+  m_Name: fish_axolotl
+  m_EditorClassIdentifier: MultiplayFishing.Data::MultiplayFishing.Data.Models.FishDataSO
+  id: fish_axolotl
+  fishName: "\uC544\uD640\uB85C\uD2C0"
+  fishIcon: {fileID: 21300000, guid: 118610f8be3cd6f48bdd063acb9f67c1, type: 3}
+  rank: S
+  catchChance: 0.05
+  sellPrice: 9999
+  minSize: 200
+  maxSize: 800
+  expReward: 5000
+  description: "\uC6C3\uB294 \uC5BC\uAD74\uC758 \uADC0\uC5EC\uC6B4 \uB3C4\uB871\uB1FD.
+    \uBCF4\uACE0\uB9CC \uC788\uC5B4\uB3C4 \uAE30\uBD84\uC774 \uC88B\uC544\uC9D1\uB2C8\uB2E4."

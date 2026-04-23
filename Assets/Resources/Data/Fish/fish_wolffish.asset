@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55edd068559bb2b4db49f5287642932a, type: 3}
+  m_Name: fish_wolffish
+  m_EditorClassIdentifier: MultiplayFishing.Data::MultiplayFishing.Data.Models.FishDataSO
+  id: fish_wolffish
+  fishName: "\uC6B8\uD504\uD53C\uC26C"
+  fishIcon: {fileID: 21300000, guid: d637d31a6af34aa4384aa1e86a13a8d1, type: 3}
+  rank: B
+  catchChance: 1.4
+  sellPrice: 1700
+  minSize: 0
+  maxSize: 0
+  description: "\uB291\uB300\uCC98\uB7FC \uBB34\uC2DC\uBB34\uC2DC\uD55C \uC5BC\uAD74\uC744
+    \uAC00\uC9C4 \uC2EC\uD574\uC5B4\uC785\uB2C8\uB2E4."

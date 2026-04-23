@@ -14,8 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: MultiplayFishing.Data::MultiplayFishing.Data.Models.FishDataSO
   id: FISH_001
   fishName: Mackerel
+  fishIcon: {fileID: 21300000, guid: 68331c0b7ed213d489ab0d2d5dc8bc62, type: 3}
   rank: D
   catchChance: 25
   sellPrice: 100
-  lengthCm: 30.5
+  minSize: 0
+  maxSize: 0
   description: "\uB4F1 \uD478\uB978 \uC0DD\uC120"

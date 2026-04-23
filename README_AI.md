@@ -1,44 +1,11 @@
-# 🤖 Mandatory Instructions for AI Assistants
+# 🤖 Gemini CLI 프로젝트 가이드라인
 
-This project is a Mirror Networking-based Multiplayer Fishing Game. Any AI assistant working on this codebase **MUST** strictly adhere to the following rules and resources before writing or modifying any code.
-
-## 1. Project-Specific Skills & Conventions
-All coding styles, naming conventions, and Mirror-specific patterns are defined in:
-👉 **`.opencode/skills/project-conventions/SKILL.md`**
-
-**Key Rules:**
-- **Networking**: Use Mirror Networking. Never write custom low-level socket code.
-- **Movement**: Use Mirror's standard `PlayerController (Reliable)`. Do NOT create custom movement scripts (already decided and documented).
-- **UI**: Use TextMeshPro (TMP) for all UI elements.
-- **Namespaces**: Follow the `MultiplayFishing.[Category]` structure.
-
-## 2. Design Specs & Task Tracking
-Current project goals and implementation details are managed via OpenSpec:
-👉 **`openspec/` folder**
-
-- Read `openspec/specs/` for architectural decisions.
-- Follow active changes in `openspec/changes/`.
-
-## 3. Mandatory Architecture Standards
-
-### 🛡️ Dependency Injection (DI) Pattern
-- **Manager Classes**: All core managers (Data, Excel, Sound, etc.) MUST be accessed via interfaces (e.g., `IDataService`).
-- **No Singletons**: `Instance` pattern is prohibited. Use `DIContainer` for service registration and resolution.
-
-### 📊 Data System (NPOI ONLY)
-- **Format**: Master data MUST be managed via `.xlsx` Excel files.
-- **Library**: Use **NPOI** for Excel handling.
-- **NO CSV**: Custom CSV parsing or usage is strictly prohibited to maintain data consistency.
-
-### 🐟 Fish Data Logic
-- **Persitence**: Caught fish go to both Inventory and Encyclopedia.
-- **Persistence Logic**: Selling a fish removes it from Inventory but **MUST KEEP** it in the Encyclopedia.
-
-## 4. Communication Style
-- Be concise and technical.
-- Always explain the "Why" behind a code change based on existing conventions.
-- If a task involves networking, refer to the `mirror-network-behaviour` and `mirror-sync-setup` skills.
+## 🚨 핵심 원칙 (Core Mandates)
+1. **OpenSpec 기반 개발**: 모든 새로운 기능 추가나 대규모 수정 시 반드시 `.openspec` 폴더 아래에 `proposal.md`, `design.md`, `tasks.md`를 작성하여 계획을 수립한 뒤 실행한다.
+2. **Skill 활용**: `.opencode/skills`에 정의된 전문 스킬들을 적극 활용하여 프로젝트 컨벤션(이름 규칙, Mirror 패턴 등)을 엄수한다.
+3. **Plan-Act-Validate**: 모든 작업은 '계획-실행-검증'의 사이클을 거치며, 완료 후에는 반드시 `feature_documentation.md`나 관련 문서에 업데이트한다.
 
 ---
-
-*Note to Human Team Members: Please ensure your AI tool reads this file or copy-paste this content into the first prompt to maintain consistency across the team.*
+## 📝 현재 진행 중인 스펙
+- `ui-status-and-inventory`: 플레이어 상태 및 인벤토리 UI 연동 (진행 중)
+- `system-refinement-and-cleanup`: 시스템 로직 고도화 및 데이터 클리닝 (예정)

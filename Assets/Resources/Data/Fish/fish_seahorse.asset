@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55edd068559bb2b4db49f5287642932a, type: 3}
+  m_Name: fish_seahorse
+  m_EditorClassIdentifier: MultiplayFishing.Data::MultiplayFishing.Data.Models.FishDataSO
+  id: fish_seahorse
+  fishName: "\uD574\uB9C8"
+  rank: C
+  catchChance: 2.2
+  sellPrice: 1500
+  lengthCm: 15
+  description: "\uB9D0\uC744 \uB2EE\uC740 \uC5BC\uAD74\uC758 \uC2E0\uBE44\uB85C\uC6B4
+    \uC791\uC740 \uC0DD\uBB3C\uC785\uB2C8\uB2E4."

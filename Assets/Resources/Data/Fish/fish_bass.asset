@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55edd068559bb2b4db49f5287642932a, type: 3}
+  m_Name: fish_bass
+  m_EditorClassIdentifier: MultiplayFishing.Data::MultiplayFishing.Data.Models.FishDataSO
+  id: fish_bass
+  fishName: "\uD070\uC785\uBC30\uC2A4"
+  fishIcon: {fileID: 21300000, guid: 55558fa32a173de4ba5cbbae23eadda7, type: 3}
+  rank: D
+  catchChance: 8
+  sellPrice: 100
+  minSize: 5
+  maxSize: 25
+  expReward: 20
+  description: "\uC785\uC774 \uC815\uB9D0 \uCEE4\uC11C \uBB34\uC5C7\uC774\uB4E0 \uC9D1\uC5B4\uC0BC\uD0A4\uB294
+    \uD0D0\uC695\uC2A4\uB7EC\uC6B4 \uBB3C\uACE0\uAE30\uC785\uB2C8\uB2E4."

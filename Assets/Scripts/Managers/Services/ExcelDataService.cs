@@ -31,7 +31,10 @@ namespace MultiplayFishing.Core
 
         public List<FishDataSO> GetAllFishData()
         {
-            return fishDataMap.Values.ToList();
+            // 엑셀 데이터가 정상적으로 입력된(이름이 있고 확률이 0보다 큰) 물고기만 반환
+            return fishDataMap.Values
+                .Where(fish => !string.IsNullOrEmpty(fish.fishName) && fish.catchChance > 0)
+                .ToList();
         }
     }
 }
