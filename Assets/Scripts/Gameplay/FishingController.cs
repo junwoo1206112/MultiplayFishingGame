@@ -215,6 +215,11 @@ namespace MultiplayFishing.Gameplay
             // Fishing Start / Fishing Finish 애니메이션 재생 중에는 모든 입력 차단.
             // hookMoveRoutine은 캐스팅(Start)과 릴인(Finish) 애니메이션 구간 동안 실행되므로
             // 별도 플래그 없이 이것을 입력 잠금 신호로 활용한다.
+            if (!isRodEquipped)
+            {
+                return;
+            }
+
             if (hookMoveRoutine != null || Time.time < inputLockedUntil) return;
 
             // 입질 중일 때 클릭
@@ -516,7 +521,9 @@ namespace MultiplayFishing.Gameplay
                 animator.SetBool(fishingParameterHash, false);
                 movement.SetMovementBlocked(false);
                 biteSystem.StopBiteLogic();
+                clickChallengeUI?.CancelChallenge();
                 StopBobbing();
+                HideFishingRuntimeVisuals();
             }
         }
 
@@ -568,6 +575,35 @@ namespace MultiplayFishing.Gameplay
             if (rodVisualRoot != null && rodVisualRoot.activeSelf != visible)
             {
                 rodVisualRoot.SetActive(visible);
+            }
+
+            if (!visible)
+            {
+                HideFishingRuntimeVisuals();
+            }
+        }
+
+        private void HideFishingRuntimeVisuals()
+        {
+            if (hookMoveRoutine != null)
+            {
+                StopCoroutine(hookMoveRoutine);
+                hookMoveRoutine = null;
+            }
+
+            if (splashRoutine != null)
+            {
+                StopCoroutine(splashRoutine);
+                splashRoutine = null;
+            }
+
+            fishingRopeController?.SetVisible(false);
+            fishingRopeController?.RestoreHookToRod();
+            fishingLineVisual?.SetHookControlledByRope(false);
+
+            if (bobberWaveEffect != null)
+            {
+                bobberWaveEffect.SetEffectActive(false);
             }
         }
 
