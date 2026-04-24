@@ -5,22 +5,25 @@ namespace MultiplayFishing.Gameplay
     public sealed class FishingSplashController
     {
         private readonly ParticleSystem fishingSplashParticle;
+        private ParticleSystem activeSplashParticle;
         private Vector3 pendingSplashPosition;
 
         public FishingSplashController(ParticleSystem fishingSplashParticle)
         {
             this.fishingSplashParticle = fishingSplashParticle;
+            activeSplashParticle = ResolveSceneParticle();
         }
 
         public void Reset()
         {
-            if (fishingSplashParticle == null)
+            ParticleSystem particle = ResolveSceneParticle();
+            if (particle == null)
             {
                 return;
             }
 
-            fishingSplashParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-            fishingSplashParticle.Clear(true);
+            particle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            particle.Clear(true);
         }
 
         public void UpdatePendingPosition(
@@ -42,28 +45,55 @@ namespace MultiplayFishing.Gameplay
                     waterSurfaceY + minimumSplashHeightOffset);
             }
 
-            if (fishingSplashParticle != null)
+            ParticleSystem particle = ResolveSceneParticle();
+            if (particle != null)
             {
-                fishingSplashParticle.transform.position = pendingSplashPosition;
+                particle.transform.position = pendingSplashPosition;
             }
         }
 
         public void Play()
         {
-            if (fishingSplashParticle == null)
+            ParticleSystem particle = ResolveSceneParticle();
+            if (particle == null)
             {
                 return;
             }
 
-            if (!fishingSplashParticle.gameObject.activeSelf)
+            if (!particle.gameObject.activeSelf)
             {
-                fishingSplashParticle.gameObject.SetActive(true);
+                particle.gameObject.SetActive(true);
             }
 
-            fishingSplashParticle.transform.position = pendingSplashPosition;
-            fishingSplashParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-            fishingSplashParticle.Clear(true);
-            fishingSplashParticle.Play();
+            particle.transform.position = pendingSplashPosition;
+            particle.transform.rotation = Quaternion.Euler(-90f, 0f, 0f);
+            particle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            particle.Clear(true);
+            particle.Play(true);
+        }
+
+        private ParticleSystem ResolveSceneParticle()
+        {
+            if (activeSplashParticle != null)
+            {
+                return activeSplashParticle;
+            }
+
+            if (fishingSplashParticle == null)
+            {
+                return null;
+            }
+
+            GameObject sourceObject = fishingSplashParticle.gameObject;
+            bool isSceneObject = sourceObject.scene.IsValid() && sourceObject.scene.isLoaded;
+            activeSplashParticle = isSceneObject
+                ? fishingSplashParticle
+                : Object.Instantiate(fishingSplashParticle);
+
+            activeSplashParticle.gameObject.name = $"{sourceObject.name} Runtime";
+            activeSplashParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            activeSplashParticle.Clear(true);
+            return activeSplashParticle;
         }
     }
 }

@@ -14,11 +14,21 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private Animator animator;
         [SerializeField] private string fishingParameter = "fishing";
         [SerializeField] private string hasFishParameter = "HasFish";
+        [SerializeField] private string rodEquippedParameter = "RodEquipped";
+        [SerializeField] private string rodTakeOutTrigger = "RodTakeOut";
+        [SerializeField] private string rodPutAwayTrigger = "RodPutAway";
 
         [Header("Fishing Visuals")]
         [SerializeField] private FishingLineVisual fishingLineVisual;
         [SerializeField] private GameObject fishingRopeObject;
         [SerializeField] private ParticleSystem fishingSplashParticle;
+        [SerializeField] private BobberWaveEffect bobberWaveEffect;
+        [SerializeField] private FishingClickChallengeUI clickChallengeUI;
+
+        [Header("Rod Visibility")]
+        [SerializeField] private GameObject rodVisualRoot;
+        [SerializeField] private string rodHideStateName = "fishing-out";
+        [SerializeField] private string rodShowStateName = "fishing-in";
 
         [Header("Fishing References")]
         [SerializeField] private Camera playerCamera;
@@ -33,6 +43,10 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private float downwardCastBias = 0.2f;
         [SerializeField] private float fallbackCastDistance = 6f;
         [SerializeField] private float maxCastDistance = 12f;
+        [SerializeField] private float castInputLockDuration = 1.0f;
+        [SerializeField] private float reelInputLockDuration = 0.8f;
+        [SerializeField] private bool blockCastWhileMoving = true;
+        [SerializeField] private bool useCastReleaseAnimationEvent = true;
         [SerializeField] private float castStartDelay = 0.18f;
         [SerializeField] private float castDuration = 0.45f;
         [SerializeField] private float reelDuration = 0.8f;
@@ -44,6 +58,8 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private float idleRopeSlack = 0.1f;
         [SerializeField] private float castRopeSlack = 0.05f;
         [SerializeField] private float hookWaterSubmergeDepth = 0.08f;
+        [Tooltip("물 오브젝트의 Transform.position.y와 실제 시각적 수면 사이의 높이 차이 보정")]
+        [SerializeField] private float waterSurfaceYOffset = 0f;
         [SerializeField] private Vector3 castTargetOffset = Vector3.zero;
         [SerializeField] private Vector3 idleHookOffset = new Vector3(0f, 0f, 0.1f);
         [SerializeField] private Vector3 splashWorldOffset = new Vector3(0f, 0.01f, 0f);
@@ -55,27 +71,76 @@ namespace MultiplayFishing.Gameplay
         [Header("Line Style")]
         [SerializeField] private float lineWidth = 0.03f;
 
+        [Header("Hook Bobbing")]
+        [SerializeField] private bool enableBobbing = true;
+        [SerializeField] private float bobAmplitude = 0.03f;
+        [SerializeField] private float bobFrequency = 1.2f;
+        [Tooltip("2차 파동 비율 (자연스러운 불규칙 움직임)")]
+        [SerializeField] private float bobSecondaryRatio = 0.3f;
+        [SerializeField] private float bobSecondaryFrequencyMultiplier = 1.7f;
+        [SerializeField] private float swayAmplitude = 0.01f;
+        [SerializeField] private float swayFrequency = 0.8f;
+        [Tooltip("보빙 시작 시 부드럽게 전환되는 시간(초)")]
+        [SerializeField] private float bobFadeInDuration = 0.5f;
+        [SerializeField] private float bobberWaveDelay = 2.0f;
+
         private FishingRopeController fishingRopeController;
         private FishingSplashController fishingSplashController;
 
         private Coroutine hookMoveRoutine;
         private Coroutine splashRoutine;
         private int fishingParameterHash;
+        private int rodEquippedParameterHash;
+        private int rodTakeOutTriggerHash;
+        private int rodPutAwayTriggerHash;
+        private int rodHideStateHash;
+        private int rodShowStateHash;
         private bool isFishingActive;
         private bool hasFishingParameter;
+        private bool hasRodEquippedParameter;
+        private bool hasRodTakeOutTrigger;
+        private bool hasRodPutAwayTrigger;
+        private bool isRodEquipped;
+        private float inputLockedUntil;
+        private bool castReleaseReceived;
+        private bool wasInRodHideState;
+        private bool wasInRodShowState;
+
+        private Vector3 bobbingBasePosition;
+        private float bobbingStartTime;
+        private bool isBobbingActive;
+        private Coroutine waveEffectRoutine;
 
         private void Awake()
         {
             if (animator == null) animator = GetComponent<Animator>();
             fishingParameterHash = Animator.StringToHash(fishingParameter);
+            rodEquippedParameterHash = Animator.StringToHash(rodEquippedParameter);
+            rodTakeOutTriggerHash = Animator.StringToHash(rodTakeOutTrigger);
+            rodPutAwayTriggerHash = Animator.StringToHash(rodPutAwayTrigger);
+            rodHideStateHash = Animator.StringToHash(rodHideStateName);
+            rodShowStateHash = Animator.StringToHash(rodShowStateName);
 
             EnsureInitialized();
+            ResolveRodVisualRoot();
             catchPresenter?.Initialize(animator, hasFishParameter);
             if (biteSystem != null)
             {
                 biteSystem.BiteStarted += HandleBiteStarted;
                 biteSystem.BiteEnded += HandleBiteEnded;
             }
+
+            if (clickChallengeUI == null)
+            {
+                clickChallengeUI = GetComponent<FishingClickChallengeUI>();
+            }
+
+            if (clickChallengeUI == null)
+            {
+                clickChallengeUI = gameObject.AddComponent<FishingClickChallengeUI>();
+            }
+
+            clickChallengeUI.ChallengeSucceeded += HandleClickChallengeSucceeded;
             CacheAnimatorParameters();
         }
 
@@ -85,6 +150,11 @@ namespace MultiplayFishing.Gameplay
             {
                 biteSystem.BiteStarted -= HandleBiteStarted;
                 biteSystem.BiteEnded -= HandleBiteEnded;
+            }
+
+            if (clickChallengeUI != null)
+            {
+                clickChallengeUI.ChallengeSucceeded -= HandleClickChallengeSucceeded;
             }
         }
 
@@ -119,6 +189,8 @@ namespace MultiplayFishing.Gameplay
         {
             ApplyLineWidth();
             HandleInput();
+            ApplyHookBobbing();
+            UpdateRodVisibilityFromAnimator();
         }
 
         private void HandleInput()
@@ -126,17 +198,34 @@ namespace MultiplayFishing.Gameplay
             // EnsureInitialized()를 Update마다 호출하지 않음.
             // 캐스팅 중 hookPoint가 분리(parent=null)된 상태에서 재생성되면
             // originalHookParent=null로 캡처되어 RestoreHookToRod가 동작하지 않게 된다.
+            if (Keyboard.current != null && Keyboard.current.tabKey.wasPressedThisFrame)
+            {
+                ToggleRodEquipped();
+                return;
+            }
+
             if (Mouse.current == null || !hasFishingParameter || !Mouse.current.leftButton.wasPressedThisFrame) return;
+
+            if (clickChallengeUI != null && clickChallengeUI.IsRunning)
+            {
+                clickChallengeUI.RegisterClick();
+                return;
+            }
 
             // Fishing Start / Fishing Finish 애니메이션 재생 중에는 모든 입력 차단.
             // hookMoveRoutine은 캐스팅(Start)과 릴인(Finish) 애니메이션 구간 동안 실행되므로
             // 별도 플래그 없이 이것을 입력 잠금 신호로 활용한다.
-            if (hookMoveRoutine != null) return;
+            if (hookMoveRoutine != null || Time.time < inputLockedUntil) return;
 
             // 입질 중일 때 클릭
             if (biteSystem.IsBiteActive)
             {
-                PerformCatch();
+                clickChallengeUI?.RegisterClick();
+                return;
+            }
+
+            if (!isFishingActive && blockCastWhileMoving && IsMovementInputPressed())
+            {
                 return;
             }
 
@@ -160,11 +249,19 @@ namespace MultiplayFishing.Gameplay
         {
             if (hookMoveRoutine != null) StopCoroutine(hookMoveRoutine);
 
+            StopBobbing();
+            LockFishingInput(isCasting);
+
             Vector3 targetPosition = isCasting ? GetCastTargetPosition() : GetIdleHookPosition();
             float duration = isCasting ? castDuration : reelDuration;
             float arc = isCasting ? castArcHeight : reelArcHeight;
 
             hookMoveRoutine = StartCoroutine(RunHookMoveRoutine(targetPosition, duration, arc, isCasting));
+        }
+
+        public void OnCastRelease()
+        {
+            castReleaseReceived = true;
         }
 
         private void PerformCatch()
@@ -182,14 +279,44 @@ namespace MultiplayFishing.Gameplay
             animator.SetBool(fishingParameterHash, false);
             movement.SetMovementBlocked(false);
 
+            StopBobbing();
+
             if (hookMoveRoutine != null) StopCoroutine(hookMoveRoutine);
             hookMoveRoutine = StartCoroutine(RunHookMoveRoutine(GetIdleHookPosition(), reelDurationWithFish, reelArcHeight, false));
+        }
+
+        private void LockFishingInput(bool isCasting)
+        {
+            float lockDuration = isCasting
+                ? Mathf.Max(castInputLockDuration, castStartDelay + castDuration)
+                : Mathf.Max(reelInputLockDuration, reelDuration);
+
+            inputLockedUntil = Mathf.Max(inputLockedUntil, Time.time + lockDuration);
+        }
+
+        private bool IsMovementInputPressed()
+        {
+            if (Keyboard.current == null)
+            {
+                return false;
+            }
+
+            return Keyboard.current.wKey.isPressed
+                || Keyboard.current.aKey.isPressed
+                || Keyboard.current.sKey.isPressed
+                || Keyboard.current.dKey.isPressed
+                || Keyboard.current.upArrowKey.isPressed
+                || Keyboard.current.leftArrowKey.isPressed
+                || Keyboard.current.downArrowKey.isPressed
+                || Keyboard.current.rightArrowKey.isPressed;
         }
 
         private IEnumerator RunHookMoveRoutine(Vector3 targetPos, float duration, float arc, bool isCasting)
         {
             if (isCasting)
             {
+                castReleaseReceived = false;
+
                 if (tipPoint != null)
                 {
                     fishingRopeController?.RestoreHookToRod(tipPoint.position);
@@ -224,7 +351,24 @@ namespace MultiplayFishing.Gameplay
                 };
             }
 
-            System.Func<float> startDelayProvider = () => isCasting ? castStartDelay : 0f;
+            // 물결 이펙트 지연 실행을 위한 Action
+            System.Action onWaterHitForWave = () =>
+            {
+                if (waveEffectRoutine != null) StopCoroutine(waveEffectRoutine);
+                waveEffectRoutine = StartCoroutine(EnableWaveEffectDelayed());
+            };
+
+            System.Func<float> startDelayProvider = () =>
+            {
+                if (!isCasting)
+                {
+                    return 0f;
+                }
+
+                return useCastReleaseAnimationEvent && castReleaseReceived
+                    ? 0f
+                    : castStartDelay;
+            };
             System.Func<float> durationProvider = () => isCasting ? castDuration : reelDuration;
             System.Func<float> arcHeightProvider = () => isCasting ? castArcHeight : reelArcHeight;
             System.Func<float> ropeSlackProvider = () => isCasting ? castRopeSlack : idleRopeSlack;
@@ -232,7 +376,9 @@ namespace MultiplayFishing.Gameplay
             System.Func<float> waterSurfaceYProvider = () =>
             {
                 FishingWaterSurfaceResolver resolver = CreateWaterSurfaceResolver();
-                return resolver.TryGetSurfaceHeight(out float waterSurfaceY) ? waterSurfaceY : targetPos.y;
+                return resolver.TryGetSurfaceHeight(out float waterSurfaceY)
+                    ? waterSurfaceY + waterSurfaceYOffset - hookWaterSubmergeDepth
+                    : targetPos.y;
             };
 
             yield return fishingRopeController.MoveHookDynamic(
@@ -247,13 +393,14 @@ namespace MultiplayFishing.Gameplay
                 true,
                 isCasting,
                 waterSurfaceYProvider,
-                onWaterHit,
+                () => { onWaterHit?.Invoke(); onWaterHitForWave?.Invoke(); },
                 fishingLineVisual,
                 !isCasting ? idleAnchorPoint : null);
 
             if (isFishingActive && isCasting)
             {
                 biteSystem.StartWaitingForBite();
+                StartBobbing();
             }
 
             // RestoreHookToRod는 MoveHook 내부(hideRopeOnComplete=true)에서 이미 호출됨.
@@ -275,7 +422,7 @@ namespace MultiplayFishing.Gameplay
 
             if (resolver.TryGetSurfaceHeight(out float waterSurfaceY))
             {
-                targetPosition.y = waterSurfaceY - hookWaterSubmergeDepth;
+                targetPosition.y = waterSurfaceY + waterSurfaceYOffset - hookWaterSubmergeDepth;
             }
 
             return targetPosition;
@@ -307,20 +454,142 @@ namespace MultiplayFishing.Gameplay
         private void CacheAnimatorParameters()
         {
             hasFishingParameter = false;
+            hasRodEquippedParameter = false;
+            hasRodTakeOutTrigger = false;
+            hasRodPutAwayTrigger = false;
             foreach (var p in animator.parameters)
             {
-                if (p.nameHash == fishingParameterHash) { hasFishingParameter = true; break; }
+                if (p.nameHash == fishingParameterHash)
+                {
+                    hasFishingParameter = true;
+                }
+
+                if (p.nameHash == rodEquippedParameterHash)
+                {
+                    hasRodEquippedParameter = true;
+                }
+
+                if (p.nameHash == rodTakeOutTriggerHash)
+                {
+                    hasRodTakeOutTrigger = true;
+                }
+
+                if (p.nameHash == rodPutAwayTriggerHash)
+                {
+                    hasRodPutAwayTrigger = true;
+                }
+            }
+
+            if (hasRodEquippedParameter)
+            {
+                isRodEquipped = animator.GetBool(rodEquippedParameterHash);
+            }
+        }
+
+        private void ToggleRodEquipped()
+        {
+            if (!hasRodEquippedParameter || hookMoveRoutine != null || Time.time < inputLockedUntil)
+            {
+                return;
+            }
+
+            isRodEquipped = !isRodEquipped;
+            if (hasRodEquippedParameter)
+            {
+                animator.SetBool(rodEquippedParameterHash, isRodEquipped);
+            }
+
+            if (isRodEquipped && hasRodTakeOutTrigger)
+            {
+                animator.ResetTrigger(rodPutAwayTriggerHash);
+                animator.SetTrigger(rodTakeOutTriggerHash);
+            }
+            else if (!isRodEquipped && hasRodPutAwayTrigger)
+            {
+                animator.ResetTrigger(rodTakeOutTriggerHash);
+                animator.SetTrigger(rodPutAwayTriggerHash);
+            }
+
+            if (!isRodEquipped)
+            {
+                isFishingActive = false;
+                animator.SetBool(fishingParameterHash, false);
+                movement.SetMovementBlocked(false);
+                biteSystem.StopBiteLogic();
+                StopBobbing();
+            }
+        }
+
+        private void ResolveRodVisualRoot()
+        {
+            if (rodVisualRoot != null)
+            {
+                return;
+            }
+
+            Transform[] children = GetComponentsInChildren<Transform>(true);
+            foreach (Transform child in children)
+            {
+                if (child.name == "RodSocket")
+                {
+                    rodVisualRoot = child.gameObject;
+                    return;
+                }
+            }
+        }
+
+        private void UpdateRodVisibilityFromAnimator()
+        {
+            if (animator == null || rodVisualRoot == null)
+            {
+                return;
+            }
+
+            AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
+            bool isInRodHideState = stateInfo.shortNameHash == rodHideStateHash;
+            bool isInRodShowState = stateInfo.shortNameHash == rodShowStateHash;
+
+            if (isInRodShowState && !wasInRodShowState)
+            {
+                SetRodVisible(true);
+            }
+
+            if (wasInRodHideState && !isInRodHideState)
+            {
+                SetRodVisible(false);
+            }
+
+            wasInRodHideState = isInRodHideState;
+            wasInRodShowState = isInRodShowState;
+        }
+
+        private void SetRodVisible(bool visible)
+        {
+            if (rodVisualRoot != null && rodVisualRoot.activeSelf != visible)
+            {
+                rodVisualRoot.SetActive(visible);
             }
         }
 
         private void HandleBiteStarted()
         {
+            biteSystem.HoldBiteForChallenge();
             catchPresenter?.ShowFishPreview(hookPoint);
+            clickChallengeUI?.BeginChallenge();
         }
 
         private void HandleBiteEnded()
         {
+            clickChallengeUI?.CancelChallenge();
             catchPresenter?.ClearFishPreview();
+        }
+
+        private void HandleClickChallengeSucceeded()
+        {
+            if (biteSystem != null && biteSystem.IsBiteActive)
+            {
+                PerformCatch();
+            }
         }
 
         private void OnValidate()
@@ -388,6 +657,77 @@ namespace MultiplayFishing.Gameplay
             hookPoint.localPosition = tipPoint.localPosition + idleHookOffset;
             hookPoint.localRotation = tipPoint.localRotation;
             hookPoint.localScale = tipPoint.localScale;
+        }
+
+        // ── Hook Bobbing ──────────────────────────────────────────
+
+        private void StartBobbing()
+        {
+            if (!enableBobbing || hookPoint == null) return;
+
+            bobbingBasePosition = hookPoint.position;
+            bobbingStartTime = Time.time;
+            isBobbingActive = true;
+        }
+
+        private void StopBobbing()
+        {
+            if (waveEffectRoutine != null)
+            {
+                StopCoroutine(waveEffectRoutine);
+                waveEffectRoutine = null;
+            }
+            
+            if (bobberWaveEffect != null)
+            {
+                bobberWaveEffect.SetEffectActive(false);
+            }
+
+            if (!isBobbingActive) return;
+
+            isBobbingActive = false;
+
+            // 보빙 종료 시 기준 위치로 복원
+            if (hookPoint != null)
+            {
+                hookPoint.position = bobbingBasePosition;
+            }
+        }
+
+        private void ApplyHookBobbing()
+        {
+            if (!isBobbingActive || hookPoint == null) return;
+
+            float elapsed = Time.time - bobbingStartTime;
+
+            // 부드러운 페이드인
+            float fadeIn = bobFadeInDuration > 0f
+                ? Mathf.Clamp01(elapsed / bobFadeInDuration)
+                : 1f;
+
+            // 1차 파동 + 2차 파동 조합 (자연스러운 불규칙 움직임)
+            float t = Time.time;
+            float primaryWave = Mathf.Sin(t * bobFrequency * Mathf.PI * 2f);
+            float secondaryWave = Mathf.Sin(t * bobFrequency * bobSecondaryFrequencyMultiplier * Mathf.PI * 2f);
+            float bobY = (primaryWave + secondaryWave * bobSecondaryRatio) * bobAmplitude * fadeIn;
+
+            // 수평 흔들림 (X, Z)
+            float swayX = Mathf.Sin(t * swayFrequency * Mathf.PI * 2f) * swayAmplitude * fadeIn;
+            float swayZ = Mathf.Cos(t * swayFrequency * 0.8f * Mathf.PI * 2f) * swayAmplitude * 0.5f * fadeIn;
+
+            hookPoint.position = bobbingBasePosition + new Vector3(swayX, bobY, swayZ);
+
+            // HookPoint rotation stays stable so the fishing line and child offsets do not drift.
+        }
+
+        private IEnumerator EnableWaveEffectDelayed()
+        {
+            yield return new WaitForSeconds(bobberWaveDelay);
+            if (bobberWaveEffect != null && isFishingActive)
+            {
+                bobberWaveEffect.SetEffectActive(true);
+            }
+            waveEffectRoutine = null;
         }
     }
 }

@@ -62,7 +62,10 @@ namespace MultiplayFishing.Gameplay
             handoffTriggered = false;
 
             StartCoroutine(AnimateFish(activeFish, hookPoint, reelTime));
-            Destroy(activeFish, Mathf.Max(reelTime + 2f, caughtFishLifetime));
+            if (handOffToHands)
+            {
+                Destroy(activeFish, Mathf.Max(reelTime + 2f, caughtFishLifetime));
+            }
         }
 
         public void ShowFishPreview(Transform hookPoint)
@@ -113,6 +116,11 @@ namespace MultiplayFishing.Gameplay
             }
 
             isAnimating = false;
+
+            if (!handOffToHands && fish != null)
+            {
+                Destroy(fish);
+            }
 
             while (fish != null)
             {

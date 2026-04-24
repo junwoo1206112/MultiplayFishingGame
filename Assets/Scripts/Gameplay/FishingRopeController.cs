@@ -301,6 +301,12 @@ namespace MultiplayFishing.Gameplay
                     finalPosition.y = finalWaterSurfaceY;
                 }
 
+                if (stopAtWaterSurface && !hasHitWater && finalPosition.y <= finalWaterSurfaceY + 0.001f)
+                {
+                    hasHitWater = true;
+                    onWaterHit?.Invoke();
+                }
+
                 hookPoint.position = finalPosition;
                 SetRopeLength(GetDesiredRopeLength(finalPosition, finalMinimumRopeLength, finalRopeSlack));
 

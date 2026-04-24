@@ -14,6 +14,7 @@ namespace MultiplayFishing.Gameplay
 
         private GameObject activeBiteSignal;
         private bool isBiteActive;
+        private bool isBiteHeldForChallenge;
         private Coroutine biteWaitRoutine;
         private Coroutine biteWindowRoutine;
 
@@ -34,6 +35,7 @@ namespace MultiplayFishing.Gameplay
             
             bool wasBiteActive = isBiteActive;
             isBiteActive = false;
+            isBiteHeldForChallenge = false;
             if (activeBiteSignal != null) Destroy(activeBiteSignal);
 
             if (wasBiteActive)
@@ -43,6 +45,16 @@ namespace MultiplayFishing.Gameplay
             
             biteWaitRoutine = null;
             biteWindowRoutine = null;
+        }
+
+        public void HoldBiteForChallenge()
+        {
+            if (!isBiteActive)
+            {
+                return;
+            }
+
+            isBiteHeldForChallenge = true;
         }
 
         private IEnumerator WaitForBite()
@@ -65,6 +77,12 @@ namespace MultiplayFishing.Gameplay
             }
 
             yield return new WaitForSeconds(biteWindowDuration);
+
+            if (isBiteHeldForChallenge)
+            {
+                biteWindowRoutine = null;
+                yield break;
+            }
 
             isBiteActive = false;
             if (activeBiteSignal != null) Destroy(activeBiteSignal);
