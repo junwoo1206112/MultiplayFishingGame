@@ -15,11 +15,11 @@ MonoBehaviour:
   id: fish_seaturtle
   fishName: "\uBC14\uB2E4\uAC70\uBD81"
   fishIcon: {fileID: 0}
-  rank: S
+  rank: "\u2605\u2605\u2605\u2605\u2605"
   catchChance: 0.15
-  sellPrice: 9000
-  minSize: 200
-  maxSize: 800
   expReward: 5000
+  sellPrice: 9000
+  minSize: 60
+  maxSize: 120
   description: "\uD3C9\uBC94\uD558\uC9C0\uB9CC \uD2B9\uBCC4\uD55C \uB2F9\uC2E0\uB9CC\uC758
     \uBB3C\uACE0\uAE30\uC785\uB2C8\uB2E4."

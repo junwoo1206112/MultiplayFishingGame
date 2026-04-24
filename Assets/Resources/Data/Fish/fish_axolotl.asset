@@ -15,11 +15,11 @@ MonoBehaviour:
   id: fish_axolotl
   fishName: "\uC544\uD640\uB85C\uD2C0"
   fishIcon: {fileID: 21300000, guid: 118610f8be3cd6f48bdd063acb9f67c1, type: 3}
-  rank: S
+  rank: "\u2605\u2605\u2605\u2605\u2605"
   catchChance: 0.05
-  sellPrice: 9999
-  minSize: 200
-  maxSize: 800
   expReward: 5000
+  sellPrice: 9999
+  minSize: 10
+  maxSize: 25
   description: "\uC6C3\uB294 \uC5BC\uAD74\uC758 \uADC0\uC5EC\uC6B4 \uB3C4\uB871\uB1FD.
     \uBCF4\uACE0\uB9CC \uC788\uC5B4\uB3C4 \uAE30\uBD84\uC774 \uC88B\uC544\uC9D1\uB2C8\uB2E4."

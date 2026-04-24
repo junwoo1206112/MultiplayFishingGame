@@ -15,11 +15,11 @@ MonoBehaviour:
   id: fish_bullshark
   fishName: "\uD669\uC18C\uC0C1\uC5B4"
   fishIcon: {fileID: 21300000, guid: d3424470518910a40baa75114b1e0fb4, type: 3}
-  rank: A
+  rank: "\u2605\u2605\u2605\u2605"
   catchChance: 0.5
-  sellPrice: 3500
-  minSize: 100
-  maxSize: 250
   expReward: 1000
+  sellPrice: 3500
+  minSize: 120
+  maxSize: 220
   description: "\uBC14\uB2E4\uC758 \uCD5C\uC0C1\uC704 \uD3EC\uC2DD\uC790. \uC7A1\uC558\uB2E4\uB294
     \uAC83 \uC790\uCCB4\uAC00 \uAE30\uC801\uC785\uB2C8\uB2E4!"

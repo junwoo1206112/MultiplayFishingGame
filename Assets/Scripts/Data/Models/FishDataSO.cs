@@ -8,17 +8,21 @@ namespace MultiplayFishing.Data.Models
         public string id;
         public string fishName;
         public Sprite fishIcon; 
-        public string rank; // S, A, B, C, D
-        public float catchChance; // %
-        public int sellPrice; // Gold
         
-        [Header("Size Range (cm)")]
+        [Header("등급 (★ 표기)")]
+        [Tooltip("예: ★★★★★ (5성), ★★★★ (4성)")]
+        public string rank; // ★, ★★, ★★★, ★★★★, ★★★★★
+        
+        [Header("포획 데이터")]
+        public float catchChance; // 등급에 따른 확률 (%)
+        public int expReward;     // 잡았을 때 획득 경험치
+        public int sellPrice;     // 상점 판매 가격 (Gold)
+        
+        [Header("크기 범위 (cm)")]
         public float minSize; 
         public float maxSize; 
 
-        [Header("Progression")]
-        public int expReward; // 이 물고기를 잡았을 때 얻는 경험치
-        
+        [Header("설명")]
         [TextArea(3, 10)]
         public string description;
     }

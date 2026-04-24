@@ -15,11 +15,11 @@ MonoBehaviour:
   id: fish_bass
   fishName: "\uD070\uC785\uBC30\uC2A4"
   fishIcon: {fileID: 21300000, guid: 55558fa32a173de4ba5cbbae23eadda7, type: 3}
-  rank: D
+  rank: "\u2605"
   catchChance: 8
-  sellPrice: 100
-  minSize: 5
-  maxSize: 25
   expReward: 20
+  sellPrice: 100
+  minSize: 20
+  maxSize: 45
   description: "\uC785\uC774 \uC815\uB9D0 \uCEE4\uC11C \uBB34\uC5C7\uC774\uB4E0 \uC9D1\uC5B4\uC0BC\uD0A4\uB294
     \uD0D0\uC695\uC2A4\uB7EC\uC6B4 \uBB3C\uACE0\uAE30\uC785\uB2C8\uB2E4."

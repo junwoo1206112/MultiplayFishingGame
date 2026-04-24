@@ -40,7 +40,7 @@ namespace MultiplayFishing.Editor
                     if (row == null || row.GetCell(0) == null) continue;
 
                     string id = GetStringValue(row.GetCell(0)).ToLower();
-                    string rank = GetStringValue(row.GetCell(2)).ToUpper();
+                    string rank = GetStringValue(row.GetCell(2));
 
                     // 1. 임의의 한글 설명 할당
                     string creativeDesc = GetFishDescription(id);
@@ -119,7 +119,7 @@ namespace MultiplayFishing.Editor
         private static int GetDefaultExpReward(string rank)
         {
             return rank switch {
-                "S" => 5000, "A" => 1000, "B" => 250, "C" => 80, "D" => 20, _ => 10
+                "★★★★★" => 5000, "★★★★" => 1000, "★★★" => 250, "★★" => 80, "★" => 20, _ => 10
             };
         }
 
@@ -161,8 +161,8 @@ namespace MultiplayFishing.Editor
             if (id.Contains("ufo") || id.Contains("alien")) return (10f, 1000f);
 
             return rank switch {
-                "S" => (200f, 800f), "A" => (100f, 250f), "B" => (50f, 120f),
-                "C" => (20f, 60f), "D" => (5f, 25f), _ => (10f, 50f)
+                "★★★★★" => (200f, 800f), "★★★★" => (100f, 250f), "★★★" => (50f, 120f),
+                "★★" => (20f, 60f), "★" => (5f, 25f), _ => (10f, 50f)
             };
         }
     }

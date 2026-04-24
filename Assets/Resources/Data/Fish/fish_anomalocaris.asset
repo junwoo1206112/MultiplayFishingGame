@@ -15,11 +15,11 @@ MonoBehaviour:
   id: fish_anomalocaris
   fishName: "\uC544\uB178\uB9D0\uB85C\uCE74\uB9AC\uC2A4"
   fishIcon: {fileID: 21300000, guid: 010b9de7d38beb346b18eb408d18e71f, type: 3}
-  rank: S
+  rank: "\u2605\u2605\u2605\u2605\u2605"
   catchChance: 0.05
-  sellPrice: 25000
-  minSize: 200
-  maxSize: 800
   expReward: 5000
+  sellPrice: 25000
+  minSize: 40
+  maxSize: 100
   description: "\uD3C9\uBC94\uD558\uC9C0\uB9CC \uD2B9\uBCC4\uD55C \uB2F9\uC2E0\uB9CC\uC758
     \uBB3C\uACE0\uAE30\uC785\uB2C8\uB2E4."

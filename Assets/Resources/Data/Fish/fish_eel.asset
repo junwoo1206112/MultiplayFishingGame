@@ -15,11 +15,11 @@ MonoBehaviour:
   id: fish_eel
   fishName: "\uC7A5\uC5B4"
   fishIcon: {fileID: 21300000, guid: 43dd760b5c9f96e43812d65cf6921378, type: 3}
-  rank: D
+  rank: "\u2605"
   catchChance: 2.2
-  sellPrice: 1100
-  minSize: 5
-  maxSize: 25
   expReward: 20
+  sellPrice: 1100
+  minSize: 60
+  maxSize: 110
   description: "\uD3C9\uBC94\uD558\uC9C0\uB9CC \uD2B9\uBCC4\uD55C \uB2F9\uC2E0\uB9CC\uC758
     \uBB3C\uACE0\uAE30\uC785\uB2C8\uB2E4."

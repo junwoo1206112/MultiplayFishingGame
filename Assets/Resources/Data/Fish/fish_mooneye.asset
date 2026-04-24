@@ -15,11 +15,11 @@ MonoBehaviour:
   id: fish_mooneye
   fishName: "\uBB38\uC544\uC774"
   fishIcon: {fileID: 21300000, guid: 46656ed0c4bc49149b1efb64ee02ae9a, type: 3}
-  rank: C
+  rank: "\u2605\u2605"
   catchChance: 3
-  sellPrice: 350
-  minSize: 20
-  maxSize: 60
   expReward: 80
+  sellPrice: 350
+  minSize: 15
+  maxSize: 30
   description: "\uD3C9\uBC94\uD558\uC9C0\uB9CC \uD2B9\uBCC4\uD55C \uB2F9\uC2E0\uB9CC\uC758
     \uBB3C\uACE0\uAE30\uC785\uB2C8\uB2E4."

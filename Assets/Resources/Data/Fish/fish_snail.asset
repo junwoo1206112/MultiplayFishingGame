@@ -15,11 +15,11 @@ MonoBehaviour:
   id: fish_snail
   fishName: "\uB2EC\uD33D\uC774"
   fishIcon: {fileID: 21300000, guid: 1ca826a6234515546b62617612de3065, type: 3}
-  rank: E
+  rank: "\u2605"
   catchChance: 15
+  expReward: 20
   sellPrice: 20
-  minSize: 10
-  maxSize: 50
-  expReward: 10
+  minSize: 1
+  maxSize: 3
   description: "\uD3C9\uBC94\uD558\uC9C0\uB9CC \uD2B9\uBCC4\uD55C \uB2F9\uC2E0\uB9CC\uC758
     \uBB3C\uACE0\uAE30\uC785\uB2C8\uB2E4."

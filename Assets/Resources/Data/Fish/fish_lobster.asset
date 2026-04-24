@@ -15,11 +15,11 @@ MonoBehaviour:
   id: fish_lobster
   fishName: "\uBC14\uB2F7\uAC00\uC7AC"
   fishIcon: {fileID: 0}
-  rank: A
+  rank: "\u2605\u2605\u2605\u2605"
   catchChance: 1
-  sellPrice: 3200
-  minSize: 100
-  maxSize: 250
   expReward: 1000
+  sellPrice: 3200
+  minSize: 20
+  maxSize: 45
   description: "\uD3C9\uBC94\uD558\uC9C0\uB9CC \uD2B9\uBCC4\uD55C \uB2F9\uC2E0\uB9CC\uC758
     \uBB3C\uACE0\uAE30\uC785\uB2C8\uB2E4."

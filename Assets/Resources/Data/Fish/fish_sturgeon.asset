@@ -15,11 +15,11 @@ MonoBehaviour:
   id: fish_sturgeon
   fishName: "\uCCA0\uAC11\uC0C1\uC5B4"
   fishIcon: {fileID: 21300000, guid: a9ac8b6ba7a5a2a43b4dced1004ed070, type: 3}
-  rank: A
+  rank: "\u2605\u2605\u2605\u2605"
   catchChance: 0.4
+  expReward: 1000
   sellPrice: 4500
   minSize: 100
   maxSize: 250
-  expReward: 1000
   description: "\uD3C9\uBC94\uD558\uC9C0\uB9CC \uD2B9\uBCC4\uD55C \uB2F9\uC2E0\uB9CC\uC758
     \uBB3C\uACE0\uAE30\uC785\uB2C8\uB2E4."

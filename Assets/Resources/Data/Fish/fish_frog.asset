@@ -15,11 +15,11 @@ MonoBehaviour:
   id: fish_frog
   fishName: "\uAC1C\uAD6C\uB9AC"
   fishIcon: {fileID: 21300000, guid: 5bc8b0b93694193438e5548d84973fd7, type: 3}
-  rank: D
+  rank: "\u2605"
   catchChance: 10
-  sellPrice: 50
-  minSize: 5
-  maxSize: 25
   expReward: 20
+  sellPrice: 50
+  minSize: 3
+  maxSize: 8
   description: "\uD3C9\uBC94\uD558\uC9C0\uB9CC \uD2B9\uBCC4\uD55C \uB2F9\uC2E0\uB9CC\uC758
     \uBB3C\uACE0\uAE30\uC785\uB2C8\uB2E4."

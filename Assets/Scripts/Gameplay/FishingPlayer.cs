@@ -64,6 +64,9 @@ namespace MultiplayFishing.Gameplay
             base.OnStartLocalPlayer();
             userService = DIContainer.Resolve<IUserService>();
             
+            // 낚시 컨트롤러 초기화 추가
+            SetupFishingController();
+            
             StartCoroutine(SmartEscapeRoutine());
             
             string savedName = PlayerPrefs.GetString("PlayerName", $"낚시꾼 {UnityEngine.Random.Range(100, 999)}");
@@ -119,60 +122,176 @@ namespace MultiplayFishing.Gameplay
             }
         }
 
-        // ==================== 낚시 성공 로직 ====================
+        // ==================== 낚시 시스템 (네트워크) ====================
 
-        /// <summary>
-        /// 낚시 성공 시 호출 (서버에서 확률 및 크기 계산 → 클라이언트에게 결과 전달)
-        /// </summary>
-        [Command]
-        public void CmdCatchFish()
+        private FishingController fishingController;
+        private FishDataSO pendingFish;
+        private float pendingFishLength;
+        private Coroutine serverFishingRoutine;
+
+        private void SetupFishingController()
         {
-            if (dataService == null)
-                dataService = DIContainer.Resolve<IDataService>();
-
-            FishDataSO caughtFish = CalculateCatch();
+            if (fishingController != null) return;
             
-            if (caughtFish != null)
+            fishingController = GetComponent<FishingController>();
+            if (fishingController == null) fishingController = gameObject.AddComponent<FishingController>();
+
+            // 컴포넌트 및 오브젝트 검색 (방어적 코딩)
+            var lineVisual = GetComponentInChildren<FishingLineVisual>();
+            
+            GameObject ropeObject = null;
+            Transform ropeTransform = transform.Find("FishingRope");
+            if (ropeTransform == null) ropeTransform = transform.GetComponentInChildren<FishingRopeController>()?.GetType().GetField("fishingRopeObject", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(null) as Transform; // 대체 검색 시도
+            
+            if (ropeTransform != null) ropeObject = ropeTransform.gameObject;
+            else Debug.LogWarning($"[FishingPlayer] 'FishingRope' 오브젝트를 {playerName}에게서 찾을 수 없습니다.");
+
+            var ropeComponent = ropeObject?.GetComponent("Rope");
+            
+            // 바늘(Hook)과 끝점(Tip) 검색 시도
+            Transform tip = transform.Find("TipPoint") ?? transform.Find("Skeleton/Hand_R/Rod/Tip"); 
+            Transform hook = transform.Find("HookPoint") ?? (ropeTransform != null ? ropeTransform.Find("Hook") : null);
+
+            var splashParticle = GetComponentInChildren<ParticleSystem>();
+            
+            // 카메라 검색 (로컬 플레이어인 경우만 필요)
+            Camera pCam = GetComponentInChildren<Camera>();
+            if (pCam == null && isLocalPlayer) pCam = Camera.main;
+
+            var waterResolver = new FishingWaterSurfaceResolver(
+                pCam,
+                tip,
+                null,
+                LayerMask.GetMask("Water"),
+                1.5f, 0.2f, 15f);
+
+            var ropeController = new FishingRopeController(tip, hook, ropeObject, ropeComponent);
+            var splashController = new FishingSplashController(splashParticle);
+
+            fishingController.Initialize(this, animator, lineVisual, ropeController, splashController, waterResolver);
+            
+            if (tip == null || hook == null) 
             {
-                // 서버에서 랜덤 크기 결정 (Min ~ Max)
-                float randomLength = UnityEngine.Random.Range(caughtFish.minSize, caughtFish.maxSize);
+                Debug.LogError($"[FishingPlayer] {playerName}의 낚시 포인트(Tip/Hook) 설정이 누락되었습니다. 낚시 연출이 정상 작동하지 않을 수 있습니다.");
+            }
+        }
+
+        [Command]
+        public void CmdStartFishing(Vector3 targetPos)
+        {
+            if (serverFishingRoutine != null) StopCoroutine(serverFishingRoutine);
+            serverFishingRoutine = StartCoroutine(ServerFishingTimer());
+        }
+
+        private IEnumerator ServerFishingTimer()
+        {
+            // 3~30초 대기
+            float waitTime = UnityEngine.Random.Range(3f, 30f);
+            yield return new WaitForSeconds(waitTime);
+
+            // 물고기 결정
+            if (dataService == null) dataService = DIContainer.Resolve<IDataService>();
+            pendingFish = CalculateCatch();
+
+            if (pendingFish != null)
+            {
+                pendingFishLength = UnityEngine.Random.Range(pendingFish.minSize, pendingFish.maxSize);
                 
-                // 해당 클라이언트에게만 결과 전달
-                TargetOnFishCaught(connectionToClient, caughtFish.id, caughtFish.fishName, caughtFish.rank, randomLength);
+                // 등급별 연타 횟수 설정
+                int requiredSpam = GetRequiredSpam(pendingFish.rank);
                 
-                // S급 이상이면 전체 공지
-                if (caughtFish.rank == "S")
+                // 클라이언트에 입질 알림
+                TargetOnNibble(connectionToClient, requiredSpam);
+            }
+            else
+            {
+                // 물고기 없음 (실패)
+                TargetOnFishingResult(connectionToClient, false, "", 0, 0);
+            }
+        }
+
+        private int GetRequiredSpam(string rank)
+        {
+            // 별 개수에 따라 연타 횟수 상이하게 설정
+            return rank switch
+            {
+                "★★★★★" => 30, // 5성
+                "★★★★" => 22,  // 4성
+                "★★★" => 15,   // 3성
+                "★★" => 10,    // 2성
+                "★" => 6,       // 1성
+                _ => 10
+            };
+        }
+
+        [TargetRpc]
+        private void TargetOnNibble(NetworkConnection target, int requiredSpam)
+        {
+            fishingController.OnServerNibble(requiredSpam);
+        }
+
+        [Command]
+        public void CmdTryHook()
+        {
+            // 서버에서도 0.5초 체크 가능하지만, 일단 클라이언트 신뢰 후 상태 전환
+            TargetOnEnterCatching(connectionToClient);
+        }
+
+        [TargetRpc]
+        private void TargetOnEnterCatching(NetworkConnection target)
+        {
+            fishingController.OnServerEnterCatching();
+        }
+
+        [Command]
+        public void CmdCompleteCatching(int spamCount)
+        {
+            if (pendingFish == null) return;
+
+            int required = GetRequiredSpam(pendingFish.rank);
+            bool success = spamCount >= required;
+
+            if (success)
+            {
+                // 보상 지급
+                TargetOnFishingResult(connectionToClient, true, pendingFish.id, pendingFishLength, pendingFish.expReward);
+                
+                // 알림
+                if (pendingFish.rank == "S")
                 {
-                    RpcBroadcastSystemMessage($"{playerName}님이 [{caughtFish.fishName}] ({randomLength:F1}cm)을(를) 낚았습니다! 🎉");
+                    RpcBroadcastSystemMessage($"{playerName}님이 [{pendingFish.fishName}] ({pendingFishLength:F1}cm)을(를) 낚았습니다! 🎉");
                 }
             }
             else
             {
-                TargetOnFishMissed(connectionToClient);
+                TargetOnFishingResult(connectionToClient, false, "", 0, 0);
             }
+
+            pendingFish = null;
+        }
+
+        [Command]
+        public void CmdFishingMissed()
+        {
+            if (serverFishingRoutine != null) StopCoroutine(serverFishingRoutine);
+            pendingFish = null;
         }
 
         [TargetRpc]
-        void TargetOnFishCaught(NetworkConnection target, string fishId, string fishName, string rank, float length)
+        private void TargetOnFishingResult(NetworkConnection target, bool success, string fishId, float length, int exp)
         {
-            if (isLocalPlayer)
+            if (success)
             {
-                // IUserService를 통해 로컬 인벤토리에 개별 데이터로 추가
                 if (userService == null) userService = DIContainer.Resolve<IUserService>();
+                
+                // IUserService.AddFish는 내부적으로 경험치 추가, 도감 갱신, 저장을 모두 수행합니다.
                 userService.AddFish(fishId, length);
                 
-                Debug.Log($"<color=green>[낚시 성공]</color> [{rank}급] {fishName} ({length:F1}cm)을(를) 낚았습니다!");
-                OnSystemMessage?.Invoke($"[{rank}급] {fishName} ({length:F1}cm) 획득!");
+                Debug.Log($"<color=green>[낚시 성공]</color> {fishId} 획득!");
+                OnSystemMessage?.Invoke($"[낚시 성공] {fishId} 획득!");
             }
-        }
 
-        [TargetRpc]
-        void TargetOnFishMissed(NetworkConnection target)
-        {
-            if (isLocalPlayer)
-            {
-                Debug.Log("<color=red>[낚시 실패]</color> 물고기를 놓쳤습니다...");
-            }
+            fishingController.OnFishingResult(success);
         }
 
         FishDataSO CalculateCatch()

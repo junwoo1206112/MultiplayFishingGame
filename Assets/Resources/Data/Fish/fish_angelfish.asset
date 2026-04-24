@@ -15,11 +15,11 @@ MonoBehaviour:
   id: fish_angelfish
   fishName: "\uC5D4\uC824\uD53C\uC26C"
   fishIcon: {fileID: 21300000, guid: 0018baea53452274eacde5912124ab00, type: 3}
-  rank: A
+  rank: "\u2605\u2605\u2605\u2605"
   catchChance: 4
-  sellPrice: 600
-  minSize: 100
-  maxSize: 250
   expReward: 1000
+  sellPrice: 600
+  minSize: 10
+  maxSize: 20
   description: "\uD3C9\uBC94\uD558\uC9C0\uB9CC \uD2B9\uBCC4\uD55C \uB2F9\uC2E0\uB9CC\uC758
     \uBB3C\uACE0\uAE30\uC785\uB2C8\uB2E4."

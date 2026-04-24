@@ -15,11 +15,11 @@ MonoBehaviour:
   id: fish_crappie
   fishName: "\uD06C\uB798\uD53C"
   fishIcon: {fileID: 21300000, guid: 485f54ac65427ee47b15bc050f85c2b5, type: 3}
-  rank: D
+  rank: "\u2605"
   catchChance: 9
-  sellPrice: 90
-  minSize: 5
-  maxSize: 25
   expReward: 20
+  sellPrice: 90
+  minSize: 15
+  maxSize: 25
   description: "\uD3C9\uBC94\uD558\uC9C0\uB9CC \uD2B9\uBCC4\uD55C \uB2F9\uC2E0\uB9CC\uC758
     \uBB3C\uACE0\uAE30\uC785\uB2C8\uB2E4."

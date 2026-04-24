@@ -15,11 +15,11 @@ MonoBehaviour:
   id: fish_ufo
   fishName: UFO
   fishIcon: {fileID: 21300000, guid: b896c9e390b4e144e94fe7fbaf6f6fbd, type: 3}
-  rank: S
+  rank: "\u2605\u2605\u2605\u2605\u2605"
   catchChance: 0.01
-  sellPrice: 99999
-  minSize: 10
-  maxSize: 1000
   expReward: 5000
+  sellPrice: 99999
+  minSize: 100
+  maxSize: 500
   description: "\uC774\uAC74 \uBB3C\uACE0\uAE30\uAC00 \uC544\uB2D9\uB2C8\uB2E4! \uC678\uACC4\uC5D0\uC11C
     \uB0A0\uC544\uC628 \uBE44\uD589 \uBB3C\uCCB4\uB124\uC694."

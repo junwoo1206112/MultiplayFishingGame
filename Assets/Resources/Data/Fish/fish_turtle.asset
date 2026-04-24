@@ -15,11 +15,11 @@ MonoBehaviour:
   id: fish_turtle
   fishName: "\uAC70\uBD81\uC774"
   fishIcon: {fileID: 21300000, guid: df3062cd494962d488489f7c6547a857, type: 3}
-  rank: C
+  rank: "\u2605\u2605"
   catchChance: 2
-  sellPrice: 1200
-  minSize: 20
-  maxSize: 60
   expReward: 80
+  sellPrice: 1200
+  minSize: 15
+  maxSize: 40
   description: "\uD3C9\uBC94\uD558\uC9C0\uB9CC \uD2B9\uBCC4\uD55C \uB2F9\uC2E0\uB9CC\uC758
     \uBB3C\uACE0\uAE30\uC785\uB2C8\uB2E4."

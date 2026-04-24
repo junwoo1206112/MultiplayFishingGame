@@ -15,11 +15,11 @@ MonoBehaviour:
   id: fish_muskellunge
   fishName: "\uBA38\uC2A4\uD0A4"
   fishIcon: {fileID: 21300000, guid: 0c922d825ddd98643af4184014a4684e, type: 3}
-  rank: B
+  rank: "\u2605\u2605\u2605"
   catchChance: 1.2
-  sellPrice: 1800
-  minSize: 50
-  maxSize: 120
   expReward: 250
+  sellPrice: 1800
+  minSize: 70
+  maxSize: 130
   description: "\uD3C9\uBC94\uD558\uC9C0\uB9CC \uD2B9\uBCC4\uD55C \uB2F9\uC2E0\uB9CC\uC758
     \uBB3C\uACE0\uAE30\uC785\uB2C8\uB2E4."

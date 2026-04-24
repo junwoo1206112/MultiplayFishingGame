@@ -1,95 +1,38 @@
-# 🎣 Webfishing 에셋 통합 & 낚시 시스템 작업 내역
+# 프로젝트 진행 상황 (Progress Report)
 
----
+## [완료된 기능]
+### 1. 낚시 핵심 시스템 (Fishing Core)
+- [x] 상태 머신 기반의 낚시 루프 (Casting -> Waiting -> Catching)
+- [x] 마우스 홀딩을 통한 캐스팅 거리 조절 (2m ~ 15m)
+- [x] 수면 레이어(Water) 인식 및 낚시 제한 로직
+- [x] 베지어 곡선을 이용한 바늘 포물선 이동 및 물보라 연출
+- [x] 입질 시 0.5초 반응 체크 로직
+- [x] 등급별 상이한 연타(Spamming) 잡기 시스템
 
-## 1. 스프라이트 통합 (52개)
+### 2. 서버 및 네트워크 (Networking)
+- [x] 서버 권한 기반의 물고기/크기 결정 로직
+- [x] Mirror를 활용한 상태 동기화 (Command, TargetRpc)
+- [x] 5성 물고기 획득 시 전 서버 브로드캐스트 공지
 
-### 복사한 파일
-- `fish1.png` ~ `fish42.png`
-- `ocean_fish1.png` ~ `ocean_fish3.png`
-- `prehistoric_fish1.png` ~ `prehistoric_fish3.png`
-- `deep_sea_fish1.png` ~ `deep_sea_fish3.png`
-- `alien_creature2.png`
+### 3. 데이터 및 자동화 (Data & Automation)
+- [x] 별점(★ ~ ★★★★★) 등급 체계 구축
+- [x] 최소/최대 크기 범위 데이터 구조 설계
+- [x] 52종 물고기 엑셀 자동 생성기 (`FishDataPopulator`)
+- [x] 엑셀 -> ScriptableObject 변환 및 데이터 패치 (`ExcelDataConverter`)
+- [x] 인벤토리 추가 시 도감 기록 자동 갱신 및 저장
 
-### 위치
-- `Assets/Fish/` (Unity 참조용)
-- `Assets/Fishes_Itchio/` (원본 백업)
+### 4. UI 및 피드백 (UI/UX)
+- [x] 캐스팅 충전 게이지 UI
+- [x] 입질 알림(!) 시각 효과
+- [x] 연타 진행도 게이지 UI
+- [x] 경험치 바 및 레벨업 시스템 연동
 
-### 자동 매핑 툴
-- `Assets/Editor/FishIconMatcher.cs`
-- 메뉴: `Tools → Fish → Match Icons to Assets`
-- `SpritePath = "Assets/Fish"`
+## [진행 예정 / 남은 작업]
+### 1. 최종 에셋 통합 (Integration)
+- [ ] 팀원 제작 UI 프리팹 적용 및 연결
+- [ ] 낚시 동작 애니메이션(Casting, Catching) 연동
+- [ ] 물고기 모델링/스프라이트 최종 리소스 교체
 
----
-
-## 2. 엑셀 데이터 (52종)
-
-### 툴
-- `Assets/Editor/FishDataPopulator.cs`
-- 메뉴: `Tools → Excel → Populate 52 Webfishing Data`
-
-### 변환 툴
-- `Assets/Editor/ExcelDataConverter.cs`
-- 메뉴: `Tools → Excel → Convert Fish Data to SO`
-
-### 실행 순서
-```
-1. Populate 52 Webfishing Data  → 엑셀 생성
-2. Convert Fish Data to SO       → ScriptableObject 생성
-3. Match Icons to Assets         → 스프라이트 연결
-```
-
----
-
-## 3. 낚시 성공 로직
-
-### 위치
-- `Assets/Scripts/Gameplay/FishingPlayer.cs`
-
-### 메서드
-| 메서드 | 설명 |
-|--------|------|
-| `CmdCatchFish()` | 낚시 성공 서버 요청 `[Command]` |
-| `CalculateCatch()` | 확률 기반 물고기 선택 |
-| `TargetOnFishCaught()` | 결과 클라이언트 알림 `[TargetRpc]` |
-
-### 사용법
-```csharp
-// 낚시 완료 시 호출
-GetComponent<FishingPlayer>().CmdCatchFish();
-```
-
----
-
-## 4. 인벤토리 저장 (클리이언트 로컬)
-
-### 저장 위치
-- Windows: `%LocalAppData%Low\MultiplayFishingGame\UserData_{playerName}.json`
-
-### 저장 흐름
-```
-CmdCatchFish() → 서버 확률 계산
-    → TargetOnFishCaught() → 클라이언트
-    → localUserData.AddToInventory()
-    → SaveLocalData() → JSON 파일 저장
-```
-
----
-
-## 5. 수정한 파일 목록
-
-| 파일 | 변경 내용 |
-|------|----------|
-| `Assets/Editor/FishIconMatcher.cs` | 52개 매핑, SpritePath 변경 |
-| `Assets/Editor/FishDataPopulator.cs` | 52종 데이터, 메뉴 이름 변경 |
-| `Assets/Scripts/Gameplay/FishingPlayer.cs` | 낚시 성공 로직, 클라이언트 로컬 저장 |
-| `Assets/Scripts/Managers/Services/UserStorageService.cs` | List<InventoryItem> 대응 |
-
----
-
-## 6. 다음 작업 (TODO)
-
-- [ ] 낚시 완료 타이밍에 `CmdCatchFish()` 연결
-- [ ] 인벤토리 UI 제작
-- [ ] 도감 UI 제작
-- [ ] Tree prefab 경고 해결
+### 2. 폴리싱 및 사운드
+- [ ] 수면 충돌, 입질, 잡기 성공/실패 효과음 추가
+- [ ] 낚시 성공 시 물고기가 튀어오르는 연출 보강

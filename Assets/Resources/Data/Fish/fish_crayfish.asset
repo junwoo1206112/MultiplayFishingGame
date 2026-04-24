@@ -15,11 +15,11 @@ MonoBehaviour:
   id: fish_crayfish
   fishName: "\uAC00\uC7AC"
   fishIcon: {fileID: 21300000, guid: 5a13c70b59db8be4aa679542fe431c52, type: 3}
-  rank: D
+  rank: "\u2605"
   catchChance: 8.5
+  expReward: 20
   sellPrice: 110
   minSize: 5
-  maxSize: 25
-  expReward: 20
+  maxSize: 10
   description: "\uD3C9\uBC94\uD558\uC9C0\uB9CC \uD2B9\uBCC4\uD55C \uB2F9\uC2E0\uB9CC\uC758
     \uBB3C\uACE0\uAE30\uC785\uB2C8\uB2E4."

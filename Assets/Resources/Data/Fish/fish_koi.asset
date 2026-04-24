@@ -15,11 +15,11 @@ MonoBehaviour:
   id: fish_koi
   fishName: "\uBE44\uB2E8\uC789\uC5B4"
   fishIcon: {fileID: 21300000, guid: 6a4ef9e05a66345459dcc46eabda7509, type: 3}
-  rank: B
+  rank: "\u2605\u2605\u2605"
   catchChance: 2
-  sellPrice: 1500
-  minSize: 50
-  maxSize: 120
   expReward: 250
+  sellPrice: 1500
+  minSize: 30
+  maxSize: 65
   description: "\uD3C9\uBC94\uD558\uC9C0\uB9CC \uD2B9\uBCC4\uD55C \uB2F9\uC2E0\uB9CC\uC758
     \uBB3C\uACE0\uAE30\uC785\uB2C8\uB2E4."
