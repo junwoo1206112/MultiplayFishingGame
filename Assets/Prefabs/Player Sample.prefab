@@ -1480,11 +1480,16 @@ MonoBehaviour:
   fishingParameter: fishing
   hasFishParameter: HasFish
   rodEquippedParameter: RodEquipped
+  rodTakeOutTrigger: RodTakeOut
+  rodPutAwayTrigger: RodPutAway
   fishingLineVisual: {fileID: 2736683615954768657}
   fishingRopeObject: {fileID: 424869486725688458}
   fishingSplashParticle: {fileID: 3736205677627389063, guid: e5240a7174dd38d4a8e149c11035fbb9, type: 3}
   bobberWaveEffect: {fileID: 5699146169660020085}
   clickChallengeUI: {fileID: 0}
+  rodVisualRoot: {fileID: 0}
+  rodHideStateName: fishing-out
+  rodShowStateName: fishing-in
   playerCamera: {fileID: 4963897933854538703}
   tipPoint: {fileID: 7006738512652515204}
   hookPoint: {fileID: 357577035313628902}

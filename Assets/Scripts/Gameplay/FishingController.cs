@@ -27,8 +27,8 @@ namespace MultiplayFishing.Gameplay
 
         [Header("Rod Visibility")]
         [SerializeField] private GameObject rodVisualRoot;
-        [SerializeField] private string rodHideStateName = "fishing-out";
-        [SerializeField] private string rodShowStateName = "fishing-in";
+        [SerializeField] private string rodHideStateName = "fishing-in";
+        [SerializeField] private string rodShowStateName = "fishing-out";
 
         [Header("Fishing References")]
         [SerializeField] private Camera playerCamera;
@@ -204,7 +204,7 @@ namespace MultiplayFishing.Gameplay
                 return;
             }
 
-            if (Mouse.current == null || !hasFishingParameter || !Mouse.current.leftButton.wasPressedThisFrame) return;
+            if (Mouse.current == null || !Mouse.current.leftButton.wasPressedThisFrame) return;
 
             if (clickChallengeUI != null && clickChallengeUI.IsRunning)
             {
@@ -220,10 +220,15 @@ namespace MultiplayFishing.Gameplay
                 return;
             }
 
+            if (!IsRodReadyForFishingInput())
+            {
+                return;
+            }
+
             if (hookMoveRoutine != null || Time.time < inputLockedUntil) return;
 
             // 입질 중일 때 클릭
-            if (biteSystem.IsBiteActive)
+            if (biteSystem != null && biteSystem.IsBiteActive)
             {
                 clickChallengeUI?.RegisterClick();
                 return;
@@ -235,18 +240,26 @@ namespace MultiplayFishing.Gameplay
             }
 
             isFishingActive = !isFishingActive;
-            animator.SetBool(fishingParameterHash, isFishingActive);
-            movement.SetMovementBlocked(isFishingActive);
+            SetFishingAnimatorActive(isFishingActive);
+            movement?.SetMovementBlocked(isFishingActive);
 
             if (isFishingActive)
             {
-                biteSystem.StopBiteLogic();
+                biteSystem?.StopBiteLogic();
                 StartFishingProcess(true);
             }
             else
             {
-                biteSystem.StopBiteLogic();
+                biteSystem?.StopBiteLogic();
                 StartFishingProcess(false);
+            }
+        }
+
+        private void SetFishingAnimatorActive(bool active)
+        {
+            if (animator != null && hasFishingParameter)
+            {
+                animator.SetBool(fishingParameterHash, active);
             }
         }
 
@@ -281,8 +294,8 @@ namespace MultiplayFishing.Gameplay
             biteSystem.StopBiteLogic();
 
             isFishingActive = false;
-            animator.SetBool(fishingParameterHash, false);
-            movement.SetMovementBlocked(false);
+            SetFishingAnimatorActive(false);
+            movement?.SetMovementBlocked(false);
 
             StopBobbing();
 
@@ -404,7 +417,7 @@ namespace MultiplayFishing.Gameplay
 
             if (isFishingActive && isCasting)
             {
-                biteSystem.StartWaitingForBite();
+                biteSystem?.StartWaitingForBite();
                 StartBobbing();
             }
 
@@ -518,13 +531,40 @@ namespace MultiplayFishing.Gameplay
             if (!isRodEquipped)
             {
                 isFishingActive = false;
-                animator.SetBool(fishingParameterHash, false);
-                movement.SetMovementBlocked(false);
-                biteSystem.StopBiteLogic();
+                SetFishingAnimatorActive(false);
+                movement?.SetMovementBlocked(false);
+                biteSystem?.StopBiteLogic();
                 clickChallengeUI?.CancelChallenge();
                 StopBobbing();
                 HideFishingRuntimeVisuals();
             }
+        }
+
+        private bool IsRodReadyForFishingInput()
+        {
+            if (!isRodEquipped)
+            {
+                return false;
+            }
+
+            if (rodVisualRoot != null && !rodVisualRoot.activeSelf)
+            {
+                return false;
+            }
+
+            if (animator == null)
+            {
+                return true;
+            }
+
+            if (animator.IsInTransition(0))
+            {
+                return false;
+            }
+
+            AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
+            return stateInfo.shortNameHash != rodShowStateHash
+                && stateInfo.shortNameHash != rodHideStateHash;
         }
 
         private void ResolveRodVisualRoot()
