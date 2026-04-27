@@ -66,7 +66,7 @@ namespace MultiplayFishing.Gameplay
             }
 
             particle.transform.position = pendingSplashPosition;
-            particle.transform.rotation = Quaternion.Euler(-90f, 0f, 0f);
+            particle.transform.rotation = Quaternion.identity;
             particle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             particle.Clear(true);
             particle.Play(true);

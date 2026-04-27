@@ -1488,8 +1488,9 @@ MonoBehaviour:
   bobberWaveEffect: {fileID: 5699146169660020085}
   clickChallengeUI: {fileID: 0}
   rodVisualRoot: {fileID: 0}
-  rodHideStateName: fishing-out
-  rodShowStateName: fishing-in
+  rodHideStateName: rod-out
+  rodShowStateName: rod-in
+  rodHideNormalizedTime: 0.95
   playerCamera: {fileID: 4963897933854538703}
   tipPoint: {fileID: 7006738512652515204}
   hookPoint: {fileID: 357577035313628902}
@@ -4185,6 +4186,7 @@ MonoBehaviour:
   alphaStart: 0.2
   alphaEnd: 0
   heightOffset: 0.01
+  waveWorldEulerAngles: {x: 90, y: 0, z: 0}
   scaleRandomness: 0.08
   timingRandomness: 0.3
 --- !u!1 &7622619690143403065

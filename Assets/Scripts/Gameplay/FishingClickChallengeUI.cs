@@ -182,7 +182,7 @@ namespace MultiplayFishing.Gameplay
                 return;
             }
 
-            progressText.text = $"{currentClicks} / {requiredClicks}";
+            progressText.text = $"{currentClicks}";
         }
 
         private void SetPanelVisible(bool visible)

@@ -37,6 +37,8 @@ namespace MultiplayFishing.Gameplay
         [Header("Position")]
         [Tooltip("수면 위 높이 오프셋")]
         [SerializeField] private float heightOffset = 0.01f;
+        [Tooltip("World-space rotation for the wave sprite.")]
+        [SerializeField] private Vector3 waveWorldEulerAngles = new Vector3(90f, 0f, 0f);
 
         [Header("Randomness")]
         [Tooltip("물결 크기의 랜덤 변동 범위")]
@@ -90,7 +92,7 @@ namespace MultiplayFishing.Gameplay
             // — 위치: 항상 부모(hookPoint) 바로 위, 수평으로 고정 —
             Vector3 parentPos = transform.parent != null ? transform.parent.position : transform.position;
             transform.position = parentPos + new Vector3(initialLocalPosition.x, heightOffset, initialLocalPosition.z);
-            transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+            transform.rotation = Quaternion.Euler(waveWorldEulerAngles);
 
             // — 1차 물결 —
             primaryPhase += Time.deltaTime;
