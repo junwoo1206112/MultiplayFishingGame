@@ -139,7 +139,6 @@ GameObject:
   - component: {fileID: 238704049228440155}
   - component: {fileID: 8358671470730349844}
   - component: {fileID: 2026807176026170374}
-  - component: {fileID: 6271346745426612475}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -213,24 +212,3 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &6271346745426612475
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5708908370499685477}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8b3433b13940fc249bf0159d5cd11936, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
-  moveSpeed: 8
-  acceleration: 12
-  mouseSensitivity: 6
-  maxLookAngle: 90
-  playerHeight: 1
-  groundCheckDistance: 1
-  groundMask:
-    serializedVersion: 2
-    m_Bits: 51

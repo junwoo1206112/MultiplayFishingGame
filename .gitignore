@@ -4,11 +4,16 @@
 [Oo]bj/
 [Bb]uild/
 [Bb]uilds/
-[Pp]ackages/
 Logs/
 UserSettings/
 /[Mm]emoryCaptures/
 /[Rr]ecordings/
+
+# Packages
+# manifest.json and packages-lock.json must be tracked.
+/[Pp]ackages/*
+![Pp]ackages/manifest.json
+![Pp]ackages/packages-lock.json
 
 # Visual Studio / VS Code
 .vs/

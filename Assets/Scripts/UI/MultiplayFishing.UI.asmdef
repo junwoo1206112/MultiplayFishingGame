@@ -4,6 +4,8 @@
     "references": [
         "MultiplayFishing.Network",
         "MultiplayFishing.Gameplay",
+        "MultiplayFishing.Core",
+        "MultiplayFishing.Data",
         "Mirror",
         "Unity.TextMeshPro"
     ],

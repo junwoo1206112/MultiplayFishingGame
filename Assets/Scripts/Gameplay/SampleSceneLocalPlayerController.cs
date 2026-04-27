@@ -291,8 +291,10 @@ namespace MultiplayFishing.Gameplay
             {
                 velocity.y = groundedVelocity;
             }
-
-            velocity.y += gravity * Time.deltaTime;
+            else
+            {
+                velocity.y += gravity * Time.deltaTime;
+            }
 
             Vector3 motion = (move * moveSpeed) + Vector3.up * velocity.y;
             characterController.Move(motion * Time.deltaTime);

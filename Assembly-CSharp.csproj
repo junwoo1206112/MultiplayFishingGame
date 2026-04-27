@@ -52,58 +52,136 @@
     <Compile Include="Assets\GogoGaga\OptimizedRopesAndCables\Script\RopeMesh.cs" />
     <Compile Include="Assets\Scripts\WaterWaves.cs" />
     <Compile Include="Assets\GogoGaga\OptimizedRopesAndCables\Script\RopeWindEffect.cs" />
+    <Compile Include="Assets\Scripts\UiAnim.cs" />
     <Compile Include="Assets\GogoGaga\OptimizedRopesAndCables\Example\Scripts\PointsAssignExample.cs" />
     <Compile Include="Assets\TutorialInfo\Scripts\Readme.cs" />
     <Compile Include="Assets\GogoGaga\OptimizedRopesAndCables\Example\Scripts\CameraMove.cs" />
+    <Compile Include="Assets\Scripts\GameInitializer.cs" />
     <Compile Include="Assets\GogoGaga\OptimizedRopesAndCables\Script\Rope.cs" />
     <Compile Include="Assets\IgniteCoders\Simple Water Shader\Resources\WaterReflection.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\IslandMap\Akduman\ToonTastic - Beach Props\ThirdPartyNotices.txt" />
+    <None Include="Assets\Packages\System.Text.Encoding.CodePages.8.0.0\LICENSE.TXT" />
     <None Include="Assets\Mirror\Plugins\Mono.Cecil\Mono.CecilX.dll" />
     <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />
     <None Include="Assets\Mirror\Plugins\Mono.Cecil\Mono.CecilX.Mdb.dll" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile Overlay.shader" />
+    <None Include="Assets\Packages\System.ComponentModel.Annotations.5.0.0\LICENSE.TXT" />
+    <None Include="Assets\Packages\SkiaSharp.3.119.2\LICENSE.txt" />
+    <None Include="Assets\Packages\System.Security.Cryptography.Pkcs.8.0.1\useSharedDesignerContext.txt" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile-2-Pass.shader" />
+    <None Include="Assets\Packages\SkiaSharp.NativeAssets.Linux.NoDependencies.3.119.2\LICENSE.txt" />
+    <None Include="Assets\Packages\BouncyCastle.Cryptography.2.6.2\lib\netstandard2.0\BouncyCastle.Cryptography.xml" />
+    <None Include="Assets\Packages\System.Formats.Asn1.8.0.1\LICENSE.TXT" />
     <None Include="Assets\ScriptTemplates\52-Mirror__Network Authenticator-NewNetworkAuthenticator.cs.txt" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_Bitmap.shader" />
+    <None Include="Assets\Packages\System.Security.Cryptography.Cng.5.0.0\LICENSE.TXT" />
+    <None Include="Assets\Packages\System.Security.Principal.Windows.5.0.0\LICENSE.TXT" />
+    <None Include="Assets\Packages\System.Security.Cryptography.Cng.5.0.0\THIRD-PARTY-NOTICES.TXT" />
+    <None Include="Assets\Packages\System.Security.Cryptography.Xml.8.0.2\lib\netstandard2.0\System.Security.Cryptography.Xml.xml" />
     <None Include="Assets\Akduman\ToonTastic - Beach Props\README.txt" />
+    <None Include="Assets\Packages\System.Security.Cryptography.Pkcs.8.0.1\lib\netstandard2.1\System.Security.Cryptography.Pkcs.dll" />
+    <None Include="Assets\Packages\SkiaSharp.NativeAssets.Linux.NoDependencies.3.119.2\THIRD-PARTY-NOTICES.txt" />
+    <None Include="Assets\Packages\System.Text.Encoding.CodePages.8.0.0\lib\netstandard2.0\System.Text.Encoding.CodePages.xml" />
+    <None Include="Assets\Packages\System.Security.Cryptography.Xml.8.0.2\LICENSE.TXT" />
+    <None Include="Assets\Packages\System.Security.AccessControl.6.0.0\THIRD-PARTY-NOTICES.TXT" />
+    <None Include="Assets\Packages\SkiaSharp.NativeAssets.macOS.3.119.2\THIRD-PARTY-NOTICES.txt" />
     <None Include="Assets\Mirror\Plugins\Mono.Cecil\Mono.CecilX.Pdb.dll" />
     <None Include="Assets\Mirror\version.txt" />
+    <None Include="Assets\Packages\System.Security.Cryptography.Pkcs.8.0.1\lib\netstandard2.1\System.Security.Cryptography.Pkcs.xml" />
+    <None Include="Assets\Packages\System.Security.Cryptography.Xml.8.0.2\useSharedDesignerContext.txt" />
+    <None Include="Assets\Packages\SkiaSharp.NativeAssets.Win32.3.119.2\LICENSE.txt" />
     <None Include="Assets\TextMesh Pro\Shaders\TMPro_Mobile.cginc" />
+    <None Include="Assets\Packages\System.Security.Cryptography.Cng.5.0.0\version.txt" />
     <None Include="Assets\ScriptTemplates\56-Mirror__Network Discovery-NewNetworkDiscovery.cs.txt" />
+    <None Include="Assets\Packages\NPOI.2.8.0\lib\netstandard2.1\NPOI.OOXML.dll" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF SSD.shader" />
     <None Include="Assets\ScriptTemplates\51-Mirror__Network Manager With Actions-NewNetworkManagerWithActions.cs.txt" />
+    <None Include="Assets\Packages\Enums.NET.5.0.0\lib\netstandard2.1\Enums.NET.dll" />
+    <None Include="Assets\Packages\System.ComponentModel.Annotations.5.0.0\lib\netstandard2.1\System.ComponentModel.Annotations.dll" />
     <None Include="Assets\GogoGaga\OptimizedRopesAndCables\Third-Party Notices.txt" />
     <None Include="Assets\ScriptTemplates\53-Mirror__Network Behaviour With Actions-NewNetworkBehaviourWithActions.cs.txt" />
+    <None Include="Assets\Packages\System.Security.Principal.Windows.5.0.0\useSharedDesignerContext.txt" />
+    <None Include="Assets\Packages\System.ComponentModel.Annotations.5.0.0\lib\netstandard2.1\System.ComponentModel.Annotations.xml" />
+    <None Include="Assets\Packages\ZString.2.6.0\lib\netstandard2.1\ZString.xml" />
+    <None Include="Assets\Packages\NPOI.2.8.0\OSMFEULA.txt" />
+    <None Include="Assets\Packages\ExtendedNumerics.BigDecimal.2025.1001.2.129\lib\netstandard2.1\ExtendedNumerics.BigDecimal.xml" />
+    <None Include="Assets\Packages\SkiaSharp.3.119.2\lib\netstandard2.1\SkiaSharp.dll" />
     <None Include="Assets\Mirror\Plugins\Mono.Cecil\Mono.CecilX.Rocks.dll" />
+    <None Include="Assets\Packages\System.Security.Cryptography.Pkcs.8.0.1\THIRD-PARTY-NOTICES.TXT" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Surface-Mobile.shader" />
+    <None Include="Assets\Packages\SkiaSharp.NativeAssets.Win32.3.119.2\runtimes\win-x64\native\libSkiaSharp.dll" />
+    <None Include="Assets\Packages\SharpZipLib.1.4.2\lib\netstandard2.1\ICSharpCode.SharpZipLib.xml" />
+    <None Include="Assets\Packages\ZString.2.6.0\lib\netstandard2.1\ZString.dll" />
     <None Include="Assets\TextMesh Pro\Shaders\SDFFunctions.hlsl" />
+    <None Include="Assets\Packages\BouncyCastle.Cryptography.2.6.2\lib\netstandard2.0\BouncyCastle.Cryptography.dll" />
+    <None Include="Assets\Packages\Microsoft.IO.RecyclableMemoryStream.3.0.1\lib\netstandard2.1\Microsoft.IO.RecyclableMemoryStream.xml" />
     <None Include="Assets\Mirror\Readme.txt" />
+    <None Include="Assets\Packages\System.Text.Encoding.CodePages.8.0.0\lib\netstandard2.0\System.Text.Encoding.CodePages.dll" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Surface.shader" />
+    <None Include="Assets\Packages\System.Security.Cryptography.Cng.5.0.0\useSharedDesignerContext.txt" />
     <None Include="Assets\ScriptTemplates\57-Mirror__Network Transform-NewNetworkTransform.cs.txt" />
     <None Include="Assets\TextMesh Pro\Sprites\EmojiOne Attribution.txt" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_Bitmap-Custom-Atlas.shader" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF.shader" />
+    <None Include="Assets\Packages\NPOI.2.8.0\lib\netstandard2.1\NPOI.OpenXml4Net.dll" />
+    <None Include="Assets\Packages\NPOI.2.8.0\lib\netstandard2.1\NPOI.OpenXmlFormats.xml" />
+    <None Include="Assets\Packages\System.Security.Principal.Windows.5.0.0\lib\netstandard2.0\System.Security.Principal.Windows.dll" />
+    <None Include="Assets\Packages\System.Security.AccessControl.6.0.0\useSharedDesignerContext.txt" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile SSD.shader" />
+    <None Include="Assets\Packages\System.Text.Encoding.CodePages.8.0.0\useSharedDesignerContext.txt" />
     <None Include="Assets\TextMesh Pro\Resources\LineBreaking Leading Characters.txt" />
+    <None Include="Assets\Packages\System.Security.Cryptography.Xml.8.0.2\THIRD-PARTY-NOTICES.TXT" />
     <None Include="Assets\ScriptTemplates\52-Mirror__Network Behaviour-NewNetworkBehaviour.cs.txt" />
     <None Include="Assets\TextMesh Pro\Shaders\TMPro_Properties.cginc" />
+    <None Include="Assets\Packages\MathNet.Numerics.Signed.5.0.0\lib\netstandard2.0\MathNet.Numerics.xml" />
     <None Include="Assets\TextMesh Pro\Shaders\TMPro_Surface.cginc" />
+    <None Include="Assets\Packages\System.Security.Principal.Windows.5.0.0\lib\netstandard2.0\System.Security.Principal.Windows.xml" />
+    <None Include="Assets\Packages\NPOI.2.8.0\lib\netstandard2.1\NPOI.Core.xml" />
+    <None Include="Assets\Packages\System.Formats.Asn1.8.0.1\lib\netstandard2.0\System.Formats.Asn1.xml" />
+    <None Include="Assets\Packages\System.Security.Principal.Windows.5.0.0\THIRD-PARTY-NOTICES.TXT" />
+    <None Include="Assets\Packages\NPOI.2.8.0\lib\netstandard2.1\NPOI.OpenXmlFormats.dll" />
+    <None Include="Assets\Packages\SkiaSharp.NativeAssets.Win32.3.119.2\THIRD-PARTY-NOTICES.txt" />
+    <None Include="Assets\Packages\SharpZipLib.1.4.2\lib\netstandard2.1\ICSharpCode.SharpZipLib.dll" />
     <None Include="Assets\TextMesh Pro\Resources\LineBreaking Following Characters.txt" />
+    <None Include="Assets\Packages\System.Formats.Asn1.8.0.1\THIRD-PARTY-NOTICES.TXT" />
+    <None Include="Assets\Packages\System.Security.Principal.Windows.5.0.0\version.txt" />
     <None Include="Assets\IslandMap\Akduman\ToonTastic - Beach Props\README.txt" />
+    <None Include="Assets\Packages\System.Security.Cryptography.Xml.8.0.2\lib\netstandard2.0\System.Security.Cryptography.Xml.dll" />
+    <None Include="Assets\Packages\System.ComponentModel.Annotations.5.0.0\version.txt" />
     <None Include="Assets\Mirror\Plugins\Mono.Cecil\License.txt" />
+    <None Include="Assets\Packages\ExtendedNumerics.BigDecimal.2025.1001.2.129\lib\netstandard2.1\ExtendedNumerics.BigDecimal.dll" />
+    <None Include="Assets\Packages\System.Security.Cryptography.Pkcs.8.0.1\LICENSE.TXT" />
+    <None Include="Assets\Packages\System.Formats.Asn1.8.0.1\useSharedDesignerContext.txt" />
+    <None Include="Assets\Packages\System.Security.Cryptography.Cng.5.0.0\lib\netstandard2.1\System.Security.Cryptography.Cng.xml" />
     <None Include="Assets\ScriptTemplates\55-Mirror__Network Room Player-NewNetworkRoomPlayer.cs.txt" />
+    <None Include="Assets\Packages\System.Formats.Asn1.8.0.1\lib\netstandard2.0\System.Formats.Asn1.dll" />
+    <None Include="Assets\Packages\NPOI.2.8.0\lib\netstandard2.1\NPOI.OpenXml4Net.xml" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile Masking.shader" />
+    <None Include="Assets\Packages\SkiaSharp.NativeAssets.macOS.3.119.2\LICENSE.txt" />
+    <None Include="Assets\Packages\System.Security.AccessControl.6.0.0\lib\netstandard2.0\System.Security.AccessControl.xml" />
+    <None Include="Assets\Packages\MathNet.Numerics.Signed.5.0.0\lib\netstandard2.0\MathNet.Numerics.dll" />
     <None Include="Assets\ScriptTemplates\54-Mirror__Custom Interest Management-CustomInterestManagement.cs.txt" />
+    <None Include="Assets\Packages\NPOI.2.8.0\lib\netstandard2.1\NPOI.OOXML.xml" />
+    <None Include="Assets\Packages\Microsoft.IO.RecyclableMemoryStream.3.0.1\lib\netstandard2.1\Microsoft.IO.RecyclableMemoryStream.dll" />
+    <None Include="Assets\Packages\SkiaSharp.NativeAssets.Win32.3.119.2\runtimes\win-x86\native\libSkiaSharp.dll" />
     <None Include="Assets\Akduman\ToonTastic - Beach Props\ThirdPartyNotices.txt" />
+    <None Include="Assets\Packages\System.Text.Encoding.CodePages.8.0.0\THIRD-PARTY-NOTICES.TXT" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF Overlay.shader" />
     <None Include="Assets\ScriptTemplates\50-Mirror__Network Manager-NewNetworkManager.cs.txt" />
+    <None Include="Assets\Packages\System.Security.AccessControl.6.0.0\lib\netstandard2.0\System.Security.AccessControl.dll" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_Bitmap-Mobile.shader" />
     <None Include="Assets\ScriptTemplates\54-Mirror__Network Room Manager-NewNetworkRoomManager.cs.txt" />
     <None Include="Assets\TextMesh Pro\Fonts\LiberationSans - OFL.txt" />
+    <None Include="Assets\Packages\System.ComponentModel.Annotations.5.0.0\THIRD-PARTY-NOTICES.TXT" />
+    <None Include="Assets\Packages\System.Security.Cryptography.Cng.5.0.0\lib\netstandard2.1\System.Security.Cryptography.Cng.dll" />
+    <None Include="Assets\Packages\NPOI.2.8.0\lib\netstandard2.1\NPOI.Core.dll" />
+    <None Include="Assets\Packages\System.Security.AccessControl.6.0.0\LICENSE.TXT" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile.shader" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_Sprite.shader" />
+    <None Include="Assets\Packages\System.ComponentModel.Annotations.5.0.0\useSharedDesignerContext.txt" />
+    <None Include="Assets\Packages\Enums.NET.5.0.0\lib\netstandard2.1\Enums.NET.xml" />
     <None Include="Assets\Mirror\Hosting\Readme.txt" />
   </ItemGroup>
   <ItemGroup>
@@ -659,6 +737,10 @@
       <HintPath>Library\PackageCache\com.unity.ext.nunit@d8c07649098d\net40\unity-custom\nunit.framework.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="System.Security.Cryptography.Pkcs">
+      <HintPath>Assets\Packages\System.Security.Cryptography.Pkcs.8.0.1\lib\netstandard2.1\System.Security.Cryptography.Pkcs.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Mirror.BouncyCastle.Cryptography">
       <HintPath>Assets\Mirror\Transports\Encryption\Plugins\BouncyCastle\Mirror.BouncyCastle.Cryptography.dll</HintPath>
       <Private>False</Private>
@@ -667,28 +749,104 @@
       <HintPath>Assets\Mirror\Plugins\Mono.Cecil\Mono.CecilX.Pdb.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="NPOI.OOXML">
+      <HintPath>Assets\Packages\NPOI.2.8.0\lib\netstandard2.1\NPOI.OOXML.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Enums.NET">
+      <HintPath>Assets\Packages\Enums.NET.5.0.0\lib\netstandard2.1\Enums.NET.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.ComponentModel.Annotations">
+      <HintPath>Assets\Packages\System.ComponentModel.Annotations.5.0.0\lib\netstandard2.1\System.ComponentModel.Annotations.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="SkiaSharp">
+      <HintPath>Assets\Packages\SkiaSharp.3.119.2\lib\netstandard2.1\SkiaSharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Mono.CecilX.Rocks">
       <HintPath>Assets\Mirror\Plugins\Mono.Cecil\Mono.CecilX.Rocks.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ZString">
+      <HintPath>Assets\Packages\ZString.2.6.0\lib\netstandard2.1\ZString.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="BouncyCastle.Cryptography">
+      <HintPath>Assets\Packages\BouncyCastle.Cryptography.2.6.2\lib\netstandard2.0\BouncyCastle.Cryptography.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System.IO.Hashing">
       <HintPath>Library\PackageCache\com.unity.collections@aea9d3bd5e19\Unity.Collections.Tests\System.IO.Hashing\System.IO.Hashing.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="System.Text.Encoding.CodePages">
+      <HintPath>Assets\Packages\System.Text.Encoding.CodePages.8.0.0\lib\netstandard2.0\System.Text.Encoding.CodePages.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="NPOI.OpenXml4Net">
+      <HintPath>Assets\Packages\NPOI.2.8.0\lib\netstandard2.1\NPOI.OpenXml4Net.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Security.Principal.Windows">
+      <HintPath>Assets\Packages\System.Security.Principal.Windows.5.0.0\lib\netstandard2.0\System.Security.Principal.Windows.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Unity.VisualScripting.Antlr3.Runtime">
       <HintPath>Library\PackageCache\com.unity.visualscripting@191c0d7e3b69\Runtime\VisualScripting.Flow\Dependencies\NCalc\Unity.VisualScripting.Antlr3.Runtime.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="NPOI.OpenXmlFormats">
+      <HintPath>Assets\Packages\NPOI.2.8.0\lib\netstandard2.1\NPOI.OpenXmlFormats.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ICSharpCode.SharpZipLib">
+      <HintPath>Assets\Packages\SharpZipLib.1.4.2\lib\netstandard2.1\ICSharpCode.SharpZipLib.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Xml">
+      <HintPath>Assets\Packages\System.Security.Cryptography.Xml.8.0.2\lib\netstandard2.0\System.Security.Cryptography.Xml.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ExtendedNumerics.BigDecimal">
+      <HintPath>Assets\Packages\ExtendedNumerics.BigDecimal.2025.1001.2.129\lib\netstandard2.1\ExtendedNumerics.BigDecimal.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Newtonsoft.Json">
-      <HintPath>Library\PackageCache\com.unity.nuget.newtonsoft-json@4dfd81071c64\Runtime\Newtonsoft.Json.dll</HintPath>
+      <HintPath>Library\PackageCache\com.unity.nuget.newtonsoft-json@74deb55db2a0\Runtime\Newtonsoft.Json.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Formats.Asn1">
+      <HintPath>Assets\Packages\System.Formats.Asn1.8.0.1\lib\netstandard2.0\System.Formats.Asn1.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Mono.Cecil">
       <HintPath>Library\PackageCache\com.unity.nuget.mono-cecil@ecb9724e46ff\Mono.Cecil.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="MathNet.Numerics">
+      <HintPath>Assets\Packages\MathNet.Numerics.Signed.5.0.0\lib\netstandard2.0\MathNet.Numerics.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.IO.RecyclableMemoryStream">
+      <HintPath>Assets\Packages\Microsoft.IO.RecyclableMemoryStream.3.0.1\lib\netstandard2.1\Microsoft.IO.RecyclableMemoryStream.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System.Runtime.CompilerServices.Unsafe">
       <HintPath>Library\PackageCache\com.unity.collections@aea9d3bd5e19\Unity.Collections.Tests\System.Runtime.CompilerServices.Unsafe\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Security.AccessControl">
+      <HintPath>Assets\Packages\System.Security.AccessControl.6.0.0\lib\netstandard2.0\System.Security.AccessControl.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Cng">
+      <HintPath>Assets\Packages\System.Security.Cryptography.Cng.5.0.0\lib\netstandard2.1\System.Security.Cryptography.Cng.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="NPOI.Core">
+      <HintPath>Assets\Packages\NPOI.2.8.0\lib\netstandard2.1\NPOI.Core.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Android.Types">
@@ -1343,6 +1501,7 @@
     <ProjectReference Include="Unity.TextMeshPro.Editor.csproj" />
     <ProjectReference Include="Mirror.Transports.csproj" />
     <ProjectReference Include="MultiplayFishing.Gameplay.csproj" />
+    <ProjectReference Include="MultiplayFishing.Data.csproj" />
     <ProjectReference Include="UnityCliConnector.Editor.csproj" />
     <ProjectReference Include="Unity.RenderPipelines.GPUDriven.Runtime.csproj" />
     <ProjectReference Include="Mirror.Editor.csproj" />
@@ -1353,6 +1512,8 @@
     <ProjectReference Include="Unity.InternalAPIEngineBridge.004.csproj" />
     <ProjectReference Include="Mirror.Authenticators.csproj" />
     <ProjectReference Include="Mirror.CompilerSymbols.csproj" />
+    <ProjectReference Include="MultiplayFishing.Core.csproj" />
+    <ProjectReference Include="MultiplayFishing.Editor.csproj" />
     <ProjectReference Include="Unity.Multiplayer.Center.Editor.csproj" />
     <ProjectReference Include="Unity.RenderPipelines.Universal.Runtime.csproj" />
     <ProjectReference Include="Unity.RenderPipelines.Universal.Config.Runtime.csproj" />

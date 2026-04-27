@@ -4,79 +4,83 @@ using Unity.Cinemachine;
 
 namespace MultiplayFishing.Gameplay
 {
-    /// <summary>
-    /// 로컬 플레이어의 시네머신 카메라 연결 및 마우스 상하 시선 처리(Look Up/Down)를 담당합니다.
-    /// </summary>
-    public class FishingCameraFollow : NetworkBehaviour
+    [DefaultExecutionOrder(100)]
+    public class FishingCameraFollow : MonoBehaviour
     {
-        [Header("Camera Target")]
-        [Tooltip("카메라가 추적할 지점 (보통 플레이어 머리 위치의 빈 오브젝트)")]
-        [SerializeField] private Transform cameraTarget;
+        [Header("Orbit Settings")]
+        [SerializeField] private float pitchSpeed = 3f;
+        [SerializeField] private float minPitch = -10f;
+        [SerializeField] private float maxPitch = 60f;
+        [SerializeField] private float defaultPitch = 20f;
+        [SerializeField] private float cameraDistance = 8f;
+        [SerializeField] private float lookAtHeight = 1.5f;
 
-        [Header("Rotation Settings")]
-        [SerializeField] private float mouseSensitivity = 2f;
-        [SerializeField] private float minPitch = -40f; // 아래로 보는 제한
-        [SerializeField] private float maxPitch = 60f;  // 위로 보는 제한
+        private Camera mainCamera;
+        private float pitch;
+        private bool initialized;
 
-        private float _currentPitch = 0f;
-        private CinemachineCamera _vcam;
-
-        public override void OnStartLocalPlayer()
+        void Awake()
         {
-            base.OnStartLocalPlayer();
-            
-            // 씬의 시네머신 카메라 찾기
-            _vcam = FindFirstObjectByType<CinemachineCamera>();
+            pitch = defaultPitch;
+        }
 
-            if (_vcam != null)
+        void LateUpdate()
+        {
+            if (NetworkClient.localPlayer == null) return;
+
+            if (!initialized)
             {
-                Transform target = cameraTarget != null ? cameraTarget : transform;
-                _vcam.Follow = target;
-                _vcam.LookAt = target;
-                
-                Debug.Log($"[FishingCameraFollow] 시네머신 카메라 연결 완료: {target.name}");
+                Initialize();
+                if (!initialized) return;
             }
 
-            // 마우스 커서 잠금
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
+            Transform player = NetworkClient.localPlayer.transform;
 
-        private void LateUpdate()
-        {
-            // 내 플레이어일 때만 시선 처리를 수행 (시점은 로컬에서만 중요)
-            if (!isLocalPlayer) return;
-
-            HandlePitchRotation();
-        }
-
-        /// <summary>
-        /// 마우스 Y축 입력을 받아 시각적인 상하 회전을 처리합니다.
-        /// </summary>
-        private void HandlePitchRotation()
-        {
-            if (cameraTarget == null) return;
-
-            // 마우스 Y축 이동값 읽기
-            float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
-
-            // 현재 각도에서 마우스 이동값 반영 (마우스 올리면 고개 들기)
-            _currentPitch -= mouseY;
-            
-            // 각도 제한 적용 (Clamping)
-            _currentPitch = Mathf.Clamp(_currentPitch, minPitch, maxPitch);
-
-            // 카메라 타겟에 회전 적용
-            cameraTarget.localRotation = Quaternion.Euler(_currentPitch, 0, 0);
-        }
-
-        private void OnApplicationFocus(bool hasFocus)
-        {
-            if (hasFocus && isLocalPlayer)
+            if (Cursor.lockState == CursorLockMode.Locked)
             {
-                Cursor.lockState = CursorLockMode.Locked;
-                Cursor.visible = false;
+                pitch -= Input.GetAxis("Mouse Y") * pitchSpeed;
+                pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
             }
+
+            float yaw = player.eulerAngles.y;
+
+            Vector3 lookAtPos = player.position + Vector3.up * lookAtHeight;
+            Quaternion orbitRotation = Quaternion.Euler(pitch, yaw, 0f);
+            Vector3 offset = orbitRotation * new Vector3(0f, 0f, -cameraDistance);
+            Vector3 targetPos = lookAtPos + offset;
+
+            mainCamera.transform.position = targetPos;
+            mainCamera.transform.rotation = Quaternion.LookRotation(lookAtPos - targetPos);
+        }
+
+        private void Initialize()
+        {
+            mainCamera = Camera.main;
+            if (mainCamera == null) return;
+
+            CinemachineBrain brain = mainCamera.GetComponent<CinemachineBrain>();
+            if (brain != null)
+            {
+                brain.enabled = false;
+            }
+
+            CinemachineCamera[] vcams = Object.FindObjectsByType<CinemachineCamera>(FindObjectsSortMode.None);
+            foreach (var vcam in vcams)
+            {
+                vcam.enabled = false;
+            }
+
+            Camera[] allCameras = Object.FindObjectsByType<Camera>(FindObjectsSortMode.None);
+            foreach (Camera cam in allCameras)
+            {
+                if (cam != mainCamera)
+                {
+                    cam.enabled = false;
+                }
+            }
+
+            pitch = defaultPitch;
+            initialized = true;
         }
     }
 }

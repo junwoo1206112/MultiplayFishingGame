@@ -1,0 +1,25 @@
+{
+    "name": "MultiplayFishing.Editor",
+    "rootNamespace": "MultiplayFishing.Editor",
+    "references": [
+        "MultiplayFishing.Data",
+        "MultiplayFishing.Core",
+        "MultiplayFishing.UI",
+        "MultiplayFishing.Network",
+        "MultiplayFishing.Gameplay",
+        "Mirror",
+        "Mirror.Editor",
+        "Unity.TextMeshPro"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
