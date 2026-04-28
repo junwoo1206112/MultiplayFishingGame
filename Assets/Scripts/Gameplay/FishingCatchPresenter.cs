@@ -77,6 +77,7 @@ namespace MultiplayFishing.Gameplay
 
             EnsureFishAttachedToHook(hookPoint);
             isPreviewFish = true;
+            StartCoroutine(SmoothAppear(activeFish, 0.3f));
         }
 
         public void ClearFishPreview()
@@ -87,6 +88,20 @@ namespace MultiplayFishing.Gameplay
             }
 
             CleanupActiveFish();
+        }
+
+        private IEnumerator SmoothAppear(GameObject fish, float duration)
+        {
+            fish.transform.localScale = Vector3.zero;
+            float elapsed = 0f;
+            while (elapsed < duration && fish != null)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / duration;
+                fish.transform.localScale = Vector3.Lerp(Vector3.zero, Vector3.one, t);
+                yield return null;
+            }
+            if (fish != null) fish.transform.localScale = Vector3.one;
         }
 
         private IEnumerator AnimateFish(GameObject fish, Transform hookPoint, float reelTime)

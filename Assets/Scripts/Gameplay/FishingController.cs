@@ -51,7 +51,7 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private float castStartDelay = 0.18f;
         [SerializeField] private float castDuration = 0.45f;
         [SerializeField] private float reelDuration = 0.8f;
-        [SerializeField] private float reelDurationWithFish = 1.2f;
+        [SerializeField] private float reelDurationWithFish = 2.0f;
         [SerializeField] private float castArcHeight = 0.35f;
         [SerializeField] private float reelArcHeight = 0.2f;
         [SerializeField] private float idleRopeLength = 1.8f;
