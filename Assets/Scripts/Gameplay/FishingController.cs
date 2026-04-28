@@ -129,6 +129,7 @@ namespace MultiplayFishing.Gameplay
             {
                 biteSystem.BiteStarted += HandleBiteStarted;
                 biteSystem.BiteEnded += HandleBiteEnded;
+                biteSystem.SetHookPoint(hookPoint);
             }
 
             if (clickChallengeUI == null)
