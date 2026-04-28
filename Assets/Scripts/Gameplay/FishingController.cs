@@ -369,17 +369,15 @@ namespace MultiplayFishing.Gameplay
                 }
             }
 
-            System.Action onWaterHit = null;
+            System.Action<Vector3> onWaterHit = null;
             if (isCasting && useSplashEffect)
             {
-                onWaterHit = () =>
+                onWaterHit = hitPosition =>
                 {
-                    FishingWaterSurfaceResolver resolver = CreateWaterSurfaceResolver();
-                    resolver.ResolveCastTarget(transform, castTargetOffset, fallbackCastDistance, out bool hit, out Vector3 hitPoint);
                     fishingSplashController.UpdatePendingPosition(
-                        hit,
-                        hitPoint,
-                        targetPos,
+                        true,
+                        hitPosition,
+                        hitPosition,
                         splashWorldOffset,
                         clampSplashToWaterSurface,
                         minimumSplashHeightOffset);
@@ -435,7 +433,7 @@ namespace MultiplayFishing.Gameplay
                 true,
                 isCasting,
                 waterSurfaceYProvider,
-                () => { onWaterHit?.Invoke(); onWaterHitForWave?.Invoke(); },
+                hitPosition => { onWaterHit?.Invoke(hitPosition); onWaterHitForWave?.Invoke(); },
                 fishingLineVisual,
                 !isCasting ? idleAnchorPoint : null);
 

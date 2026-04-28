@@ -162,6 +162,43 @@ namespace MultiplayFishing.Gameplay
             FishingLineVisual lineVisual = null,
             Transform completionAnchor = null)
         {
+            System.Action<Vector3> onWaterHitAtPosition = onWaterHit != null
+                ? hitPosition => onWaterHit()
+                : null;
+
+            return MoveHook(
+                targetPosition,
+                startDelay,
+                duration,
+                arcHeight,
+                ropeSlack,
+                minimumRopeLength,
+                showRopeOnStart,
+                hideRopeOnComplete,
+                useArcPath,
+                stopAtWaterSurface,
+                waterSurfaceY,
+                onWaterHitAtPosition,
+                lineVisual,
+                completionAnchor);
+        }
+
+        public IEnumerator MoveHook(
+            Vector3 targetPosition,
+            float startDelay,
+            float duration,
+            float arcHeight,
+            float ropeSlack,
+            float minimumRopeLength,
+            bool showRopeOnStart,
+            bool hideRopeOnComplete,
+            bool useArcPath,
+            bool stopAtWaterSurface,
+            float waterSurfaceY,
+            System.Action<Vector3> onWaterHit = null,
+            FishingLineVisual lineVisual = null,
+            Transform completionAnchor = null)
+        {
             return MoveHookDynamic(
                 targetPosition,
                 () => startDelay,
@@ -192,6 +229,43 @@ namespace MultiplayFishing.Gameplay
             bool stopAtWaterSurface,
             System.Func<float> waterSurfaceYProvider,
             System.Action onWaterHit = null,
+            FishingLineVisual lineVisual = null,
+            Transform completionAnchor = null)
+        {
+            System.Action<Vector3> onWaterHitAtPosition = onWaterHit != null
+                ? hitPosition => onWaterHit()
+                : null;
+
+            return MoveHookDynamic(
+                targetPosition,
+                startDelayProvider,
+                durationProvider,
+                arcHeightProvider,
+                ropeSlackProvider,
+                minimumRopeLengthProvider,
+                showRopeOnStart,
+                hideRopeOnComplete,
+                useArcPath,
+                stopAtWaterSurface,
+                waterSurfaceYProvider,
+                onWaterHitAtPosition,
+                lineVisual,
+                completionAnchor);
+        }
+
+        public IEnumerator MoveHookDynamic(
+            Vector3 targetPosition,
+            System.Func<float> startDelayProvider,
+            System.Func<float> durationProvider,
+            System.Func<float> arcHeightProvider,
+            System.Func<float> ropeSlackProvider,
+            System.Func<float> minimumRopeLengthProvider,
+            bool showRopeOnStart,
+            bool hideRopeOnComplete,
+            bool useArcPath,
+            bool stopAtWaterSurface,
+            System.Func<float> waterSurfaceYProvider,
+            System.Action<Vector3> onWaterHit = null,
             FishingLineVisual lineVisual = null,
             Transform completionAnchor = null)
         {
@@ -276,7 +350,7 @@ namespace MultiplayFishing.Gameplay
                         if (!hasHitWater)
                         {
                             hasHitWater = true;
-                            onWaterHit?.Invoke();
+                            onWaterHit?.Invoke(nextPosition);
                         }
                     }
 
@@ -304,7 +378,7 @@ namespace MultiplayFishing.Gameplay
                 if (stopAtWaterSurface && !hasHitWater && finalPosition.y <= finalWaterSurfaceY + 0.001f)
                 {
                     hasHitWater = true;
-                    onWaterHit?.Invoke();
+                    onWaterHit?.Invoke(finalPosition);
                 }
 
                 hookPoint.position = finalPosition;

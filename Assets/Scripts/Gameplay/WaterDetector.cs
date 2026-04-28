@@ -23,13 +23,8 @@ namespace MultiplayFishing.Gameplay
                 return false;
             }
 
-            Vector3 rayOrigin = GetRayOrigin();
-            return Physics.Raycast(
-                rayOrigin,
-                Vector3.down,
-                downCheckDistance,
-                oceanLayer,
-                triggerInteraction);
+            return TryGetClosestSurface(out RaycastHit hit)
+                && IsOceanLayer(hit.collider.gameObject.layer);
         }
 
         private bool EnsureOceanLayer()
@@ -55,6 +50,42 @@ namespace MultiplayFishing.Gameplay
             return transform.position
                 + transform.forward * forwardCheckDistance
                 + Vector3.up * rayStartHeight;
+        }
+
+        private bool TryGetClosestSurface(out RaycastHit closestHit)
+        {
+            Vector3 rayOrigin = GetRayOrigin();
+            RaycastHit[] hits = Physics.RaycastAll(
+                rayOrigin,
+                Vector3.down,
+                downCheckDistance,
+                Physics.DefaultRaycastLayers,
+                triggerInteraction);
+
+            closestHit = default;
+            float closestDistance = float.PositiveInfinity;
+
+            for (int i = 0; i < hits.Length; i++)
+            {
+                RaycastHit hit = hits[i];
+                if (hit.collider == null || hit.collider.transform.IsChildOf(transform))
+                {
+                    continue;
+                }
+
+                if (hit.distance < closestDistance)
+                {
+                    closestDistance = hit.distance;
+                    closestHit = hit;
+                }
+            }
+
+            return closestHit.collider != null;
+        }
+
+        private bool IsOceanLayer(int layer)
+        {
+            return (oceanLayer.value & (1 << layer)) != 0;
         }
 
         private void OnDrawGizmosSelected()

@@ -1550,12 +1550,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb0829782b782794da2edd85f4af3703, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MultiplayFishing.Gameplay::MultiplayFishing.Gameplay.WaterDetector
-  waterLayerMask:
+  oceanLayer:
     serializedVersion: 2
-    m_Bits: 144
-  castAngle: 40
-  sphereRadius: 0.5
-  maxDistance: 12
+    m_Bits: 0
+  forwardCheckDistance: 3
+  rayStartHeight: 2
+  downCheckDistance: 5
+  triggerInteraction: 2
 --- !u!1 &2453267273373660918
 GameObject:
   m_ObjectHideFlags: 0
