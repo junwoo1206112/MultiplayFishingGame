@@ -4,34 +4,22 @@ namespace MultiplayFishing.Gameplay
 {
     public class WaterDetector : MonoBehaviour
     {
-        [Header("Water Detection")]
-        [SerializeField] private LayerMask waterLayerMask;
-        [SerializeField] private float castAngle = 40f;
-        [SerializeField] private float sphereRadius = 0.5f;
-        [SerializeField] private float maxDistance = 12f;
+        [Header("Ocean Detection")]
+        [SerializeField] private LayerMask oceanLayer;
+        [SerializeField] private float forwardCheckDistance = 3f;
+        [SerializeField] private float downCheckDistance = 5f;
 
-        public bool IsWaterInFront(Vector3 origin, Vector3 forward, out bool isOcean)
+        private void Awake()
         {
-            float rad = castAngle * Mathf.Deg2Rad;
-            Vector3 direction = (forward * Mathf.Cos(rad) + Vector3.down * Mathf.Sin(rad)).normalized;
+            if (oceanLayer == 0)
+                oceanLayer = 1 << LayerMask.NameToLayer("Ocean");
+        }
 
-            if (Physics.SphereCast(origin, sphereRadius, direction, out RaycastHit hit, maxDistance, waterLayerMask))
-            {
-                if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Ocean"))
-                {
-                    int groundMask = LayerMask.GetMask("Ground");
-                    bool groundBetween = Physics.Raycast(origin, direction, hit.distance, groundMask);
-                    isOcean = !groundBetween;
-                }
-                else
-                {
-                    isOcean = false;
-                }
-                return true;
-            }
-
-            isOcean = false;
-            return false;
+        public bool CanFish()
+        {
+            int mask = oceanLayer != 0 ? oceanLayer.value : (1 << LayerMask.NameToLayer("Ocean"));
+            Vector3 checkPos = transform.position + transform.forward * forwardCheckDistance;
+            return Physics.Raycast(checkPos, Vector3.down, downCheckDistance, mask);
         }
     }
 }

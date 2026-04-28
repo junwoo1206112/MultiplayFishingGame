@@ -257,11 +257,10 @@ namespace MultiplayFishing.Gameplay
                 return;
             }
 
-            // 캐스팅 전 물 감지: SphereCast로 Ocean 레이어 확인
+            // 캐스팅 전 Ocean 감지
             if (!isFishingActive && waterDetector != null)
             {
-                Vector3 origin = playerCamera != null ? playerCamera.transform.position : transform.position;
-                if (!waterDetector.IsWaterInFront(origin, transform.forward))
+                if (!waterDetector.CanFish())
                     return;
             }
 
