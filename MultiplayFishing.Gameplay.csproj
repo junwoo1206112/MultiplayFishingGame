@@ -43,7 +43,7 @@
     <UnityVersion>6000.3.10f1</UnityVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Analyzer Include="C:\Users\admin\.vscode\extensions\visualstudiotoolsforunity.vstuc-1.2.1\Analyzers\Microsoft.Unity.Analyzers.dll" />
+    <Analyzer Include="C:\Users\admin\.vscode\extensions\visualstudiotoolsforunity.vstuc-1.2.2\Analyzers\Microsoft.Unity.Analyzers.dll" />
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.3.10f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.SourceGenerators.dll" />
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.3.10f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.3.10f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
@@ -51,6 +51,7 @@
   <ItemGroup>
     <Compile Include="Assets\Scripts\Gameplay\SampleSceneLocalPlayerController.cs" />
     <Compile Include="Assets\Scripts\Gameplay\FishingSplashEffect.cs" />
+    <Compile Include="Assets\Scripts\Gameplay\FishingController.cs" />
     <Compile Include="Assets\Scripts\Gameplay\FishingRopeController.cs" />
     <Compile Include="Assets\Scripts\Gameplay\FishingCameraFollow.cs" />
     <Compile Include="Assets\Scripts\Gameplay\FishingPlayer.cs" />
@@ -1278,6 +1279,7 @@
   <ItemGroup>
     <ProjectReference Include="MultiplayFishing.Network.csproj" />
     <ProjectReference Include="MultiplayFishing.Core.csproj" />
+    <ProjectReference Include="MultiplayFishing.Data.csproj" />
     <ProjectReference Include="Mirror.csproj" />
     <ProjectReference Include="UnityEditor.UI.csproj" />
     <ProjectReference Include="UnityEngine.UI.csproj" />
