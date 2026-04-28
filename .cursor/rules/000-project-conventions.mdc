@@ -1,0 +1,53 @@
+---
+description: MultiplayFishingGame project conventions, code style, and Mirror networking patterns
+globs: Assets/Scripts/**/*.cs
+---
+
+# MultiplayFishingGame — Project Conventions
+
+## Tech Stack
+Unity 6 (6000.3.10f1), C# 9.0, netstandard2.1, Mirror Networking v96.0.1, URP, New Input System, Cinemachine, TextMeshPro
+
+## Folder → Namespace Mapping
+- `Assets/Scripts/Network/` → `MultiplayFishing.Network`
+- `Assets/Scripts/Gameplay/` → `MultiplayFishing.Gameplay`
+- `Assets/Scripts/Data/` → `MultiplayFishing.Data`
+- `Assets/Scripts/Data/Models/` → `MultiplayFishing.Data.Models`
+- `Assets/Scripts/UI/` → `MultiplayFishing.UI`
+- `Assets/Scripts/Managers/` → `MultiplayFishing.Core`
+- `Assets/Scripts/Utilities/` → `MultiplayFishing.Utilities`
+- `Editor/` → `MultiplayFishing.Editor`
+- `Tests/` → `MultiplayFishing.Tests`
+
+## Code Style
+- **Using order**: System.* → UnityEngine.* → Mirror → MultiplayFishing.*
+- **Braces**: Allman style (braces on new line), 4-space indentation, no tabs
+- **Private fields**: camelCase, NO underscore prefix (`lastSendTime`, not `_lastSendTime`)
+- **Serialized fields**: `[SerializeField] private camelCase`
+- **Public fields**: PascalCase (except SyncVars which are camelCase)
+- **Methods**: PascalCase
+- **Parameters**: camelCase
+
+## Mirror Networking Patterns
+- **Server-authoritative**: Server owns state, clients receive updates via SyncVar/ClientRpc
+- **SyncVar**: `[SyncVar(hook = nameof(OnXChanged))] public type fieldName;` — hook signature `void OnXChanged(Type old, Type new)`
+- **Command**: `[Command] public void CmdAction()` — client calls, server executes
+- **ClientRpc**: `[ClientRpc] private void RpcAction()` — server calls, all clients execute
+- **TargetRpc**: `[TargetRpc] private void TargetAction(NetworkConnection target, ...)` — server calls, one client executes
+- **Region organization**: `#region Server` / `#region Client` in NetworkBehaviour
+
+## Error Handling
+- Guard clauses with early return: `if (x == null) return;`
+- Validate all Command/Rpc parameters on server side
+- No try-catch in hot paths
+- Logging: `Debug.Log($"[ClassName] message")`
+
+## Forbidden Patterns
+- `GameObject.Find()` → use references, singletons, or `FindFirstObjectByType<T>()`
+- `Update()` for net sync → use SyncVar, ClientRpc, SyncObject collections
+- Modifying `Assets/Mirror/` — Mirror is read-only
+- Manual `.meta` editing — Unity manages these
+- Legacy Input Manager → use New Input System
+- `FindObjectOfType<T>()` → use `FindFirstObjectByType<T>()`
+- Try-catch in hot paths → use guard clauses
+- Underscore-prefixed private fields

@@ -1383,46 +1383,7 @@ CharacterController:
   m_SkinWidth: 0.02
   m_MinMoveDistance: 0
   m_Center: {x: 0, y: 1, z: 0}
---- !u!114 &8186686476597030224
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1333185881400598937}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5d9767c392fb4e843af321f8280741bb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: MultiplayFishing.Gameplay::MultiplayFishing.Gameplay.SampleSceneLocalPlayerController
-  moveSpeed: 4.5
-  rotationSpeed: 180
-  gravity: -20
-  groundedVelocity: -2
-  allowRotationWhileFishing: 0
-  animator: {fileID: 0}
-  walkParameter: Walk
-  fishingParameter: fishing
-  walkThreshold: 0.05
-  fishingLineVisual: {fileID: 6069757633772293587}
-  fishingRopeObject: {fileID: 0}
-  playerCamera: {fileID: 7948268227411115564}
-  tipPoint: {fileID: 9101332650873501933}
-  hookPoint: {fileID: 6280358915695032048}
-  waterSurfaceTransform: {fileID: 0}
-  fishingSplashParticle: {fileID: 0}
-  waterLayerMask:
-    serializedVersion: 2
-    m_Bits: 16
-  waterRayStartHeight: 1.5
-  downwardCastBias: 0.2
-  fallbackCastDistance: 6
-  maxCastDistance: 12
-  castStartDelay: 0.18
-  castDuration: 0.45
-  reelDuration: 0.3
-  castArcHeight: 0.35
-  reelArcHeight: 0.2
+
   idleRopeLength: 1.8
   castRopeLength: 1.8
   idleRopeSlack: 0.1
