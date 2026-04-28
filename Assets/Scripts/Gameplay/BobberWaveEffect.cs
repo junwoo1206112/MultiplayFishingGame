@@ -38,7 +38,7 @@ namespace MultiplayFishing.Gameplay
         [Tooltip("수면 위 높이 오프셋")]
         [SerializeField] private float heightOffset = 0.01f;
         [Tooltip("World-space rotation for the wave sprite.")]
-        [SerializeField] private Vector3 waveWorldEulerAngles = new Vector3(90f, 0f, 0f);
+        [SerializeField] private Vector3 waveWorldEulerAngles = new Vector3(0f, 0f, 0f);
 
         [Header("Randomness")]
         [Tooltip("물결 크기의 랜덤 변동 범위")]

@@ -40,8 +40,8 @@ namespace MultiplayFishing.Gameplay
 
             if (Cursor.lockState == CursorLockMode.Locked)
             {
-                yaw += Input.GetAxis("Mouse X") * mouseSensitivity;
-                pitch -= Input.GetAxis("Mouse Y") * mouseSensitivity;
+                yaw += UnityEngine.Input.GetAxis("Mouse X") * mouseSensitivity;
+                pitch -= UnityEngine.Input.GetAxis("Mouse Y") * mouseSensitivity;
                 pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
             }
 
