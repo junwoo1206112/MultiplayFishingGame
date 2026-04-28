@@ -3,6 +3,7 @@ using UnityEngine;
 using Mirror;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using MultiplayFishing.Core;
 using MultiplayFishing.Data.Models;
 
@@ -23,16 +24,35 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private Renderer characterRenderer;
         [SerializeField] private float walkStopDelay = 0.3f;
 
+        [Header("Movement Settings")]
+        [SerializeField] private float walkSpeed = 8f;
+        [SerializeField] private float sprintSpeed = 14f;
+
+        [Header("Sprint UI")]
+
         private Animator animator;
         private CharacterController characterController;
+        private MonoBehaviour playerController;
+        private FieldInfo maxMoveSpeedField;
         private int walkParamHash;
         private bool hasWalkParam;
         private float walkStopTimer;
         private Vector3 lastPosition;
+        private bool isSprinting;
+        [SerializeField]         private TMPro.TMP_Text sprintStatusText;
+        private bool sprintUISearched;
 
         // 서비스 참조 (DI)
         private IDataService dataService;
         private IUserService userService;
+
+        public bool IsFishing
+        {
+            get
+            {
+                return fishingController != null && fishingController.CurrentState != FishingState.Idle;
+            }
+        }
 
         private void Awake()
         {
@@ -64,14 +84,43 @@ namespace MultiplayFishing.Gameplay
             base.OnStartLocalPlayer();
             userService = DIContainer.Resolve<IUserService>();
             
-            // 낚시 컨트롤러 초기화 추가
+            EnablePlayerController();
             SetupFishingController();
+
+            // Sprint UI 초기값 비움
+            UpdateSprintUI();
             
             StartCoroutine(SmartEscapeRoutine());
-            
+
             string savedName = PlayerPrefs.GetString("PlayerName", $"낚시꾼 {UnityEngine.Random.Range(100, 999)}");
             OnPlayerNameChangedEvent?.Invoke(savedName);
             CmdUpdatePlayerName(savedName);
+        }
+
+        private void EnablePlayerController()
+        {
+            Component[] components = GetComponents<Component>();
+            foreach (Component c in components)
+            {
+                string typeName = c.GetType().Name;
+                if (typeName == "PlayerControllerReliable" || typeName == "PlayerControllerBase")
+                {
+                    MonoBehaviour mb = c as MonoBehaviour;
+                    if (mb != null)
+                    {
+                        playerController = mb;
+                        mb.enabled = true;
+
+                        // maxMoveSpeed public 필드 캐싱
+                        maxMoveSpeedField = mb.GetType().GetField("maxMoveSpeed");
+                        if (maxMoveSpeedField != null)
+                            maxMoveSpeedField.SetValue(mb, walkSpeed);
+
+                        Debug.Log($"[FishingPlayer] Mirror PlayerController 활성화됨");
+                    }
+                    break;
+                }
+            }
         }
 
         void OnPlayerNameChanged(string oldValue, string newValue) => OnPlayerNameChangedEvent?.Invoke(newValue);
@@ -122,6 +171,49 @@ namespace MultiplayFishing.Gameplay
             }
         }
 
+        // ==================== 달리기 시스템 ====================
+
+        private void Update()
+        {
+            UpdateWalkAnimation();
+
+            if (!isLocalPlayer) return;
+
+            if (IsFishing) return;
+
+            HandleSprintInput();
+        }
+
+        private void HandleSprintInput()
+        {
+            bool shiftHeld = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+
+            if (shiftHeld != isSprinting)
+            {
+                isSprinting = shiftHeld;
+                if (maxMoveSpeedField != null && playerController != null)
+                {
+                    maxMoveSpeedField.SetValue(playerController, shiftHeld ? sprintSpeed : walkSpeed);
+                }
+
+                UpdateSprintUI();
+            }
+        }
+
+        private void UpdateSprintUI()
+        {
+            if (sprintStatusText == null && !sprintUISearched)
+            {
+                sprintStatusText = GameObject.Find("SprintStatusText")?.GetComponent<TMPro.TMP_Text>();
+                sprintUISearched = true;
+            }
+
+            if (sprintStatusText == null) return;
+            sprintStatusText.text = isSprinting ? "SPRINT ON" : "";
+        }
+
+        public bool IsSprinting => isSprinting;
+
         // ==================== 낚시 시스템 (네트워크) ====================
 
         private FishingController fishingController;
@@ -148,9 +240,13 @@ namespace MultiplayFishing.Gameplay
 
             var ropeComponent = ropeObject?.GetComponent("Rope");
             
-            // 바늘(Hook)과 끝점(Tip) 검색 시도
-            Transform tip = transform.Find("TipPoint") ?? transform.Find("Skeleton/Hand_R/Rod/Tip"); 
-            Transform hook = transform.Find("HookPoint") ?? (ropeTransform != null ? ropeTransform.Find("Hook") : null);
+            // 바늘(Hook)과 끝점(Tip) 검색 시도 (재귀적/이름 포함 검색으로 강화)
+            Transform tip = FindChildRecursive(transform, "Tip");
+            Transform hook = FindChildRecursive(transform, "Hook");
+
+            // 만약 못 찾았다면 기존의 고정 경로 시도
+            if (tip == null) tip = transform.Find("Skeleton/Hand_R/Rod/Tip");
+            if (hook == null) hook = ropeTransform != null ? ropeTransform.Find("Hook") : null;
 
             var splashParticle = GetComponentInChildren<ParticleSystem>();
             
@@ -170,10 +266,44 @@ namespace MultiplayFishing.Gameplay
 
             fishingController.Initialize(this, animator, lineVisual, ropeController, splashController, waterResolver);
             
+            // 낚시 상태 변경 시 PlayerController 토글 (낚시 중 이동 차단)
+            if (isLocalPlayer)
+            {
+                fishingController.OnStateChanged += OnFishingStateChanged;
+            }
+
             if (tip == null || hook == null) 
             {
-                Debug.LogError($"[FishingPlayer] {playerName}의 낚시 포인트(Tip/Hook) 설정이 누락되었습니다. 낚시 연출이 정상 작동하지 않을 수 있습니다.");
+                Debug.LogWarning($"[FishingPlayer] {playerName}의 낚시 포인트(Tip:{tip != null}, Hook:{hook != null}) 일부가 누락되었습니다. 연출이 제한될 수 있습니다.");
             }
+        }
+
+        private void OnFishingStateChanged(FishingState newState)
+        {
+            if (playerController == null) return;
+            playerController.enabled = newState == FishingState.Idle;
+
+            // 낚시 시작 시 Sprint 해제
+            if (newState != FishingState.Idle && isSprinting)
+            {
+                isSprinting = false;
+                if (maxMoveSpeedField != null)
+                    maxMoveSpeedField.SetValue(playerController, walkSpeed);
+                UpdateSprintUI();
+            }
+        }
+
+        private Transform FindChildRecursive(Transform parent, string nameContains)
+        {
+            foreach (Transform child in parent)
+            {
+                if (child.name.Contains(nameContains, StringComparison.OrdinalIgnoreCase))
+                    return child;
+                
+                Transform result = FindChildRecursive(child, nameContains);
+                if (result != null) return result;
+            }
+            return null;
         }
 
         [Command]
@@ -342,11 +472,6 @@ namespace MultiplayFishing.Gameplay
         {
             CacheWalkParam();
             lastPosition = transform.position;
-        }
-
-        private void Update()
-        {
-            UpdateWalkAnimation();
         }
 
         private void UpdateWalkAnimation()

@@ -1577,6 +1577,9 @@ MonoBehaviour:
   playerColor: {r: 1, g: 1, b: 1, a: 1}
   characterRenderer: {fileID: 0}
   walkStopDelay: 0.2
+  walkSpeed: 8
+  sprintSpeed: 14
+  sprintStatusText: {fileID: 0}
 --- !u!114 &-30323828382460919
 MonoBehaviour:
   m_ObjectHideFlags: 0
