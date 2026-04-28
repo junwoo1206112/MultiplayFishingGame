@@ -237,7 +237,7 @@ namespace MultiplayFishing.Gameplay
                 float initialRopeSlack = ropeSlackProvider != null ? ropeSlackProvider() : 0f;
                 SetRopeLength(GetDesiredRopeLength(targetPosition, initialMinimumRopeLength, initialRopeSlack));
 
-                Vector3 startPosition = launchStartPosition;
+                Vector3 startPosition = !hideRopeOnComplete ? launchStartPosition : hookPoint.position;
                 float elapsed = 0f;
                 bool hasHitWater = false;
                 float lastT = 0f;

@@ -51784,6 +51784,11 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: -6364478861242937035, guid: 5374e258aa8b0a54b9ad017e47f849ec, type: 3}
+--- !u!1 &801140406 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2199994792208976159, guid: ce4547ba7a926814ca252c9e8f3c71b5, type: 3}
+  m_PrefabInstance: {fileID: 2713159329205833603}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &802380298
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -65121,7 +65126,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2736683615954768657, guid: ce4547ba7a926814ca252c9e8f3c71b5, type: 3}
   m_PrefabInstance: {fileID: 2713159329205833603}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 801140406}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5d643d3af44417745bc5d901abd5c87d, type: 3}
@@ -74633,6 +74638,11 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 1952006993}
   m_SourcePrefab: {fileID: 100100000, guid: 0ab22827d0f3f0b40a97e9430d684283, type: 3}
+--- !u!4 &1125192053 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6415742697755246827, guid: ce4547ba7a926814ca252c9e8f3c71b5, type: 3}
+  m_PrefabInstance: {fileID: 2713159329205833603}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1125282176 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 767562868964138845, guid: 7baba197ce36c92439b423eabaad3737, type: 3}
@@ -90091,6 +90101,24 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1570669089643500453, guid: ce4547ba7a926814ca252c9e8f3c71b5, type: 3}
   m_PrefabInstance: {fileID: 2713159329205833603}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1344799301
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 801140406}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb0829782b782794da2edd85f4af3703, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MultiplayFishing.Gameplay::MultiplayFishing.Gameplay.WaterDetector
+  waterLayerMask:
+    serializedVersion: 2
+    m_Bits: 144
+  castAngle: 40
+  sphereRadius: 0.5
+  maxDistance: 12
 --- !u!4 &1346026290 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1490849379766892529, guid: b8217b9c1183a5144b666d1dd63980c4, type: 3}
@@ -149630,11 +149658,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3974794051072384695, guid: ce4547ba7a926814ca252c9e8f3c71b5, type: 3}
       propertyPath: reelArcHeight
-      value: 10
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 3974794051072384695, guid: ce4547ba7a926814ca252c9e8f3c71b5, type: 3}
       propertyPath: castStartDelay
       value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3974794051072384695, guid: ce4547ba7a926814ca252c9e8f3c71b5, type: 3}
+      propertyPath: idleAnchorPoint
+      value: 
+      objectReference: {fileID: 1125192053}
+    - target: {fileID: 3974794051072384695, guid: ce4547ba7a926814ca252c9e8f3c71b5, type: 3}
+      propertyPath: idleHookOffset.y
+      value: -10
       objectReference: {fileID: 0}
     - target: {fileID: 3974794051072384695, guid: ce4547ba7a926814ca252c9e8f3c71b5, type: 3}
       propertyPath: splashWorldOffset.y
@@ -149644,6 +149680,14 @@ PrefabInstance:
       propertyPath: fishingSplashParticle
       value: 
       objectReference: {fileID: 9102416919201996325, guid: 0b912e9003fba894faa88cf964a6fb8a, type: 3}
+    - target: {fileID: 3974794051072384695, guid: ce4547ba7a926814ca252c9e8f3c71b5, type: 3}
+      propertyPath: rodHideNormalizedTime
+      value: 0.7
+      objectReference: {fileID: 0}
+    - target: {fileID: 3974794051072384695, guid: ce4547ba7a926814ca252c9e8f3c71b5, type: 3}
+      propertyPath: hookWaterSubmergeDepth
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 3974794051072384695, guid: ce4547ba7a926814ca252c9e8f3c71b5, type: 3}
       propertyPath: minimumSplashHeightOffset
       value: 0.03
@@ -149700,7 +149744,10 @@ PrefabInstance:
     m_RemovedGameObjects:
     - {fileID: 4575525609013556046, guid: ce4547ba7a926814ca252c9e8f3c71b5, type: 3}
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2199994792208976159, guid: ce4547ba7a926814ca252c9e8f3c71b5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1344799301}
   m_SourcePrefab: {fileID: 100100000, guid: ce4547ba7a926814ca252c9e8f3c71b5, type: 3}
 --- !u!1001 &8154295180691608045
 PrefabInstance:
@@ -149714,13 +149761,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: WaterBlock_50m
       objectReference: {fileID: 0}
+    - target: {fileID: 616788279558673026, guid: 3cff7ff53077f61419c5f9c661acfd43, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
     - target: {fileID: 2174610998671273471, guid: 3cff7ff53077f61419c5f9c661acfd43, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2174610998671273471, guid: 3cff7ff53077f61419c5f9c661acfd43, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -1.9
+      value: 0.17
       objectReference: {fileID: 0}
     - target: {fileID: 2174610998671273471, guid: 3cff7ff53077f61419c5f9c661acfd43, type: 3}
       propertyPath: m_LocalPosition.z
@@ -149757,7 +149808,7 @@ PrefabInstance:
     - target: {fileID: 7394200281244297795, guid: 3cff7ff53077f61419c5f9c661acfd43, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 19ac4fcfcf42b4344a6c7d97a5cd61fc, type: 2}
+      objectReference: {fileID: 2100000, guid: 141d9d6ca43b6c843965491604c6deff, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

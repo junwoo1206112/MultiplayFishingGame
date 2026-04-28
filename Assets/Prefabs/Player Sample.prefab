@@ -1254,6 +1254,7 @@ GameObject:
   - component: {fileID: 5356259300119587112}
   - component: {fileID: 1191068289322922115}
   - component: {fileID: 3974794051072384695}
+  - component: {fileID: 2895638865676939351}
   m_Layer: 0
   m_Name: Player Sample
   m_TagString: Untagged
@@ -1476,6 +1477,7 @@ MonoBehaviour:
   movement: {fileID: 296195286698845221}
   biteSystem: {fileID: 5356259300119587112}
   catchPresenter: {fileID: 1191068289322922115}
+  waterDetector: {fileID: 2895638865676939351}
   animator: {fileID: 4840261169809639903}
   fishingParameter: fishing
   hasFishParameter: HasFish
@@ -1536,6 +1538,24 @@ MonoBehaviour:
   swayFrequency: 0.8
   bobFadeInDuration: 0.5
   bobberWaveDelay: 2.5
+--- !u!114 &2895638865676939351
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2199994792208976159}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb0829782b782794da2edd85f4af3703, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MultiplayFishing.Gameplay::MultiplayFishing.Gameplay.WaterDetector
+  waterLayerMask:
+    serializedVersion: 2
+    m_Bits: 144
+  castAngle: 40
+  sphereRadius: 0.5
+  maxDistance: 12
 --- !u!1 &2453267273373660918
 GameObject:
   m_ObjectHideFlags: 0

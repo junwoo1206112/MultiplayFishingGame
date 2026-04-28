@@ -11,6 +11,7 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private PlayerMovement movement;
         [SerializeField] private FishingBiteSystem biteSystem;
         [SerializeField] private FishingCatchPresenter catchPresenter;
+        [SerializeField] private WaterDetector waterDetector;
         [SerializeField] private Animator animator;
         [SerializeField] private string fishingParameter = "fishing";
         [SerializeField] private string hasFishParameter = "HasFish";
@@ -124,6 +125,7 @@ namespace MultiplayFishing.Gameplay
 
             EnsureInitialized();
             ResolveRodVisualRoot();
+            if (waterDetector == null) waterDetector = GetComponent<WaterDetector>();
             catchPresenter?.Initialize(animator, hasFishParameter);
             if (biteSystem != null)
             {
@@ -253,6 +255,14 @@ namespace MultiplayFishing.Gameplay
             if (!isFishingActive && blockCastWhileMoving && IsMovementInputPressed())
             {
                 return;
+            }
+
+            // 캐스팅 전 물 감지: SphereCast로 Ocean 레이어 확인
+            if (!isFishingActive && waterDetector != null)
+            {
+                Vector3 origin = playerCamera != null ? playerCamera.transform.position : transform.position;
+                if (!waterDetector.IsWaterInFront(origin, transform.forward))
+                    return;
             }
 
             isFishingActive = !isFishingActive;
