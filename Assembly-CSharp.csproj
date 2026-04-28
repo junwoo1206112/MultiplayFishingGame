@@ -1429,6 +1429,7 @@
   <ItemGroup>
     <ProjectReference Include="Mirror.Components.csproj" />
     <ProjectReference Include="kcp2k.csproj" />
+    <ProjectReference Include="MultiplayFishing.Input.csproj" />
     <ProjectReference Include="Edgegap.csproj" />
     <ProjectReference Include="EncryptionTransportEditor.csproj" />
     <ProjectReference Include="MultiplayFishing.Network.csproj" />

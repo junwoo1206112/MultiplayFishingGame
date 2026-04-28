@@ -7,19 +7,64 @@ namespace MultiplayFishing.Gameplay
         [Header("Ocean Detection")]
         [SerializeField] private LayerMask oceanLayer;
         [SerializeField] private float forwardCheckDistance = 3f;
+        [SerializeField] private float rayStartHeight = 2f;
         [SerializeField] private float downCheckDistance = 5f;
+        [SerializeField] private QueryTriggerInteraction triggerInteraction = QueryTriggerInteraction.Collide;
 
         private void Awake()
         {
-            if (oceanLayer == 0)
-                oceanLayer = 1 << LayerMask.NameToLayer("Ocean");
+            EnsureOceanLayer();
         }
 
         public bool CanFish()
         {
-            int mask = oceanLayer != 0 ? oceanLayer.value : (1 << LayerMask.NameToLayer("Ocean"));
-            Vector3 checkPos = transform.position + transform.forward * forwardCheckDistance;
-            return Physics.Raycast(checkPos, Vector3.down, downCheckDistance, mask);
+            if (!EnsureOceanLayer())
+            {
+                return false;
+            }
+
+            Vector3 rayOrigin = GetRayOrigin();
+            return Physics.Raycast(
+                rayOrigin,
+                Vector3.down,
+                downCheckDistance,
+                oceanLayer,
+                triggerInteraction);
+        }
+
+        private bool EnsureOceanLayer()
+        {
+            if (oceanLayer != 0)
+            {
+                return true;
+            }
+
+            int layer = LayerMask.NameToLayer("Ocean");
+            if (layer < 0)
+            {
+                Debug.LogWarning("WaterDetector could not find an Ocean layer. Assign oceanLayer in the inspector.", this);
+                return false;
+            }
+
+            oceanLayer = 1 << layer;
+            return true;
+        }
+
+        private Vector3 GetRayOrigin()
+        {
+            return transform.position
+                + transform.forward * forwardCheckDistance
+                + Vector3.up * rayStartHeight;
+        }
+
+        private void OnDrawGizmosSelected()
+        {
+            Vector3 rayOrigin = GetRayOrigin();
+            Vector3 rayEnd = rayOrigin + Vector3.down * downCheckDistance;
+
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawLine(rayOrigin, rayEnd);
+            Gizmos.DrawSphere(rayOrigin, 0.08f);
         }
     }
 }

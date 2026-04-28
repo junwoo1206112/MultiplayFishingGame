@@ -131,7 +131,6 @@ namespace MultiplayFishing.Gameplay
             {
                 biteSystem.BiteStarted += HandleBiteStarted;
                 biteSystem.BiteEnded += HandleBiteEnded;
-                biteSystem.SetHookPoint(hookPoint);
             }
 
             if (clickChallengeUI == null)
@@ -162,9 +161,12 @@ namespace MultiplayFishing.Gameplay
             }
         }
 
-        private void EnsureInitialized()
+        private void EnsureInitialized(bool repairHookParent = true)
         {
-            RepairHookParentIfNeeded();
+            if (repairHookParent)
+            {
+                RepairHookParentIfNeeded();
+            }
 
             if (fishingRopeController == null)
             {

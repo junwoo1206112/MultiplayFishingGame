@@ -17,5 +17,7 @@
   <Project Path="EncryptionTransportEditor.csproj" />
   <Project Path="Telepathy.csproj" />
   <Project Path="MultiplayFishing.UI.csproj" />
+  <Project Path="MultiplayFishing.Input.csproj" />
   <Project Path="Mirror.CompilerSymbols.csproj" />
+  <Project Path="MultiplayFishing.Gameplay.Tests.csproj" />
 </Solution>

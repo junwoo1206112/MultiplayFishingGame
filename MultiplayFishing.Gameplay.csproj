@@ -52,16 +52,22 @@
     <Compile Include="Assets\Scripts\Gameplay\SampleSceneLocalPlayerController.cs" />
     <Compile Include="Assets\Scripts\Gameplay\FishingSplashEffect.cs" />
     <Compile Include="Assets\Scripts\Gameplay\FishingController.cs" />
+    <Compile Include="Assets\Scripts\Gameplay\WaterDetector.cs" />
     <Compile Include="Assets\Scripts\Gameplay\BobberWaveEffect.cs" />
     <Compile Include="Assets\Scripts\Gameplay\FishingRopeController.cs" />
+    <Compile Include="Assets\Scripts\Gameplay\FishLiftSettings.cs" />
     <Compile Include="Assets\Scripts\Gameplay\FishingClickChallengeUI.cs" />
     <Compile Include="Assets\Scripts\Gameplay\FishingCameraFollow.cs" />
+    <Compile Include="Assets\Scripts\Gameplay\FishingBobbingEffect.cs" />
+    <Compile Include="Assets\Scripts\Gameplay\FishingInputHandler.cs" />
+    <Compile Include="Assets\Scripts\Gameplay\FishingRodVisibility.cs" />
     <Compile Include="Assets\Scripts\Gameplay\FishingPlayer.cs" />
     <Compile Include="Assets\Scripts\Gameplay\FishingLineVisual.cs" />
     <Compile Include="Assets\Scripts\Gameplay\PlayerMovement.cs" />
     <Compile Include="Assets\Scripts\Gameplay\FishingBiteSystem.cs" />
     <Compile Include="Assets\Scripts\Gameplay\FishingCatchPresenter.cs" />
     <Compile Include="Assets\Scripts\Gameplay\FishingWaterSurfaceResolver.cs" />
+    <Compile Include="Assets\Scripts\Gameplay\FishingAnimationController.cs" />
     <Compile Include="Assets\Scripts\Gameplay\FishingSplashController.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -1207,6 +1213,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="MultiplayFishing.Network.csproj" />
+    <ProjectReference Include="MultiplayFishing.Input.csproj" />
     <ProjectReference Include="Mirror.csproj" />
   </ItemGroup>
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
