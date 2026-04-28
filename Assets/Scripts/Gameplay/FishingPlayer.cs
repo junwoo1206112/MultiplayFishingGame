@@ -204,7 +204,7 @@ namespace MultiplayFishing.Gameplay
         {
             if (sprintStatusText == null && !sprintUISearched)
             {
-                sprintStatusText = GameObject.Find("SprintStatusText")?.GetComponent<TMPro.TMP_Text>();
+                sprintStatusText = FindFirstObjectByType<TMPro.TMP_Text>();
                 sprintUISearched = true;
             }
 
