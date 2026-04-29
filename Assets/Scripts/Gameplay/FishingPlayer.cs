@@ -53,7 +53,6 @@ namespace MultiplayFishing.Gameplay
                 return fishingController != null && fishingController.CurrentState != FishingState.Idle;
             }
         }
-
         private void Awake()
         {
             if (characterRenderer == null) characterRenderer = GetComponentInChildren<Renderer>();
@@ -91,7 +90,6 @@ namespace MultiplayFishing.Gameplay
             UpdateSprintUI();
             
             StartCoroutine(SmartEscapeRoutine());
-
             string savedName = PlayerPrefs.GetString("PlayerName", $"낚시꾼 {UnityEngine.Random.Range(100, 999)}");
             OnPlayerNameChangedEvent?.Invoke(savedName);
             CmdUpdatePlayerName(savedName);
@@ -122,7 +120,6 @@ namespace MultiplayFishing.Gameplay
                 }
             }
         }
-
         void OnPlayerNameChanged(string oldValue, string newValue) => OnPlayerNameChangedEvent?.Invoke(newValue);
         
         void OnPlayerColorChanged(Color oldColor, Color newColor) 
@@ -213,7 +210,6 @@ namespace MultiplayFishing.Gameplay
         }
 
         public bool IsSprinting => isSprinting;
-
         // ==================== 낚시 시스템 (네트워크) ====================
 
         private FishingController fishingController;
@@ -240,13 +236,9 @@ namespace MultiplayFishing.Gameplay
 
             var ropeComponent = ropeObject?.GetComponent("Rope");
             
-            // 바늘(Hook)과 끝점(Tip) 검색 시도 (재귀적/이름 포함 검색으로 강화)
-            Transform tip = FindChildRecursive(transform, "Tip");
-            Transform hook = FindChildRecursive(transform, "Hook");
-
-            // 만약 못 찾았다면 기존의 고정 경로 시도
-            if (tip == null) tip = transform.Find("Skeleton/Hand_R/Rod/Tip");
-            if (hook == null) hook = ropeTransform != null ? ropeTransform.Find("Hook") : null;
+            // 바늘(Hook)과 끝점(Tip) 검색 시도
+            Transform tip = FindChildRecursive(transform, "Tip") ?? transform.Find("Skeleton/Hand_R/Rod/Tip");
+            Transform hook = FindChildRecursive(transform, "Hook") ?? (ropeTransform != null ? ropeTransform.Find("Hook") : null);
 
             var splashParticle = GetComponentInChildren<ParticleSystem>();
             
@@ -305,7 +297,6 @@ namespace MultiplayFishing.Gameplay
             }
             return null;
         }
-
         [Command]
         public void CmdStartFishing(Vector3 targetPos)
         {
@@ -473,6 +464,7 @@ namespace MultiplayFishing.Gameplay
             CacheWalkParam();
             lastPosition = transform.position;
         }
+
 
         private void UpdateWalkAnimation()
         {

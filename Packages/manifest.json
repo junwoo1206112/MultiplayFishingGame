@@ -2,6 +2,10 @@
   "dependencies": {
     "com.coplaydev.unity-mcp": "https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#beta",
     "com.github-glitchenzo.nugetforunity": "https://github.com/GlitchEnzo/NuGetForUnity.git?path=/src/NuGetForUnity",
+<<<<<<< HEAD
+=======
+    "com.unity.2d.sprite": "1.0.0",
+>>>>>>> origin/Map
     "com.unity.ai.navigation": "2.0.10",
     "com.unity.cinemachine": "3.1.6",
     "com.unity.collab-proxy": "2.11.3",

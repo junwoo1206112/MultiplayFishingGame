@@ -82,6 +82,10 @@ namespace MultiplayFishing.Gameplay
             bool leftPressed = Mouse.current.leftButton.wasPressedThisFrame;
             bool leftHeld = Mouse.current.leftButton.isPressed;
             bool leftReleased = Mouse.current.leftButton.wasReleasedThisFrame;
+<<<<<<< HEAD
+=======
+            bool spacePressed = Keyboard.current.spaceKey.wasPressedThisFrame;
+>>>>>>> origin/Map
 
             switch (CurrentState)
             {
@@ -99,7 +103,11 @@ namespace MultiplayFishing.Gameplay
                     break;
 
                 case FishingState.Catching:
+<<<<<<< HEAD
                     if (leftPressed) RecordSpam();
+=======
+                    if (spacePressed) RecordSpam();
+>>>>>>> origin/Map
                     break;
             }
         }
