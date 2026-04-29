@@ -23,10 +23,7 @@
   <Project Path="Unity.TextMeshPro.csproj" />
   <Project Path="UnityCliConnector.Editor.csproj" />
   <Project Path="MultiplayFishing.Editor.csproj" />
-<<<<<<< HEAD
-=======
   <Project Path="Unity.TextMeshPro.Editor.csproj" />
->>>>>>> origin/Map
   <Project Path="Mirror.csproj" />
   <Project Path="SimpleWebTransport.csproj" />
   <Project Path="UnityEditor.UI.csproj" />
@@ -35,21 +32,13 @@
   <Project Path="Unity.2D.Sprite.Editor.csproj" />
   <Project Path="Mirror.Transports.csproj" />
   <Project Path="EncryptionTransportEditor.csproj" />
-<<<<<<< HEAD
-  <Project Path="MultiplayFishing.UI.csproj" />
-  <Project Path="MultiplayFishing.Gameplay.csproj" />
-=======
   <Project Path="Unity.Multiplayer.Center.Common.csproj" />
   <Project Path="MultiplayFishing.UI.csproj" />
->>>>>>> origin/Map
+  <Project Path="MultiplayFishing.Gameplay.csproj" />
   <Project Path="Telepathy.csproj" />
   <Project Path="Assembly-CSharp.csproj" />
   <Project Path="UnityEditor.UI.Analytics.csproj" />
   <Project Path="Assembly-CSharp-Editor.csproj" />
-<<<<<<< HEAD
-  <Project Path="Mirror.CompilerSymbols.csproj" />
-  <Project Path="MultiplayFishing.Data.csproj" />
-=======
   <Project Path="Unity.ShaderGraph.Utilities.csproj" />
   <Project Path="Unity.RenderPipeline.Universal.ShaderLibrary.csproj" />
   <Project Path="Mirror.CompilerSymbols.csproj" />
@@ -62,5 +51,4 @@
   <Project Path="Unity.RenderPipelines.Universal.Config.Runtime.csproj" />
   <Project Path="Unity.RenderPipelines.ShaderGraph.ShaderGraphLibrary.csproj" />
   <Project Path="Unity.RenderPipelines.Core.ShaderLibrary.csproj" />
->>>>>>> origin/Map
 </Solution>
