@@ -1,72 +1,21 @@
 using UnityEngine;
 using UnityEngine.UI;
-<<<<<<< HEAD
-using TMPro;
-=======
 using System.Collections;
->>>>>>> origin/Map
 using MultiplayFishing.Gameplay;
 
 namespace MultiplayFishing.UI
 {
     public class FishingUI : MonoBehaviour
     {
-<<<<<<< HEAD
         [Header("Panels")]
         [SerializeField] private GameObject chargingPanel;
         [SerializeField] private GameObject catchingPanel;
-        [SerializeField] private GameObject alertPanel; // "!" 아이콘용
+        [SerializeField] private GameObject alertPanel;
 
-=======
->>>>>>> origin/Map
         [Header("Charging UI")]
         [SerializeField] private Slider chargingBar;
 
         [Header("Catching UI")]
-<<<<<<< HEAD
-        [SerializeField] private Slider catchingBar;
-        [SerializeField] private TMP_Text catchingText;
-
-        private FishingController targetController;
-
-        private void Start()
-        {
-            // 로컬 플레이어가 생성될 때까지 대기하거나 찾음
-            FindLocalFishingController();
-            
-            // 초기 상태: 모두 숨김
-            if (chargingPanel) chargingPanel.SetActive(false);
-            if (catchingPanel) catchingPanel.SetActive(false);
-            if (alertPanel) alertPanel.SetActive(false);
-        }
-
-        private void FindLocalFishingController()
-        {
-            // 실제 환경에서는 FishingPlayer가 생성된 후 Controller를 주입하거나 
-            // 이벤트를 통해 전달받는 것이 좋으나, 여기서는 간단히 검색 방식을 사용합니다.
-            var players = FindObjectsByType<FishingPlayer>(FindObjectsSortMode.None);
-            foreach (var p in players)
-            {
-                if (p.isLocalPlayer)
-                {
-                    targetController = p.GetComponent<FishingController>();
-                    if (targetController != null)
-                    {
-                        targetController.OnStateChanged += HandleStateChanged;
-                        targetController.OnChargeProgressChanged += UpdateChargeBar;
-                        targetController.OnCatchProgressChanged += UpdateCatchBar;
-                    }
-                    break;
-                }
-            }
-        }
-
-        private void Update()
-        {
-            if (targetController == null)
-            {
-                FindLocalFishingController();
-=======
         [SerializeField] private Image fillImage;
         [SerializeField] private RectTransform backgroundRect;
         [SerializeField] private RectTransform borderRect;
@@ -90,7 +39,7 @@ namespace MultiplayFishing.UI
         private float timerElapsed;
         private bool isTimerRunning;
 
-        private UIManager uiManager;
+        private FishingController targetController;
 
         private void Awake()
         {
@@ -116,17 +65,31 @@ namespace MultiplayFishing.UI
 
         private void Start()
         {
-            uiManager = GetComponentInParent<UIManager>();
-            if (uiManager != null)
+            HideAllPanels();
+            FindLocalFishingController();
+        }
+
+        private void FindLocalFishingController()
+        {
+            var players = FindObjectsByType<FishingPlayer>(FindObjectsSortMode.None);
+            foreach (var p in players)
             {
-                uiManager.OnPanelStateChanged += HandlePanelStateChanged;
->>>>>>> origin/Map
+                if (p.isLocalPlayer)
+                {
+                    targetController = p.GetComponent<FishingController>();
+                    if (targetController != null)
+                    {
+                        targetController.OnStateChanged += HandleStateChanged;
+                        targetController.OnChargeProgressChanged += UpdateChargeBar;
+                        targetController.OnCatchProgressChanged += UpdateCatchBar;
+                    }
+                    break;
+                }
             }
         }
 
         private void OnDestroy()
         {
-<<<<<<< HEAD
             if (targetController != null)
             {
                 targetController.OnStateChanged -= HandleStateChanged;
@@ -137,60 +100,30 @@ namespace MultiplayFishing.UI
 
         private void HandleStateChanged(FishingState state)
         {
-            if (chargingPanel) chargingPanel.SetActive(state == FishingState.Charging);
-            if (catchingPanel) catchingPanel.SetActive(state == FishingState.Catching);
-            if (alertPanel) alertPanel.SetActive(state == FishingState.Nibble);
+            HideAllPanels();
 
-            // 입질 시 효과음 재생 등 추가 가능
-            if (state == FishingState.Nibble)
-            {
-                Debug.Log("입질! 빨리 낚으세요!");
-            }
-        }
-
-        private void UpdateChargeBar(float progress)
-        {
-            if (chargingBar) chargingBar.value = progress;
-        }
-
-        private void UpdateCatchBar(float current, float target)
-        {
-            if (catchingBar)
-            {
-                catchingBar.maxValue = target;
-                catchingBar.value = current;
-            }
-
-            if (catchingText)
-            {
-                catchingText.text = $"연타!! ({current} / {target})";
-            }
-        }
-    }
-}
-=======
-            if (uiManager != null)
-            {
-                uiManager.OnPanelStateChanged -= HandlePanelStateChanged;
-            }
-        }
-
-        private void HandlePanelStateChanged(FishingState state)
-        {
             switch (state)
             {
                 case FishingState.Charging:
+                    if (chargingPanel) chargingPanel.SetActive(true);
                     OnChargingStarted();
                     break;
+                case FishingState.Nibble:
+                    if (alertPanel) alertPanel.SetActive(true);
+                    Debug.Log("입질! 빨리 낚으세요!");
+                    break;
                 case FishingState.Catching:
+                    if (catchingPanel) catchingPanel.SetActive(true);
                     OnCatchingStarted();
                     break;
-                case FishingState.Idle:
-                case FishingState.Failure:
-                case FishingState.Success:
-                    OnFishingEnded();
-                    break;
             }
+        }
+
+        private void HideAllPanels()
+        {
+            if (chargingPanel) chargingPanel.SetActive(false);
+            if (catchingPanel) catchingPanel.SetActive(false);
+            if (alertPanel) alertPanel.SetActive(false);
         }
 
         private void OnChargingStarted()
@@ -229,6 +162,12 @@ namespace MultiplayFishing.UI
 
         private void Update()
         {
+            if (targetController == null)
+            {
+                FindLocalFishingController();
+                return;
+            }
+
             if (Input.GetKeyDown(KeyCode.Space) && isTimerRunning)
             {
                 if (fillImage != null)
@@ -304,6 +243,11 @@ namespace MultiplayFishing.UI
                 fillImage.color = colorHigh;
         }
 
+        public void UpdateChargeBar(float progress)
+        {
+            if (chargingBar) chargingBar.value = progress;
+        }
+
         public void UpdateCatchBar(float current, float target)
         {
             if (fillImage != null)
@@ -312,12 +256,5 @@ namespace MultiplayFishing.UI
                 UpdateFillColor();
             }
         }
-
-        public void UpdateChargeBar(float progress)
-        {
-            if (chargingBar != null)
-                chargingBar.value = progress;
-        }
     }
 }
->>>>>>> origin/Map
