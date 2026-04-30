@@ -60,7 +60,7 @@ namespace Mirror
         }
 
         GUIContent title;
-        Styles styles = new Styles();
+        Styles styles;
 
         public override GUIContent GetPreviewTitle()
         {
@@ -69,6 +69,13 @@ namespace Mirror
                 title = new GUIContent("Network Information");
             }
             return title;
+        }
+
+        public override void Cleanup()
+        {
+            base.Cleanup();
+            styles = null;
+            title = null;
         }
 
         public override bool HasPreviewGUI()

@@ -10,7 +10,7 @@ namespace MultiplayFishing.UI
     public class NetworkMenuUI : MonoBehaviour
     {
         [Header("Dependency")]
-        [SerializeField] private FishingNetworkManager manager;
+        [SerializeField] private FishingRoomManager manager;
 
         [Header("Buttons")]
         [SerializeField] private Button hostButton;
@@ -112,7 +112,7 @@ namespace MultiplayFishing.UI
         {
             if (manager == null)
             {
-                manager = FindAnyObjectByType<FishingNetworkManager>();
+                manager = FindAnyObjectByType<FishingRoomManager>();
             }
         }
 
@@ -178,7 +178,7 @@ namespace MultiplayFishing.UI
 
         void OnEnable()
         {
-            FishingNetworkManager.NetworkStateChanged += Refresh;
+            FishingRoomManager.NetworkStateChanged += Refresh;
             SceneManager.sceneLoaded += OnSceneLoaded;
             EnsureManager();
             Refresh();
@@ -186,7 +186,7 @@ namespace MultiplayFishing.UI
 
         void OnDisable()
         {
-            FishingNetworkManager.NetworkStateChanged -= Refresh;
+            FishingRoomManager.NetworkStateChanged -= Refresh;
             SceneManager.sceneLoaded -= OnSceneLoaded;
         }
 
@@ -213,7 +213,7 @@ namespace MultiplayFishing.UI
             else if (NetworkClient.isConnected) manager.StopClient();
         }
 
-        void OnCopyIPClicked() { GUIUtility.systemCopyBuffer = FishingNetworkManager.GetLocalIPAddress(); }
+        void OnCopyIPClicked() { GUIUtility.systemCopyBuffer = FishingRoomManager.GetLocalIPAddress(); }
 
         void Refresh()
         {
@@ -237,7 +237,7 @@ namespace MultiplayFishing.UI
             // 실시간으로 씬 내의 플레이어 오브젝트 수를 세어서 표시
             if (manager != null && manager.mode != NetworkManagerMode.Offline && connectionInfoText != null)
             {
-                connectionInfoText.text = $"[ 인원: {manager.ConnectedClientCount}/{manager.MaxPlayers} ]";
+                connectionInfoText.text = $"[ 인원: {manager.ConnectedClientCount}/{manager.maxConnections} ]";
             }
         }
     }
