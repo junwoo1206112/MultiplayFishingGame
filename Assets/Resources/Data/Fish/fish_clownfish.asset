@@ -21,5 +21,7 @@ MonoBehaviour:
   sellPrice: 450
   minSize: 5
   maxSize: 10
+  weight: 0.11
+  requiredSpam: 2
   description: "\uC0B0\uD638\uCD08 \uC0AC\uC774\uB97C \uD5E4\uC5C4\uCE58\uB294 \uADC0\uC5EC\uC6B4
     \uBB3C\uACE0\uAE30. \uC601\uD654 \uC18D \uC8FC\uC778\uACF5 \uAC19\uC544\uC694."

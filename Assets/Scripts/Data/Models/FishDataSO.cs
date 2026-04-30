@@ -22,6 +22,12 @@ namespace MultiplayFishing.Data.Models
         public float minSize; 
         public float maxSize; 
 
+        [Header("무게 (kg)")]
+        public float weight;
+
+        [Header("연타 횟수")]
+        public int requiredSpam;
+
         [Header("설명")]
         [TextArea(3, 10)]
         public string description;

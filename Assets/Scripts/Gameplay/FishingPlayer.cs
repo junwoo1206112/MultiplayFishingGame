@@ -322,8 +322,8 @@ namespace MultiplayFishing.Gameplay
             {
                 pendingFishLength = UnityEngine.Random.Range(pendingFish.minSize, pendingFish.maxSize);
                 
-                // 등급별 연타 횟수 설정
-                int requiredSpam = GetRequiredSpam(pendingFish.rank);
+                // 무게 기반 연타 횟수 계산
+                int requiredSpam = GetRequiredSpam(pendingFish);
                 
                 // 클라이언트에 입질 알림
                 TargetOnNibble(connectionToClient, requiredSpam);
@@ -335,18 +335,21 @@ namespace MultiplayFishing.Gameplay
             }
         }
 
-        private int GetRequiredSpam(string rank)
+        private int GetRequiredSpam(FishDataSO fish)
         {
-            // 별 개수에 따라 연타 횟수 상이하게 설정
-            return rank switch
+            if (fish == null) return 5;
+
+            // 1. 엑셀/SO에 저장된 값이 있다면 우선 사용
+            if (fish.requiredSpam > 0)
             {
-                "★★★★★" => 30, // 5성
-                "★★★★" => 22,  // 4성
-                "★★★" => 15,   // 3성
-                "★★" => 10,    // 2성
-                "★" => 6,       // 1성
-                _ => 10
-            };
+                return fish.requiredSpam;
+            }
+
+            // 2. 폴백 계산 (1~10 범위)
+            float weightBonus = Mathf.Log10(fish.weight + 1) * 1.5f;
+            int rankBonus = fish.rank.Length; 
+
+            return Mathf.Clamp(Mathf.RoundToInt(1 + weightBonus + rankBonus), 1, 10);
         }
 
         [TargetRpc]
@@ -373,7 +376,7 @@ namespace MultiplayFishing.Gameplay
         {
             if (pendingFish == null) return;
 
-            int required = GetRequiredSpam(pendingFish.rank);
+            int required = GetRequiredSpam(pendingFish);
             bool success = spamCount >= required;
 
             if (success)

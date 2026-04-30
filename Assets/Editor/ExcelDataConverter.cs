@@ -30,9 +30,11 @@ namespace MultiplayFishing.Editor
                 ISheet sheet = workbook.GetSheetAt(0);
                 IRow headerRow = sheet.GetRow(0);
 
-                // 헤더 확장 (ID, Name, Rank, Chance, Price, Min, Max, Description, EXP)
+                // 헤더 확장 (ID, Name, Rank, Chance, Price, Min, Max, Description, EXP, Weight, RequiredSpam)
                 headerRow.CreateCell(7).SetCellValue("Description");
                 headerRow.CreateCell(8).SetCellValue("EXP Reward");
+                headerRow.CreateCell(9).SetCellValue("Weight");
+                headerRow.CreateCell(10).SetCellValue("Required Spam");
 
                 for (int i = 1; i <= sheet.LastRowNum; i++)
                 {
@@ -41,6 +43,8 @@ namespace MultiplayFishing.Editor
 
                     string id = GetStringValue(row.GetCell(0)).ToLower();
                     string rank = GetStringValue(row.GetCell(2));
+                    float minSize = GetNumericValue(row.GetCell(5));
+                    float maxSize = GetNumericValue(row.GetCell(6));
 
                     // 1. 임의의 한글 설명 할당
                     string creativeDesc = GetFishDescription(id);
@@ -51,12 +55,22 @@ namespace MultiplayFishing.Editor
                     row.CreateCell(8).SetCellValue(exp);
                     
                     // 3. 만약 최소/최대 크기가 없다면 이것도 패치
-                    if (GetNumericValue(row.GetCell(5)) <= 0)
+                    if (minSize <= 0)
                     {
                         var (min, max) = GetDefaultSizeRange(rank, id);
+                        minSize = min;
+                        maxSize = max;
                         row.CreateCell(5).SetCellValue(min);
                         row.CreateCell(6).SetCellValue(max);
                     }
+
+                    // 4. 무게 자동 할당 (크기에 비례, 등급별 보정)
+                    float weight = GetDefaultWeight(rank, (minSize + maxSize) / 2f);
+                    row.CreateCell(9).SetCellValue(weight);
+
+                    // 5. 무게 기반 연타 횟수 계산 및 저장
+                    int spam = CalculateRequiredSpam(rank, weight);
+                    row.CreateCell(10).SetCellValue(spam);
                 }
 
                 using (FileStream file = new FileStream(ExcelPath, FileMode.Create, FileAccess.Write, FileShare.None))
@@ -107,6 +121,8 @@ namespace MultiplayFishing.Editor
                     fishData.maxSize = GetNumericValue(row.GetCell(6));
                     fishData.description = GetStringValue(row.GetCell(7));
                     fishData.expReward = (int)GetNumericValue(row.GetCell(8));
+                    fishData.weight = GetNumericValue(row.GetCell(9));
+                    fishData.requiredSpam = (int)GetNumericValue(row.GetCell(10));
 
                     EditorUtility.SetDirty(fishData);
                 }
@@ -114,6 +130,32 @@ namespace MultiplayFishing.Editor
                 AssetDatabase.Refresh();
                 Debug.Log("Excel sync complete.");
             }
+        }
+
+        private static int CalculateRequiredSpam(string rank, float weight)
+        {
+            // 테스트를 위해 1~10 범위로 조정
+            // 기본 1회 + 로그 기반 무게 보너스(0~4회) + 등급 보너스(1~5회)
+            float weightBonus = (float)Math.Log10(weight + 1) * 1.5f;
+            int rankBonus = rank.Length; // 별 개수당 1회
+            
+            return Mathf.Clamp(Mathf.RoundToInt(1 + weightBonus + rankBonus), 1, 10);
+        }
+
+        private static float GetDefaultWeight(string rank, float avgSize)
+        {
+            // 기본적인 무게 공식: 크기의 제곱에 등급 보너스 곱함
+            float baseWeight = (avgSize * avgSize) / 500f;
+            
+            float multiplier = rank switch {
+                "★★★★★" => 5.0f,
+                "★★★★" => 2.5f,
+                "★★★" => 1.5f,
+                "★★" => 1.1f,
+                _ => 1.0f
+            };
+
+            return (float)Math.Round(baseWeight * multiplier, 2);
         }
 
         private static int GetDefaultExpReward(string rank)
