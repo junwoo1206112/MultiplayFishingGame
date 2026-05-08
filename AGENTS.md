@@ -12,8 +12,8 @@
 
 ## ⚠️ Shop System — UI 프리팹 셋업 필요 (2026-05-08)
 
-**상점 시스템(Shop System) 코드는 완료되었지만, Unity Editor에서 아래 작업이 필요합니다.**
-👉 **`UI_SETUP_GUIDE.md`** 파일을 반드시 읽고 진행하세요.
+**상점 시스템(Shop System) 코드는 완료 + GitHub 푸시 완료.**  
+👉 **`UI_SETUP_GUIDE.md`** 파일을 반드시 읽고 Unity Editor에서 아래 작업을 진행하세요.
 
 | 단계 | 작업 | 담당 |
 |------|------|------|
