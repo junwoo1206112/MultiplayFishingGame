@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6fa9bd78cff8ecb4db44689c645b3928, type: 3}
+  m_Name: bait_basic
+  m_EditorClassIdentifier: MultiplayFishing.Data::MultiplayFishing.Data.Models.BaitDataSO
+  id: bait_basic
+  baitName: "\uAE30\uBCF8 \uBBF8\uB07C"
+  icon: {fileID: 0}
+  rank: "\u2605"
+  price: 0
+  attractionFishIds: []
+  catchChanceBonus: 0
+  description: "\uC544\uBB34 \uBB3C\uACE0\uAE30\uB098 \uC7A1\uC744 \uC218 \uC788\uB294
+    \uAE30\uBCF8 \uBBF8\uB07C\uC785\uB2C8\uB2E4."

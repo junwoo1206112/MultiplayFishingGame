@@ -8,5 +8,9 @@ namespace MultiplayFishing.Core
         void LoadData();
         FishDataSO GetFishData(string id);
         List<FishDataSO> GetAllFishData();
+        RodDataSO GetRodData(string id);
+        List<RodDataSO> GetAllRodData();
+        BaitDataSO GetBaitData(string id);
+        List<BaitDataSO> GetAllBaitData();
     }
 }

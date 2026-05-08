@@ -49,6 +49,11 @@ namespace MultiplayFishing.Data.Models
         public int currentTier = 1;
         public int currentExp = 0;
 
+        public List<string> ownedRodIds = new List<string>();
+        public List<string> ownedBaitIds = new List<string>();
+        public string equippedRodId = "";
+        public string equippedBaitId = "";
+
         public void AddToInventory(string fishId, float length)
         {
             inventory.Add(new InventoryItem(fishId, length));

@@ -20,6 +20,10 @@ namespace MultiplayFishing.Gameplay
         [SyncVar(hook = nameof(OnPlayerNameChanged))] public string playerName = "";
         [SyncVar(hook = nameof(OnPlayerColorChanged))] public Color playerColor = Color.white;
 
+        [Header("Equipment (Shop)")]
+        [SyncVar(hook = nameof(OnEquippedRodChanged))] public string equippedRodId = "";
+        [SyncVar(hook = nameof(OnEquippedBaitChanged))] public string equippedBaitId = "";
+
         [Header("Setup References")]
         [SerializeField] private Renderer characterRenderer;
         [SerializeField] private float walkStopDelay = 0.3f;
@@ -66,6 +70,13 @@ namespace MultiplayFishing.Gameplay
             base.OnStartServer();
             playerColor = Color.HSVToRGB(UnityEngine.Random.value, 0.8f, 1.0f);
             dataService = DIContainer.Resolve<IDataService>();
+            userService = DIContainer.Resolve<IUserService>();
+
+            if (userService != null)
+            {
+                equippedRodId = userService.UserData.equippedRodId;
+                equippedBaitId = userService.UserData.equippedBaitId;
+            }
         }
 
         public override void OnStartClient()
@@ -82,6 +93,18 @@ namespace MultiplayFishing.Gameplay
         {
             base.OnStartLocalPlayer();
             userService = DIContainer.Resolve<IUserService>();
+            dataService = DIContainer.Resolve<IDataService>();
+
+            if (userService != null)
+            {
+                string savedRodId = userService.UserData.equippedRodId;
+                string savedBaitId = userService.UserData.equippedBaitId;
+
+                if (!string.IsNullOrEmpty(savedRodId))
+                    CmdEquipRod(savedRodId);
+                if (!string.IsNullOrEmpty(savedBaitId))
+                    CmdEquipBait(savedBaitId);
+            }
             
             EnablePlayerController();
             SetupFishingController();
@@ -126,6 +149,16 @@ namespace MultiplayFishing.Gameplay
         { 
             UpdateCharacterColor(newColor); 
             OnPlayerColorChangedEvent?.Invoke(newColor); 
+        }
+
+        void OnEquippedRodChanged(string oldValue, string newValue)
+        {
+            Debug.Log($"[FishingPlayer] Equipped rod changed: {oldValue} -> {newValue}");
+        }
+
+        void OnEquippedBaitChanged(string oldValue, string newValue)
+        {
+            Debug.Log($"[FishingPlayer] Equipped bait changed: {oldValue} -> {newValue}");
         }
 
         private void UpdateCharacterColor(Color color)
@@ -405,6 +438,77 @@ namespace MultiplayFishing.Gameplay
             pendingFish = null;
         }
 
+        // ==================== 상점 시스템 (네트워크) ====================
+
+        [Command]
+        public void CmdBuyItem(int itemType, string itemId)
+        {
+            if (userService == null) userService = DIContainer.Resolve<IUserService>();
+            if (userService == null) return;
+
+            bool success = userService.BuyItem((ShopItemType)itemType, itemId);
+            TargetRpcBuyResult(connectionToClient, success);
+        }
+
+        [Command]
+        public void CmdEquipRod(string rodId)
+        {
+            if (userService == null) userService = DIContainer.Resolve<IUserService>();
+            if (userService == null) return;
+
+            if (userService.EquipRod(rodId))
+            {
+                equippedRodId = rodId;
+            }
+        }
+
+        [Command]
+        public void CmdEquipBait(string baitId)
+        {
+            if (userService == null) userService = DIContainer.Resolve<IUserService>();
+            if (userService == null) return;
+
+            if (userService.EquipBait(baitId))
+            {
+                equippedBaitId = baitId;
+            }
+        }
+
+        [Command]
+        public void CmdUnequipRod()
+        {
+            if (userService == null) userService = DIContainer.Resolve<IUserService>();
+            if (userService == null) return;
+
+            userService.UnequipRod();
+            equippedRodId = "";
+        }
+
+        [Command]
+        public void CmdUnequipBait()
+        {
+            if (userService == null) userService = DIContainer.Resolve<IUserService>();
+            if (userService == null) return;
+
+            userService.UnequipBait();
+            equippedBaitId = "";
+        }
+
+        [TargetRpc]
+        private void TargetRpcBuyResult(NetworkConnection target, bool success)
+        {
+            if (success)
+            {
+                Debug.Log("[Shop] Purchase successful.");
+                OnSystemMessage?.Invoke("[상점] 구매가 완료되었습니다!");
+            }
+            else
+            {
+                Debug.Log("[Shop] Purchase failed.");
+                OnSystemMessage?.Invoke("[상점] 구매에 실패했습니다. 골드를 확인해주세요.");
+            }
+        }
+
         [TargetRpc]
         private void TargetOnFishingResult(NetworkConnection target, bool success, string fishId, float length, int exp)
         {
@@ -427,18 +531,32 @@ namespace MultiplayFishing.Gameplay
             List<FishDataSO> allFish = dataService.GetAllFishData();
             if (allFish == null || allFish.Count == 0) return null;
 
+            float catchBonus = 0f;
+            if (!string.IsNullOrEmpty(equippedRodId))
+            {
+                var rod = dataService.GetRodData(equippedRodId);
+                if (rod != null) catchBonus += rod.catchChanceBonus;
+            }
+            if (!string.IsNullOrEmpty(equippedBaitId))
+            {
+                var bait = dataService.GetBaitData(equippedBaitId);
+                if (bait != null) catchBonus += bait.catchChanceBonus;
+            }
+
             float totalChance = 0f;
             foreach (var fish in allFish)
             {
                 totalChance += fish.catchChance;
             }
 
-            float randomValue = UnityEngine.Random.Range(0f, totalChance);
+            float adjustedTotal = totalChance + catchBonus;
+            float randomValue = UnityEngine.Random.Range(0f, adjustedTotal);
             float currentChance = 0f;
 
             foreach (var fish in allFish)
             {
-                currentChance += fish.catchChance;
+                float fishChance = fish.catchChance;
+                currentChance += fishChance;
                 if (randomValue <= currentChance)
                 {
                     return fish;
@@ -446,6 +564,13 @@ namespace MultiplayFishing.Gameplay
             }
 
             return allFish[allFish.Count - 1];
+        }
+
+        public float GetCastDistanceBonus()
+        {
+            if (string.IsNullOrEmpty(equippedRodId)) return 0f;
+            var rod = dataService.GetRodData(equippedRodId);
+            return rod != null ? rod.castDistanceBonus : 0f;
         }
 
         // ==================== 애니메이션 및 캐릭터 제어 ====================

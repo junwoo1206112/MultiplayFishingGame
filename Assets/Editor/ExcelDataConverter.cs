@@ -12,7 +12,9 @@ namespace MultiplayFishing.Editor
     public class ExcelDataConverter : EditorWindow
     {
         private const string ExcelPath = "Assets/ExcelData/FishData.xlsx";
-        private const string ResourcePath = "Assets/Resources/Data/Fish";
+        private const string FishResourcePath = "Assets/Resources/Data/Fish";
+        private const string RodResourcePath = "Assets/Resources/Data/Rods";
+        private const string BaitResourcePath = "Assets/Resources/Data/Baits";
 
         [MenuItem("Tools/Excel/1. Patch Creative Content (Desc & EXP)")]
         public static void PatchCreativeContent()
@@ -103,7 +105,7 @@ namespace MultiplayFishing.Editor
                     if (row == null || row.GetCell(0) == null) continue;
 
                     string id = GetStringValue(row.GetCell(0));
-                    string assetPath = Path.Combine(ResourcePath, $"{id}.asset");
+                    string assetPath = Path.Combine(FishResourcePath, $"{id}.asset");
 
                     FishDataSO fishData = AssetDatabase.LoadAssetAtPath<FishDataSO>(assetPath);
                     if (fishData == null)
@@ -206,6 +208,111 @@ namespace MultiplayFishing.Editor
                 "★★★★★" => (200f, 800f), "★★★★" => (100f, 250f), "★★★" => (50f, 120f),
                 "★★" => (20f, 60f), "★" => (5f, 25f), _ => (10f, 50f)
             };
+        }
+
+        [MenuItem("Tools/Excel/3. Convert Rods Sheet to SO")]
+        public static void ConvertRodsToSO()
+        {
+            if (!File.Exists(ExcelPath)) return;
+
+            if (!Directory.Exists(RodResourcePath))
+                Directory.CreateDirectory(RodResourcePath);
+
+            using (FileStream file = new FileStream(ExcelPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                IWorkbook workbook = new XSSFWorkbook(file);
+                ISheet sheet = workbook.GetSheet("Rods");
+                if (sheet == null)
+                {
+                    EditorUtility.DisplayDialog("Error", "Rods sheet not found in FishData.xlsx", "OK");
+                    return;
+                }
+
+                for (int i = 1; i <= sheet.LastRowNum; i++)
+                {
+                    IRow row = sheet.GetRow(i);
+                    if (row == null || row.GetCell(0) == null) continue;
+
+                    string id = GetStringValue(row.GetCell(0));
+                    string assetPath = Path.Combine(RodResourcePath, $"{id}.asset");
+
+                    RodDataSO rodData = AssetDatabase.LoadAssetAtPath<RodDataSO>(assetPath);
+                    if (rodData == null)
+                    {
+                        rodData = ScriptableObject.CreateInstance<RodDataSO>();
+                        AssetDatabase.CreateAsset(rodData, assetPath);
+                    }
+
+                    rodData.id = id;
+                    rodData.rodName = GetStringValue(row.GetCell(1));
+                    rodData.rank = GetStringValue(row.GetCell(2));
+                    rodData.price = (int)GetNumericValue(row.GetCell(3));
+                    rodData.castDistanceBonus = GetNumericValue(row.GetCell(4));
+                    rodData.catchChanceBonus = GetNumericValue(row.GetCell(5));
+                    rodData.durability = GetNumericValue(row.GetCell(6));
+                    rodData.description = GetStringValue(row.GetCell(7));
+
+                    EditorUtility.SetDirty(rodData);
+                }
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+                Debug.Log("Rods SO conversion complete.");
+            }
+        }
+
+        [MenuItem("Tools/Excel/4. Convert Baits Sheet to SO")]
+        public static void ConvertBaitsToSO()
+        {
+            if (!File.Exists(ExcelPath)) return;
+
+            if (!Directory.Exists(BaitResourcePath))
+                Directory.CreateDirectory(BaitResourcePath);
+
+            using (FileStream file = new FileStream(ExcelPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                IWorkbook workbook = new XSSFWorkbook(file);
+                ISheet sheet = workbook.GetSheet("Baits");
+                if (sheet == null)
+                {
+                    EditorUtility.DisplayDialog("Error", "Baits sheet not found in FishData.xlsx", "OK");
+                    return;
+                }
+
+                for (int i = 1; i <= sheet.LastRowNum; i++)
+                {
+                    IRow row = sheet.GetRow(i);
+                    if (row == null || row.GetCell(0) == null) continue;
+
+                    string id = GetStringValue(row.GetCell(0));
+                    string assetPath = Path.Combine(BaitResourcePath, $"{id}.asset");
+
+                    BaitDataSO baitData = AssetDatabase.LoadAssetAtPath<BaitDataSO>(assetPath);
+                    if (baitData == null)
+                    {
+                        baitData = ScriptableObject.CreateInstance<BaitDataSO>();
+                        AssetDatabase.CreateAsset(baitData, assetPath);
+                    }
+
+                    baitData.id = id;
+                    baitData.baitName = GetStringValue(row.GetCell(1));
+                    baitData.rank = GetStringValue(row.GetCell(2));
+                    baitData.price = (int)GetNumericValue(row.GetCell(3));
+
+                    string attractionStr = GetStringValue(row.GetCell(4));
+                    if (string.IsNullOrEmpty(attractionStr) || attractionStr == "all")
+                        baitData.attractionFishIds = Array.Empty<string>();
+                    else
+                        baitData.attractionFishIds = attractionStr.Split(',');
+
+                    baitData.catchChanceBonus = GetNumericValue(row.GetCell(5));
+                    baitData.description = GetStringValue(row.GetCell(6));
+
+                    EditorUtility.SetDirty(baitData);
+                }
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+                Debug.Log("Baits SO conversion complete.");
+            }
         }
     }
 }

@@ -77,7 +77,99 @@ namespace MultiplayFishing.Core
             Debug.Log($"[UserStorageService] Bulk sold all fish. Gained {totalGain}G. Total Gold: {userData.gold}");
             
             Save();
-            OnDataChanged?.Invoke(); // UI에 알림
+            OnDataChanged?.Invoke();
+        }
+
+        public bool BuyItem(ShopItemType itemType, string itemId)
+        {
+            int price = 0;
+
+            if (itemType == ShopItemType.Rod)
+            {
+                if (IsRodOwned(itemId))
+                {
+                    Debug.LogWarning($"[UserStorageService] Rod {itemId} already owned.");
+                    return false;
+                }
+                var rodData = dataService.GetRodData(itemId);
+                if (rodData == null) return false;
+                price = rodData.price;
+            }
+            else if (itemType == ShopItemType.Bait)
+            {
+                if (IsBaitOwned(itemId))
+                {
+                    Debug.LogWarning($"[UserStorageService] Bait {itemId} already owned.");
+                    return false;
+                }
+                var baitData = dataService.GetBaitData(itemId);
+                if (baitData == null) return false;
+                price = baitData.price;
+            }
+
+            if (userData.gold < price)
+            {
+                Debug.Log($"[UserStorageService] Not enough gold. Need {price}, have {userData.gold}.");
+                return false;
+            }
+
+            userData.gold -= price;
+
+            if (itemType == ShopItemType.Rod)
+                userData.ownedRodIds.Add(itemId);
+            else
+                userData.ownedBaitIds.Add(itemId);
+
+            Debug.Log($"[UserStorageService] Purchased {itemType} {itemId}. Gold left: {userData.gold}");
+            Save();
+            OnDataChanged?.Invoke();
+            return true;
+        }
+
+        public bool EquipRod(string rodId)
+        {
+            if (!IsRodOwned(rodId)) return false;
+            userData.equippedRodId = rodId;
+            Debug.Log($"[UserStorageService] Equipped rod: {rodId}");
+            Save();
+            OnDataChanged?.Invoke();
+            return true;
+        }
+
+        public bool EquipBait(string baitId)
+        {
+            if (!IsBaitOwned(baitId)) return false;
+            userData.equippedBaitId = baitId;
+            Debug.Log($"[UserStorageService] Equipped bait: {baitId}");
+            Save();
+            OnDataChanged?.Invoke();
+            return true;
+        }
+
+        public void UnequipRod()
+        {
+            userData.equippedRodId = "";
+            Debug.Log($"[UserStorageService] Unequipped rod.");
+            Save();
+            OnDataChanged?.Invoke();
+        }
+
+        public void UnequipBait()
+        {
+            userData.equippedBaitId = "";
+            Debug.Log($"[UserStorageService] Unequipped bait.");
+            Save();
+            OnDataChanged?.Invoke();
+        }
+
+        public bool IsRodOwned(string rodId)
+        {
+            return userData.ownedRodIds.Contains(rodId);
+        }
+
+        public bool IsBaitOwned(string baitId)
+        {
+            return userData.ownedBaitIds.Contains(baitId);
         }
 
         public void Save()
