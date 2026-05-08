@@ -2,7 +2,13 @@
     "name": "MultiplayFishing.Network",
     "rootNamespace": "MultiplayFishing.Network",
     "references": [
-        "Mirror"
+        "Mirror",
+        "Mirror.Transports",
+        "Unity.Networking.Transport",
+        "Unity.Collections",
+        "Unity.Services.Multiplayer",
+        "Unity.Services.Core",
+        "Unity.Services.Authentication"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

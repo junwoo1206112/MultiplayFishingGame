@@ -1,3 +1,4 @@
+using System;
 using Mirror;
 using TMPro;
 using UnityEngine;
@@ -35,6 +36,8 @@ namespace MultiplayFishing.UI
 
         void Awake()
         {
+            if (transform.parent == null)
+                DontDestroyOnLoad(gameObject);
             rootCanvas = GetComponentInParent<Canvas>();
             searchRoot = rootCanvas != null ? rootCanvas.transform : transform;
 
@@ -57,7 +60,7 @@ namespace MultiplayFishing.UI
 
             if (nameInput != null)
             {
-                nameInput.text = PlayerPrefs.GetString(PlayerNameKey, $"낚시꾼 {Random.Range(100, 999)}");
+                nameInput.text = PlayerPrefs.GetString(PlayerNameKey, $"낚시꾼 {UnityEngine.Random.Range(100, 999)}");
             }
 
             SetupUIPositions();
@@ -196,30 +199,55 @@ namespace MultiplayFishing.UI
             Refresh();
         }
 
-        void OnHostClicked() { ForceSaveName(); if (manager != null) manager.StartHost(); }
+        void OnHostClicked()
+        {
+            ForceSaveName();
+            if (manager == null) return;
+            string roomName = nameInput != null && !string.IsNullOrWhiteSpace(nameInput.text)
+                ? $"{nameInput.text.Trim()}"
+                : $"낚시방";
+            manager.CreateRoom(roomName);
+        }
+
         void OnJoinClicked()
         {
             ForceSaveName();
             if (manager == null) return;
-            string addr = (addressInput != null && !string.IsNullOrWhiteSpace(addressInput.text)) ? addressInput.text.Trim() : "localhost";
-            manager.networkAddress = addr;
-            manager.StartClient();
+            string lobbyId = (addressInput != null && !string.IsNullOrWhiteSpace(addressInput.text))
+                ? addressInput.text.Trim()
+                : "";
+            manager.JoinRoom(lobbyId);
         }
 
         void OnDisconnectClicked()
         {
             if (manager == null) return;
-            if (NetworkServer.active && NetworkClient.isConnected) manager.StopHost();
-            else if (NetworkClient.isConnected) manager.StopClient();
+            try
+            {
+                if (NetworkServer.active && NetworkClient.isConnected) manager.StopHost();
+                else if (NetworkClient.isConnected) manager.StopClient();
+            }
+            catch (NullReferenceException)
+            {
+                if (NetworkServer.active) NetworkServer.Shutdown();
+                if (NetworkClient.active) NetworkClient.Disconnect();
+            }
         }
 
-        void OnCopyIPClicked() { GUIUtility.systemCopyBuffer = FishingRoomManager.GetLocalIPAddress(); }
+        void OnCopyIPClicked()
+        {
+            string joinCode = manager.CurrentJoinCode;
+            if (!string.IsNullOrEmpty(joinCode))
+                GUIUtility.systemCopyBuffer = joinCode;
+        }
 
         void Refresh()
         {
             if (manager == null) return;
             
-            bool isOffline = manager.mode == NetworkManagerMode.Offline;
+            bool isOffline = !NetworkServer.active && !NetworkClient.active;
+            bool isHost = NetworkServer.active && NetworkClient.active;
+            bool isWaiting = isHost && !manager.IsRelayReady;
             
             if (offlineControlsRoot != null) 
                 offlineControlsRoot.SetActive(isOffline);
@@ -227,17 +255,64 @@ namespace MultiplayFishing.UI
             if (onlineControlsRoot != null) 
                 onlineControlsRoot.SetActive(!isOffline);
             
-            if (copyIPButton != null) copyIPButton.gameObject.SetActive(manager.mode == NetworkManagerMode.Host);
+            if (copyIPButton != null) copyIPButton.gameObject.SetActive(isHost && !isWaiting);
 
-            if (statusText != null) statusText.text = isOffline ? "오프라인" : $"{manager.ModeText} 모드";
+            if (statusText != null)
+            {
+                if (isOffline)
+                    statusText.text = "오프라인";
+                else if (isWaiting)
+                    statusText.text = "릴레이 서버 연결 중...";
+                else
+                    statusText.text = $"{manager.ModeText} 모드";
+            }
         }
 
         void Update()
         {
-            // 실시간으로 씬 내의 플레이어 오브젝트 수를 세어서 표시
-            if (manager != null && manager.mode != NetworkManagerMode.Offline && connectionInfoText != null)
+            EnsureManager();
+            bool isOffline = !NetworkServer.active && !NetworkClient.active;
+
+            if (offlineControlsRoot != null)
+                offlineControlsRoot.SetActive(isOffline);
+            if (onlineControlsRoot != null)
+                onlineControlsRoot.SetActive(!isOffline);
+
+            if (manager == null) return;
+
+            bool isHost = NetworkServer.active && NetworkClient.active;
+            bool isWaiting = isHost && !manager.IsRelayReady;
+            string joinCode = manager.CurrentJoinCode;
+
+            if (copyIPButton != null)
+                copyIPButton.gameObject.SetActive(!string.IsNullOrEmpty(joinCode));
+
+            if (statusText != null)
             {
-                connectionInfoText.text = $"[ 인원: {manager.ConnectedClientCount}/{manager.maxConnections} ]";
+                if (isOffline)
+                    statusText.text = "오프라인";
+                else if (isWaiting)
+                    statusText.text = "릴레이 서버 연결 중...";
+                else
+                    statusText.text = $"{manager.ModeText} 모드";
+            }
+
+            if (connectionInfoText != null)
+            {
+                if (isHost && !string.IsNullOrEmpty(joinCode))
+                {
+                    connectionInfoText.text =
+                        $"[ 인원: {manager.ConnectedClientCount}/{manager.maxConnections} ]\n" +
+                        $"참가 코드: {joinCode}";
+                }
+                else if (isHost)
+                {
+                    connectionInfoText.text = "릴레이 서버 할당 대기 중...";
+                }
+                else if (!isOffline)
+                {
+                    connectionInfoText.text = "서버에 연결 중...";
+                }
             }
         }
     }

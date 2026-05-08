@@ -292,6 +292,8 @@ namespace Edgegap
                 yield return new WaitForSeconds(0.2f);
             }
         }
+        public string GetLobbyId() => _lobbyId;
+
         private static string RandomPlayerId()
         {
             return $"mirror-player-{Random.Range(1, int.MaxValue)}";

@@ -1575,6 +1575,8 @@ MonoBehaviour:
   syncInterval: 0
   playerName: 
   playerColor: {r: 1, g: 1, b: 1, a: 1}
+  equippedRodId: 
+  equippedBaitId: 
   characterRenderer: {fileID: 0}
   walkStopDelay: 0.2
   walkSpeed: 8

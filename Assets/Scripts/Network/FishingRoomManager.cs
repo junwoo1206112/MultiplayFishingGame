@@ -1,12 +1,35 @@
 using UnityEngine;
 using Mirror;
 using System;
+using System.Threading.Tasks;
 
 namespace MultiplayFishing.Network
 {
     public class FishingRoomManager : NetworkManager
     {
         public static event Action NetworkStateChanged;
+        public static event Action<string> JoinCodeChanged;
+
+        public UnityRelayTransport RelayTransport
+        {
+            get
+            {
+                if (transport is UnityRelayTransport relay)
+                    return relay;
+                return GetComponent<UnityRelayTransport>();
+            }
+        }
+
+        public string CurrentJoinCode
+        {
+            get
+            {
+                var rt = RelayTransport;
+                return rt != null ? rt.JoinCode : null;
+            }
+        }
+
+        public bool IsRelayReady => RelayTransport != null && !string.IsNullOrEmpty(CurrentJoinCode);
 
         public string ModeText => mode switch
         {
@@ -28,11 +51,18 @@ namespace MultiplayFishing.Network
         public override void Awake()
         {
             base.Awake();
-            // NetworkManager에는 showRoomGUI가 없으므로 해당 줄을 삭제했습니다.
         }
 
         public override void OnStartHost() { base.OnStartHost(); NetworkStateChanged?.Invoke(); }
         public override void OnStopHost() { base.OnStopHost(); NetworkStateChanged?.Invoke(); }
+        public override void OnClientConnect()
+        {
+            base.OnClientConnect();
+            if (NetworkServer.active) return;
+            NetworkClient.Ready();
+            NetworkClient.AddPlayer();
+        }
+
         public override void OnStartClient() 
         { 
             base.OnStartClient(); 
@@ -42,7 +72,6 @@ namespace MultiplayFishing.Network
 
         public override void OnServerAddPlayer(NetworkConnectionToClient conn)
         {
-            // 이미 플레이어가 있다면 생성하지 않음 (안전 장치)
             if (conn.identity != null) return;
 
             Transform startPos = GetStartPosition();
@@ -57,6 +86,63 @@ namespace MultiplayFishing.Network
         public override void OnClientDisconnect()
         {
             base.OnClientDisconnect();
+            NetworkStateChanged?.Invoke();
+        }
+
+        private bool isCreatingRoom;
+
+        public async void CreateRoom(string roomName)
+        {
+            var rt = RelayTransport;
+            if (rt == null)
+            {
+                Debug.LogError("[FishingRoomManager] Transport가 UnityRelayTransport가 아닙니다. NetworkManager 프리팹을 확인하세요.");
+                return;
+            }
+
+            if (isCreatingRoom)
+            {
+                Debug.LogWarning("[FishingRoomManager] 이미 방 생성 중입니다.");
+                return;
+            }
+
+            isCreatingRoom = true;
+            Debug.Log($"[FishingRoomManager] Unity Relay 방 생성 중... ({roomName})");
+            try
+            {
+                string code = await rt.CreateRelayAllocation(maxConnections);
+                JoinCodeChanged?.Invoke(code);
+                StartHost();
+                NetworkStateChanged?.Invoke();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[FishingRoomManager] Relay 방 생성 실패: {e.Message}");
+            }
+            finally
+            {
+                isCreatingRoom = false;
+            }
+        }
+
+        public void JoinRoom(string joinCode)
+        {
+            if (string.IsNullOrWhiteSpace(joinCode))
+            {
+                Debug.LogWarning("[FishingRoomManager] joinCode가 비어 있습니다.");
+                return;
+            }
+
+            var rt = RelayTransport;
+            if (rt == null)
+            {
+                Debug.LogError("[FishingRoomManager] Transport가 UnityRelayTransport가 아닙니다.");
+                return;
+            }
+
+            Debug.Log($"[FishingRoomManager] Unity Relay 방 참가 중... (joinCode: {joinCode})");
+            rt.PrepareRelayJoin(joinCode.Trim());
+            StartClient();
             NetworkStateChanged?.Invoke();
         }
 

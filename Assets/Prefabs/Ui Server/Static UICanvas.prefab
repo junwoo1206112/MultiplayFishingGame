@@ -48,13 +48,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85f4e8334dae8e143969e77e1d53da49, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MultiplayFishing.UI::MultiplayFishing.UI.NetworkMenuUI
-  manager: {fileID: 0}
+  manager: {fileID: 2766395469390964814, guid: 98bb94192f233ed4e8bb322a1889ccb3, type: 3}
   hostButton: {fileID: 9113527618930713333}
   joinButton: {fileID: 1500240690841026989}
   disconnectButton: {fileID: 6778448269959336913}
   copyIPButton: {fileID: 4801989782670745122}
   addressInput: {fileID: 3419447146374525381}
-  nameInput: {fileID: 0}
+  nameInput: {fileID: 2542408504537909553}
   offlineControlsRoot: {fileID: 3513660500862243016}
   onlineControlsRoot: {fileID: 5142731685145778128}
   statusText: {fileID: 964185597110754736}
@@ -171,6 +171,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 7834613393473714987}
     m_Modifications:
+    - target: {fileID: 2027909857533894354, guid: 5043810815686be4e98996a39c210f15, type: 3}
+      propertyPath: m_text
+      value: "\"\uCC38\uAC00 \uCF54\uB4DC \uC785\uB825\""
+      objectReference: {fileID: 0}
     - target: {fileID: 3575275228335781191, guid: 5043810815686be4e98996a39c210f15, type: 3}
       propertyPath: m_Name
       value: Panel_Offline
@@ -290,6 +294,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+--- !u!114 &2542408504537909553 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2456319335156165822, guid: 5043810815686be4e98996a39c210f15, type: 3}
+  m_PrefabInstance: {fileID: 98774057327142287}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2da0c512f12947e489f739169773d7ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TMP_InputField
 --- !u!114 &3419447146374525381 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 3326677344611095626, guid: 5043810815686be4e98996a39c210f15, type: 3}
@@ -330,6 +345,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 7834613393473714987}
     m_Modifications:
+    - target: {fileID: 3661119616554195906, guid: 6257295f11e5ad042aeffcb3418a2cbb, type: 3}
+      propertyPath: m_text
+      value: "\"\uCC38\uAC00 \uCF54\uB4DC \uBCF5\uC0AC\uD558\uAE30\""
+      objectReference: {fileID: 0}
     - target: {fileID: 4849179257765445440, guid: 6257295f11e5ad042aeffcb3418a2cbb, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 100

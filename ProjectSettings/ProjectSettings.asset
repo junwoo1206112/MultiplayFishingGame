@@ -144,7 +144,8 @@ PlayerSettings:
   visionOSBundleVersion: 1.0
   tvOSBundleVersion: 1.0
   bundleVersion: 0.1.0
-  preloadedAssets: []
+  preloadedAssets:
+  - {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   metroInputSource: 0
   wsaTransparentSwapchain: 0
   m_HolographicPauseOnTrackingLoss: 1
@@ -928,10 +929,10 @@ PlayerSettings:
   captureStartupLogs: {}
   activeInputHandler: 2
   windowsGamepadBackendHint: 0
-  cloudProjectId: 8ccf6264-1537-4ed2-baa9-0fa8259202c5
+  cloudProjectId: e2b247cc-7ea2-48ea-a457-b388058485f3
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: MultiplayFishingGame
+  projectName: MFishingOnline
   organizationId: kimjunwoo1206112
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
