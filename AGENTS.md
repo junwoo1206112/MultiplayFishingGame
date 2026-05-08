@@ -10,6 +10,19 @@
 - **OpenCode skills**: `.opencode/skills/` — 7 skills for Mirror, OpenSpec, and project conventions (auto-loaded by OpenCode)
 - **AGENTS.md**: This file is auto-loaded by OpenCode every session. Use it as the primary project guide.
 
+## ⚠️ Shop System — UI 프리팹 셋업 필요 (2026-05-08)
+
+**상점 시스템(Shop System) 코드는 완료되었지만, Unity Editor에서 아래 작업이 필요합니다.**
+👉 **`UI_SETUP_GUIDE.md`** 파일을 반드시 읽고 진행하세요.
+
+| 단계 | 작업 | 담당 |
+|------|------|------|
+| 3 | ShopSlot/ShopInventorySlot/ConfirmDialog 프리팹 생성 | UI 담당 |
+| 4 | ShopUI를 Dynamic UI Canvas에 배치 + SerializeField 연결 | UI 담당 |
+| 5 | B키 토글 확인, 구매/판매/장착 테스트 | UI 담당 |
+
+---
+
 ## Build / Lint / Test
 
 - **No npm/CI/tests exist.** This is a pure Unity project — build is done inside the Unity Editor.
