@@ -60,7 +60,7 @@ namespace MultiplayFishing.UI
                 if (slotUI != null)
                 {
                     var fishInfo = dataService.GetFishData(item.fishId);
-                    slotUI.Setup(item, fishInfo, userService);
+                    slotUI.Setup(item, fishInfo, userService, confirmDialog);
                     activeSlots.Add(slotUI);
                 }
             }

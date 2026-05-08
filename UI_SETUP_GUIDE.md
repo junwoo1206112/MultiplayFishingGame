@@ -19,15 +19,21 @@
 
 ---
 
-## 2. Static vs Dynamic Canvas 결정
+## 2. Canvas 배치
 
-**ShopUI 전체를 Dynamic UI Canvas에 배치합니다.**
+### 모든 ShopUI 관련 UI는 Dynamic UI Canvas에 배치
 
-### 이유
-- `windowRoot.SetActive()`로 토글되는 창 (Static은 항상 보이는 HUD 전용)
-- 아이템 리스트 슬롯들이 `Instantiate/Destroy`로 동적 생성됨
-- 기존 InventoryUI, EncyclopediaUI와 동일한 패턴 유지
-- ConfirmDialog는 최상위에 배치하여 모든 UI 위에 표시
+| UI | Canvas | 이유 |
+|----|--------|------|
+| ShopUI (전체 창) | **Dynamic** | `windowRoot.SetActive()` 토글, 기존 InventoryUI/EncyclopediaUI와 동일 패턴 |
+| ShopDetailPanel | **Dynamic** | ShopUI의 일부로 함께 토글 |
+| ShopInventoryPanel | **Dynamic** | "물고기 판매" 탭에서만 활성화 |
+| ConfirmDialog | **Dynamic** | ShopUI 내부 최상위, 모든 UI 위에 표시 |
+
+### Static Canvas에는 다음만 유지
+- PlayerStatusUI (골드/경험치 HUD)
+- NotificationUI (토스트 알림)
+- 항상 보여야 하는 HUD 요소들
 
 ---
 
@@ -108,16 +114,27 @@ ShopInventorySlot (Prefab) = ShopInventorySlotUI.cs
 └── SellButton (Button)            ← sellButton
 ```
 
-### ConfirmDialog 프리팹 (확인 팝업)
+### ConfirmDialog (확인 팝업 — Scene에 1개만)
+
+> ⚠️ **ConfirmDialog는 프리팹이 아닌 Scene에 직접 배치하는 단일 인스턴스입니다.**
+> ShopUI, ShopInventoryPanel, ShopInventorySlotUI 모두 **동일한 ConfirmDialog**를 참조합니다.
 
 ```
-ConfirmDialog (Prefab) = ConfirmDialog.cs
-├── DialogRoot (GameObject)         ← dialogRoot
+ConfirmDialog (GameObject, Scene) = ConfirmDialog.cs
+├── DialogRoot (GameObject)         ← dialogRoot (초기값: 비활성)
 ├── TitleText (TMP_Text)            ← titleText
 ├── MessageText (TMP_Text)          ← messageText
 ├── ConfirmButton (Button)          ← confirmButton
 └── CancelButton (Button)           ← cancelButton
 ```
+
+### 참조 관계 (ConfirmDialog 연결 대상)
+
+| 스크립트 | 필드명 | 연결 방법 |
+|----------|--------|----------|
+| `ShopUI` | `confirmDialog` | Inspector 드래그 |
+| `ShopInventoryPanel` | `confirmDialog` | Inspector 드래그 |
+| `ShopInventorySlotUI` | `confirmDialog` | **자동 전달** (ShopInventoryPanel이 `Setup()` 시 전달) |
 
 ---
 
@@ -210,7 +227,9 @@ ConfirmDialog (Prefab) = ConfirmDialog.cs
 | `lengthText` | LengthText (TMP_Text) |
 | `priceText` | PriceText (TMP_Text) |
 | `sellButton` | SellButton (Button) |
-| `confirmDialog` | ConfirmDialog 참조 (같은 Scene의 ConfirmDialog) |
+| `confirmDialog` | **연결 불필요** — ShopInventoryPanel이 인스턴스화 시 자동 전달 |
+
+> **참고:** `confirmDialog`는 `Setup()`의 `dialog` 파라미터로 전달되므로 프리팹에서 직접 연결할 필요 없습니다.
 
 ---
 
@@ -228,15 +247,26 @@ ConfirmDialog (Prefab) = ConfirmDialog.cs
 
 ## 9. 최종 체크리스트
 
-- [ ] `Tools → Excel → 3. Populate Shop Data` 실행 (Rods/Baits 시트 생성)
-- [ ] `Tools → Excel → 3. Convert Rods Sheet to SO` 실행
-- [ ] `Tools → Excel → 4. Convert Baits Sheet to SO` 실행
-- [ ] ShopUI 프리팹 생성 → Dynamic UI Canvas에 배치
-- [ ] ShopSlot 프리팹 생성 → `itemSlotPrefab`에 연결
-- [ ] ShopInventorySlot 프리팹 생성 → `slotPrefab`에 연결
-- [ ] ConfirmDialog 프리팹 생성 → 모든 `confirmDialog` 필드에 연결
-- [ ] ShopUI의 모든 SerializeField 누락 없이 연결
+### ✅ 완료됨 (코드 + 엑셀)
+- [x] `Tools → Excel → 3. Populate Shop Data` 실행 (Rods/Baits 시트 생성)
+- [x] `Tools → Excel → 3. Convert Rods Sheet to SO` 실행
+- [x] `Tools → Excel → 4. Convert Baits Sheet to SO` 실행
+- [x] RodDataSO / BaitDataSO 데이터 모델 생성
+- [x] IDataService / IUserService 확장 (조회/구매/장착)
+- [x] UserStorageService (BuyItem/Equip/Unequip/IsOwned)
+- [x] FishingPlayer SyncVar + Command + CalculateCatch 보너스
+- [x] ShopUI / ShopSlotUI / ShopDetailPanel 스크립트
+- [x] ShopInventoryPanel / ShopInventorySlotUI / ConfirmDialog 스크립트
+
+### ⬜ Unity Editor에서 해야 할 일
+- [ ] **ShopUI 프리팹 생성** → Dynamic UI Canvas에 배치
+- [ ] **ShopSlot 프리팹 생성** → `itemSlotPrefab`에 연결
+- [ ] **ShopInventorySlot 프리팹 생성** → `slotPrefab`에 연결
+- [ ] **ConfirmDialog는 Scene에 직접 배치** (프리팹 아님), 하나만 생성
+- [ ] ConfirmDialog 참조를 ShopUI → confirmDialog, ShopInventoryPanel → confirmDialog 에 각각 연결
+- [ ] ShopUI의 모든 SerializeField 누락 없이 연결 (4~8번 항목)
 - [ ] `B` 키로 ShopUI 토글 확인
 - [ ] 낚싯대/미끼 탭 전환 + 아이템 목록 표시 확인
-- [ ] 물고기 판매 탭 → 인벤토리 목록 + 판매 확인
-- [ ] 구매/장착 → 골드 변동 확인
+- [ ] 물고기 판매 탭 → 인벤토리 목록 + 개별/전체 판매 확인
+- [ ] 구매 → 골드 차감 + 소유 표시 확인
+- [ ] 장착/해제 → SyncVar 동기화 확인

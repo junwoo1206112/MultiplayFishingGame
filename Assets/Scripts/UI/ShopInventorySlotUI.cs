@@ -19,10 +19,11 @@ namespace MultiplayFishing.UI
         private InventoryItem itemData;
         private IUserService userService;
 
-        public void Setup(InventoryItem item, FishDataSO fishInfo, IUserService userService)
+        public void Setup(InventoryItem item, FishDataSO fishInfo, IUserService userService, ConfirmDialog dialog = null)
         {
             this.itemData = item;
             this.userService = userService;
+            if (dialog != null) this.confirmDialog = dialog;
 
             if (fishInfo != null)
             {
