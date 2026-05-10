@@ -225,7 +225,8 @@ namespace MultiplayFishing.UI
             try
             {
                 if (NetworkServer.active && NetworkClient.isConnected) manager.StopHost();
-                else if (NetworkClient.isConnected) manager.StopClient();
+                else if (NetworkClient.active) manager.StopClient();
+                else if (NetworkServer.active) manager.StopServer();
             }
             catch (NullReferenceException)
             {

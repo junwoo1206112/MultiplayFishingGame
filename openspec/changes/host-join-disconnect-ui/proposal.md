@@ -1,3 +1,10 @@
+## 2026-05-09 Server Feature Usage Update
+
+The current network UI now targets Unity Relay join-code connection instead of LAN/IP connection. The active server feature set is documented in `Docs/SERVER_FEATURE_USAGE.md`.
+
+- Use Unity Relay, Anonymous Authentication, QoS-selected allocation, Unity Transport Relay over DTLS, and Mirror host/client mode.
+- Do not treat Unity Lobby Service, Edgegap Relay/Lobby, LAN IP join, dedicated server build, matchmaking, or room list browsing as active features for this change.
+
 ## Why
 
 현재 MultiplayFishingGame에는 IMGUI 기반의 NetworkHUD만 있고, 다른 플레이어가 호스트의 IP를 입력해서 접속하는 기능과 연결 상태를 시각적으로 보여주는 기능이 없다. kart-mirror-sample 프로젝트의 NetworkMenuUI 패턴을 참고하여, TMP(TextMeshPro) 기반의 호스트/조인/연결 끊기 UI와 네트워크 매니저 이벤트 시스템을 구현해야 한다.

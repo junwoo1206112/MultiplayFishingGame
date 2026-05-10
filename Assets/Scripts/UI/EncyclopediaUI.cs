@@ -45,7 +45,7 @@ namespace MultiplayFishing.UI
 
         private void Update()
         {
-            if (Input.GetKeyDown(toggleKey))
+            if (UnityEngine.Input.GetKeyDown(toggleKey))
             {
                 ToggleWindow();
             }

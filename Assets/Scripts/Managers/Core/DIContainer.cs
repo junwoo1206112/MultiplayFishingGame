@@ -29,5 +29,18 @@ namespace MultiplayFishing.Core
             }
             throw new Exception($"Service {type.Name} not registered in DIContainer.");
         }
+
+        public static bool TryResolve<T>(out T service)
+        {
+            var type = typeof(T);
+            if (services.TryGetValue(type, out var implementation))
+            {
+                service = (T)implementation;
+                return true;
+            }
+
+            service = default;
+            return false;
+        }
     }
 }

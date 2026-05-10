@@ -5,6 +5,7 @@
         "MultiplayFishing.Network",
         "MultiplayFishing.Core",
         "MultiplayFishing.Data",
+        "MultiplayFishing.Input",
         "Mirror",
         "Unity.Cinemachine",
         "Unity.InputSystem",

@@ -1,5 +1,5 @@
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
 using MultiplayFishing.Core;
 
 namespace MultiplayFishing.UI
@@ -16,10 +16,19 @@ namespace MultiplayFishing.UI
         private IDataService dataService;
         private List<InventorySlotUI> activeSlots = new List<InventorySlotUI>();
 
+        private void Awake()
+        {
+            AutoBindReferences();
+        }
+
         private void Start()
         {
-            userService = DIContainer.Resolve<IUserService>();
-            dataService = DIContainer.Resolve<IDataService>();
+            if (!DIContainer.TryResolve(out userService) || !DIContainer.TryResolve(out dataService))
+            {
+                Debug.LogWarning("[InventoryUI] UserService or DataService is not ready. Inventory UI will wait for services.");
+                if (windowRoot != null) windowRoot.SetActive(false);
+                return;
+            }
 
             userService.OnDataChanged += RefreshList;
             
@@ -27,9 +36,26 @@ namespace MultiplayFishing.UI
             RefreshList();
         }
 
+        private void AutoBindReferences()
+        {
+            if (windowRoot == null)
+            {
+                var panel = transform.Find("InventoryPanel");
+                if (panel != null)
+                    windowRoot = panel.gameObject;
+            }
+
+            if (contentParent == null)
+            {
+                var content = transform.Find("InventoryPanel/LeftContent/Scroll View/Viewport/Content");
+                if (content != null)
+                    contentParent = content;
+            }
+        }
+
         private void Update()
         {
-            if (Input.GetKeyDown(toggleKey))
+            if (UnityEngine.Input.GetKeyDown(toggleKey))
             {
                 ToggleWindow();
             }
@@ -67,12 +93,26 @@ namespace MultiplayFishing.UI
         /// </summary>
         public void OnSellAllClicked()
         {
+            if (userService == null) return;
+
             userService.SellAllFish();
         }
 
         public void RefreshList()
         {
-            if (contentParent == null || slotPrefab == null) return;
+            if (userService == null || dataService == null) return;
+
+            if (contentParent == null)
+            {
+                Debug.LogWarning("[InventoryUI] Content parent is not assigned.");
+                return;
+            }
+
+            if (slotPrefab == null)
+            {
+                Debug.LogWarning("[InventoryUI] Slot prefab is not assigned.");
+                return;
+            }
 
             // 1. 기존 슬롯 정리
             foreach (var slot in activeSlots)
@@ -82,7 +122,10 @@ namespace MultiplayFishing.UI
             activeSlots.Clear();
 
             // 2. 인벤토리 아이템 생성
-            var inventory = userService.UserData.inventory;
+            var userData = userService.UserData;
+            if (userData == null || userData.inventory == null) return;
+
+            var inventory = userData.inventory;
             foreach (var item in inventory)
             {
                 GameObject obj = Instantiate(slotPrefab, contentParent);

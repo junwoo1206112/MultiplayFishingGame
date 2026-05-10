@@ -100,6 +100,19 @@ namespace MultiplayFishing.Gameplay
             return tipPoint.TransformPoint(offset);
         }
 
+        public void ApplyLineWidth(float width)
+        {
+            if (rodLineFixed != null)
+            {
+                rodLineFixed.widthMultiplier = width;
+            }
+
+            if (rodLineCast != null)
+            {
+                rodLineCast.widthMultiplier = width;
+            }
+        }
+
         private void ApplyHookPosition()
         {
             // RopeController가 애니메이션 중이면 위치 설정 안함

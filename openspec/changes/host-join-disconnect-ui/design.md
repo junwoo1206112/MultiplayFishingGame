@@ -1,3 +1,15 @@
+## 2026-05-09 Server Feature Usage Update
+
+Current implementation has moved from LAN/IP join expectations to Unity Relay join-code flow. See `Docs/SERVER_FEATURE_USAGE.md`.
+
+- Active: Unity Relay allocation/join code/join allocation.
+- Active: Unity Anonymous Authentication before Relay calls.
+- Active: Unity QoS-selected region via `CreateAllocationAsync(maxPlayers, region: null)`.
+- Active: Unity Transport Relay over DTLS through `ToRelayServerData("dtls")`.
+- Active: Mirror host/client mode through `FishingRoomManager.StartHost()` and `StartClient()`.
+- Active: Custom `UnityRelayTransport` with `NetworkDriver.Connect()`, server `NetworkDriver.Accept()`, reliable UTP pipeline, and guarded disconnect callback.
+- Not active: Unity Lobby Service, Edgegap Relay/Lobby, LAN IP join, dedicated server build, matchmaking, and room list browsing.
+
 ## Context
 
 MultiplayFishingGame은 Mirror Networking v96.0.1 기반 멀티플레이 낚시 게임. 현재 FishingNetworkManager는 기본 연결 콜백만 있고, NetworkHUD는 IMGUI 기반이다. kart-mirror-sample 프로젝트의 NetworkMenuUI 패턴(이벤트 기반, TMP UI, 상태 표시)을 참고하여 TMP 기반 UI로 전환한다.

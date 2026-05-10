@@ -66,7 +66,7 @@ namespace MultiplayFishing.UI
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.Space))
+            if (UnityEngine.Input.GetKeyDown(KeyCode.Space))
             {
                 Debug.Log("[TEST] Space key pressed!");
                 if (fillImage != null)
@@ -79,7 +79,7 @@ namespace MultiplayFishing.UI
                 Shake();
             }
 
-            if (Input.GetKeyDown(KeyCode.R))
+            if (UnityEngine.Input.GetKeyDown(KeyCode.R))
             {
                 Debug.Log("[TEST] R key pressed!");
                 if (fillImage != null)

@@ -1,3 +1,23 @@
+## 2026-05-09 Server Feature Usage Requirements
+
+### Requirement: Relay Join Code Flow
+The network menu SHALL use Unity Relay join codes for the active host/join flow.
+
+#### Scenario: Host creates Relay room
+- **WHEN** the host button is clicked
+- **THEN** the system creates a Unity Relay allocation, signs in anonymously if needed, obtains a join code, starts Mirror host mode, and displays the join code.
+
+#### Scenario: Participant joins Relay room
+- **WHEN** a participant enters a join code and clicks join
+- **THEN** the system signs in anonymously if needed, joins the Relay allocation, starts Mirror client mode, and connects through Unity Transport Relay over DTLS.
+
+#### Scenario: Participant disconnects
+- **WHEN** the participant clicks disconnect
+- **THEN** the custom transport notifies Mirror through `OnClientDisconnected`, Mirror shuts down the client, and the offline scene (`Assets/Scenes/Lobby.unity`) loads.
+
+### Requirement: Inactive Server Features
+The network menu SHALL NOT depend on Unity Lobby Service, Edgegap Relay/Lobby, LAN IP join, dedicated server builds, matchmaking, or room list browsing in the current active flow.
+
 ## ADDED Requirements
 
 ### Requirement: Host/Join/Disconnect UI
