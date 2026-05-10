@@ -270,3 +270,5 @@ ConfirmDialog (GameObject, Scene) = ConfirmDialog.cs
 - [ ] 물고기 판매 탭 → 인벤토리 목록 + 개별/전체 판매 확인
 - [ ] 구매 → 골드 차감 + 소유 표시 확인
 - [ ] 장착/해제 → SyncVar 동기화 확인
+> Server/network feature reference updated on 2026-05-09: see `SERVER_FEATURE_USAGE.md`.
+> Current active networking is Unity Relay join code + Mirror host/client mode; Unity Lobby Service and Edgegap are not active.

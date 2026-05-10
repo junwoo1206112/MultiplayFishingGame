@@ -108,3 +108,5 @@
 
 ---
 *본 가이드는 v2.0 초정밀 버전으로 업데이트되었습니다.*
+> Server/network feature reference updated on 2026-05-09: see `SERVER_FEATURE_USAGE.md`.
+> Current active networking is Unity Relay join code + Mirror host/client mode; Unity Lobby Service and Edgegap are not active.

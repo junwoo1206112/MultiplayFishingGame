@@ -1,3 +1,10 @@
+## 2026-05-09 서버 기능 기준
+
+- 서버/네트워크 기능 사용 현황은 `SERVER_FEATURE_USAGE.md`를 기준으로 확인한다.
+- 현재 활성 흐름은 Unity Relay + Anonymous Authentication + QoS + Unity Transport Relay/DTLS + Mirror host/client mode이다.
+- 현재 비활성 흐름은 Unity Lobby Service, Edgegap Relay/Lobby, dedicated server build, matchmaking, room list browsing, LAN IP join이다.
+- Relay 관련 수정 시 `UnityRelayTransport`, `FishingRoomManager`, `NetworkMenuUI`, `UNITY_RELAY_SETUP_GUIDE.md`, `SERVER_FEATURE_USAGE.md`를 함께 갱신한다.
+
 # 🤖 Gemini CLI 프로젝트 가이드라인
 
 ## 🚨 핵심 원칙 (Core Mandates)

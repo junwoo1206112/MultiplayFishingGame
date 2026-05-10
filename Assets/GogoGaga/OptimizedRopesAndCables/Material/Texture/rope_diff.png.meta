@@ -1,17 +1,9 @@
 fileFormatVersion: 2
-<<<<<<<< HEAD:Assets/GogoGaga/OptimizedRopesAndCables/Material/Texture/rope_diff.png.meta
 guid: 6d98ce67985b565408888d47b2e32a30
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
   serializedVersion: 12
-========
-guid: a57188e3abdf6be48994c022f294e0ca
-TextureImporter:
-  internalIDToNameTable: []
-  externalObjects: {}
-  serializedVersion: 13
->>>>>>>> master:Assets/Screenshots/codex_game_after_detach.png.meta
   mipmaps:
     mipMapMode: 0
     enableMipMap: 1
@@ -35,7 +27,7 @@ TextureImporter:
   vTOnly: 0
   ignoreMipmapLimit: 0
   grayScaleToAlpha: 0
-  generateCubemap: 6
+  generateCubemap: 0
   cubemapConvolution: 0
   seamlessCubemap: 0
   textureFormat: 1
@@ -91,7 +83,6 @@ TextureImporter:
   - serializedVersion: 4
     buildTarget: Standalone
     maxTextureSize: 2048
-<<<<<<<< HEAD:Assets/GogoGaga/OptimizedRopesAndCables/Material/Texture/rope_diff.png.meta
     resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 1
@@ -116,8 +107,6 @@ TextureImporter:
   - serializedVersion: 3
     buildTarget: WebGL
     maxTextureSize: 2048
-========
->>>>>>>> master:Assets/Screenshots/codex_game_after_detach.png.meta
     resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 1
@@ -155,18 +144,12 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-<<<<<<<< HEAD:Assets/GogoGaga/OptimizedRopesAndCables/Material/Texture/rope_diff.png.meta
-========
-    spriteCustomMetadata:
-      entries: []
->>>>>>>> master:Assets/Screenshots/codex_game_after_detach.png.meta
     nameFileIdTable: {}
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-<<<<<<<< HEAD:Assets/GogoGaga/OptimizedRopesAndCables/Material/Texture/rope_diff.png.meta
 AssetOrigin:
   serializedVersion: 1
   productId: 287164
@@ -174,5 +157,3 @@ AssetOrigin:
   packageVersion: 1.2
   assetPath: Assets/GogoGaga/OptimizedRopesAndCables/Material/Texture/rope_diff.png
   uploadId: 683666
-========
->>>>>>>> master:Assets/Screenshots/codex_game_after_detach.png.meta

@@ -1,3 +1,18 @@
+## 2026-05-09 서버 기능 사용 현황
+
+현재 멀티플레이 연결은 `SERVER_FEATURE_USAGE.md`의 내용을 기준으로 한다.
+
+- Host는 Unity Relay allocation을 생성하고 join code를 표시한다.
+- Participant는 join code로 Unity Relay join allocation을 수행한다.
+- Host/participant 모두 Unity Anonymous Authentication을 사용한다.
+- Relay allocation은 `region: null`로 생성하여 Unity QoS가 지역을 선택한다.
+- Transport는 Unity Transport Relay over DTLS를 사용한다.
+- Mirror는 host/client mode를 사용하며 dedicated server build는 현재 사용하지 않는다.
+- Mirror 메시지는 UTP `ReliableSequencedPipelineStage`로 전송한다.
+- Server는 UTP `NetworkDriver.Accept()` 후 데이터 이벤트를 처리한다.
+- Disconnect는 custom transport가 Mirror `OnClientDisconnected`를 통지하여 `offlineScene`인 Lobby로 복귀하게 한다.
+- Unity Lobby Service, Edgegap Relay/Lobby, matchmaking, room list browsing, LAN IP join은 현재 활성 기능이 아니다.
+
 # Multiplay Fishing Game - 기능 명세서 (Function Specification)
 
 본 문서는 프로젝트의 각 컴포넌트와 시스템이 수행하는 역할을 상세히 기록하여 팀원들 간의 개발 싱크를 맞추기 위해 작성되었습니다.

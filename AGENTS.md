@@ -10,10 +10,22 @@
 - **OpenCode skills**: `.opencode/skills/` — 7 skills for Mirror, OpenSpec, and project conventions (auto-loaded by OpenCode)
 - **AGENTS.md**: This file is auto-loaded by OpenCode every session. Use it as the primary project guide.
 
+## Server Feature Usage — 2026-05-09
+
+Current source of truth: `Docs/SERVER_FEATURE_USAGE.md`.
+
+- Active gameplay networking uses Unity Relay join codes, Unity Anonymous Authentication, Unity QoS region selection, Unity Transport Relay over DTLS, and Mirror host/client mode.
+- `UnityRelayTransport` is the active custom Mirror transport.
+- Relay clients must connect with `NetworkDriver.Connect()` so UTP uses Relay server data.
+- Relay servers must call `NetworkDriver.Accept()` before processing data events.
+- Mirror payloads use `ReliableSequencedPipelineStage`.
+- Client disconnect must notify Mirror through `OnClientDisconnected` so `offlineScene` (`Assets/Scenes/Lobby.unity`) loads correctly.
+- Not active in the current flow: Unity Lobby Service, Edgegap Relay/Lobby, LAN IP join, dedicated server build, matchmaking, and room list browsing.
+
 ## ⚠️ Shop System — UI 프리팹 셋업 필요 (2026-05-08)
 
 **상점 시스템(Shop System) 코드는 완료 + GitHub 푸시 완료.**  
-👉 **`UI_SETUP_GUIDE.md`** 파일을 반드시 읽고 Unity Editor에서 아래 작업을 진행하세요.
+👉 **`Docs/UI_SETUP_GUIDE.md`** 파일을 반드시 읽고 Unity Editor에서 아래 작업을 진행하세요.
 
 | 단계 | 작업 | 담당 |
 |------|------|------|

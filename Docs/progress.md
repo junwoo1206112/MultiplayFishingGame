@@ -36,3 +36,20 @@
 ### 2. 폴리싱 및 사운드
 - [ ] 수면 충돌, 입질, 잡기 성공/실패 효과음 추가
 - [ ] 낚시 성공 시 물고기가 튀어오르는 연출 보강
+## 서버 기능 사용 현황 업데이트 (2026-05-09)
+
+- [x] Unity Relay 기반 호스트/참가 연결 사용.
+- [x] Unity Anonymous Authentication 기반 Relay 호출 사용.
+- [x] Unity QoS 기반 Relay 지역 자동 선택 사용.
+- [x] Unity Transport Relay over DTLS 사용.
+- [x] Mirror host/client mode 사용.
+- [x] `UnityRelayTransport` custom Mirror transport 사용.
+- [x] UTP `NetworkDriver.Connect()` Relay client connect 사용.
+- [x] UTP `NetworkDriver.Accept()` server accept 처리 사용.
+- [x] UTP `ReliableSequencedPipelineStage` reliable payload 전송 사용.
+- [x] Mirror disconnect callback 통지 후 `offlineScene` Lobby 복귀 처리 사용.
+- [ ] Unity Lobby Service는 현재 사용하지 않음.
+- [ ] Edgegap Relay/Lobby는 현재 활성 흐름에서 사용하지 않음.
+- [ ] Dedicated server build, matchmaking, room list browsing, LAN IP join은 현재 사용하지 않음.
+
+상세 기능 매트릭스와 연결 흐름은 `SERVER_FEATURE_USAGE.md`를 기준 문서로 유지한다.

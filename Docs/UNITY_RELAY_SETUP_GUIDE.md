@@ -1,5 +1,9 @@
 # Unity Relay — 셋업 가이드
 
+> 2026-05-09 update: Current server/network feature usage is documented in `SERVER_FEATURE_USAGE.md`.
+> Active gameplay networking uses Unity Relay join codes, Anonymous Authentication, QoS-selected Relay allocation, Unity Transport Relay over DTLS, and Mirror host/client mode.
+> Unity Lobby Service, Edgegap Lobby/Relay, LAN IP join, dedicated server builds, matchmaking, and room list browsing are not active in the current flow.
+
 외부 IP에서도 접속 가능한 멀티플레이 (완전 무료, 50 CCU 이하)
 
 ---
@@ -92,6 +96,23 @@ com.unity.services.authentication
 ---
 
 ## 7. 문제 해결
+
+### 2026-05-09 Relay debugging notes
+
+The active server flow now uses these runtime features:
+
+- `UnityServices.InitializeAsync()` for Unity Gaming Services startup.
+- `AuthenticationService.Instance.SignInAnonymouslyAsync()` for anonymous host/client identity.
+- `RelayService.Instance.CreateAllocationAsync(maxPlayers, region: null)` for host Relay allocation. `region: null` lets Unity QoS choose an appropriate Relay region.
+- `RelayService.Instance.GetJoinCodeAsync()` for the host invite code.
+- `RelayService.Instance.JoinAllocationAsync(joinCode)` for participant entry.
+- `Allocation.ToRelayServerData("dtls")` and `JoinAllocation.ToRelayServerData("dtls")` for UTP Relay configuration.
+- `NetworkDriver.Connect()` for Relay clients. Do not use `NetworkEndpoint.AnyIpv4` for Relay client connect.
+- `NetworkDriver.Accept()` on the server before processing data events. Without this, UTP can discard Mirror's initial ready/add-player data.
+- `ReliableSequencedPipelineStage` for Mirror payloads.
+- `OnClientDisconnected` notification from the custom transport so Mirror can clean up and load `offlineScene`.
+
+See `SERVER_FEATURE_USAGE.md` for the full feature matrix and connection flow.
 
 | 증상 | 확인할 것 |
 |------|----------|

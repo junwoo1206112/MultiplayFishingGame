@@ -69,3 +69,10 @@
 
 ---
 *본 문서는 Gemini CLI에 의해 자동 생성되었습니다.*
+## 2026-05-09 서버 기능 사용 현황
+
+서버/네트워크 기능의 현재 기준 문서는 `SERVER_FEATURE_USAGE.md`이다.
+
+- Active: Unity Relay join code, Anonymous Authentication, QoS-selected Relay allocation, Unity Transport Relay over DTLS, Mirror host/client mode.
+- Active implementation files: `Assets/Scripts/Network/UnityRelayTransport.cs`, `Assets/Scripts/Network/FishingRoomManager.cs`, `Assets/Scripts/UI/NetworkMenuUI.cs`.
+- Not active: Unity Lobby Service, Edgegap Relay/Lobby, LAN IP join, dedicated server build, matchmaking, room list browsing.

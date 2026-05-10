@@ -77,3 +77,10 @@
 
 ---
 *본 문서는 Gemini CLI가 프로젝트 구조를 분석하여 자동으로 생성했습니다. 지속적으로 업데이트될 예정입니다.*
+## 2026-05-09 서버/네트워크 기능 사용 현황
+
+상세 기준 문서: `SERVER_FEATURE_USAGE.md`
+
+- Active: Unity Relay join code flow, Anonymous Authentication, QoS-selected Relay allocation, Unity Transport Relay over DTLS, Mirror host/client mode.
+- Active: `UnityRelayTransport` custom transport, UTP reliable pipeline, server-side `NetworkDriver.Accept()`, guarded Mirror disconnect notification.
+- Not active: Unity Lobby Service, Edgegap Relay/Lobby, dedicated server build, matchmaking, room list browsing, LAN IP join.

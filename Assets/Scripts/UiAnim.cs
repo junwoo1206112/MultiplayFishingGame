@@ -20,7 +20,7 @@ public class UiAnim : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (UnityEngine.Input.GetKeyDown(KeyCode.Space))
         {
             Debug.Log($"[{gameObject.name}] Shake triggered");
             _isShaking = true;

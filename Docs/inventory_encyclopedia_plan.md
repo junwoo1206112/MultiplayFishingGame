@@ -56,3 +56,5 @@
 
 ---
 *본 기획서는 모든 백엔드 및 UI 연동 로직 구현을 마친 최종 사양서입니다.*
+> Server/network feature reference updated on 2026-05-09: see `SERVER_FEATURE_USAGE.md`.
+> Current active networking is Unity Relay join code + Mirror host/client mode; Unity Lobby Service and Edgegap are not active.

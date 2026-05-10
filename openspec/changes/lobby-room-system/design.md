@@ -1,3 +1,11 @@
+## 2026-05-09 Current Server Feature Note
+
+This design is not the active runtime networking flow. The current active flow is documented in `Docs/SERVER_FEATURE_USAGE.md`.
+
+- Active now: Unity Relay join code flow, Anonymous Authentication, QoS-selected Relay allocation, Unity Transport Relay over DTLS, Mirror host/client mode, custom `UnityRelayTransport`.
+- Not active now: Unity Lobby Service, Edgegap Relay/Lobby, LAN IP join, dedicated server build, matchmaking, and room list browsing.
+- If this lobby-room-system change resumes, update it against the current Relay transport instead of assuming KCP/LAN-only connection.
+
 ## Context
 
 MultiplayFishingGame은 Mirror Networking v96.0.1 기반 클라이언트-서버 멀티플레이 낚시 게임. 현재 FishingNetworkManager는 단순 호스트/클라이언트 연결만 지원하며, 채널 선택이나 방 생성 기능이 없음. Mirror의 NetworkRoomManager와 NetworkRoomPlayer를 기반으로 채널-로비-방 흐름을 구현.

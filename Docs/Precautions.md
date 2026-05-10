@@ -1,3 +1,15 @@
+## 2026-05-09 서버 기능 주의사항
+
+현재 서버/네트워크 기능 사용 기준은 `SERVER_FEATURE_USAGE.md`를 따른다.
+
+- `UnityRelayTransport`는 Mirror transport이므로 Mirror가 기대하는 callback을 반드시 호출해야 한다.
+- Relay client connect는 `NetworkDriver.Connect()`를 사용한다. Relay client에서 `NetworkEndpoint.AnyIpv4`로 connect하지 않는다.
+- Relay server는 `serverDriver.PopEvent()` 전에 `serverDriver.Accept()`로 새 연결을 먼저 수락해야 한다.
+- Mirror payload는 `ReliableSequencedPipelineStage`를 사용한다.
+- `ClientDisconnect()`는 Mirror가 `offlineScene`으로 복귀할 수 있도록 `OnClientDisconnected`를 정확히 한 번 통지해야 한다.
+- 현재 UI의 참가 코드는 Unity Relay join code이며 IP 주소가 아니다.
+- Unity Lobby Service, Edgegap Relay/Lobby, matchmaking, dedicated server flow는 현재 활성 기능이 아니므로 새 작업에서 혼동하지 않는다.
+
 # ⚠️ 프로젝트 개발 주의사항 및 가이드 (Precautions)
 
 이 문서는 프로젝트의 안정성을 유지하고, 팀원 간의 협업 시 발생할 수 있는 충돌을 방지하기 위한 핵심 규칙을 담고 있습니다. 처음 참여하시는 분은 반드시 정독해 주세요.

@@ -130,6 +130,13 @@ namespace MultiplayFishing.Gameplay
                     if (mb != null)
                     {
                         playerController = mb;
+
+                        FieldInfo controllerUIPrefabField = mb.GetType().GetField("ControllerUIPrefab");
+                        if (controllerUIPrefabField != null)
+                        {
+                            controllerUIPrefabField.SetValue(mb, null);
+                        }
+
                         mb.enabled = true;
 
                         // maxMoveSpeed public 필드 캐싱
@@ -216,7 +223,7 @@ namespace MultiplayFishing.Gameplay
 
         private void HandleSprintInput()
         {
-            bool shiftHeld = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+            bool shiftHeld = UnityEngine.Input.GetKey(KeyCode.LeftShift) || UnityEngine.Input.GetKey(KeyCode.RightShift);
 
             if (shiftHeld != isSprinting)
             {
@@ -280,8 +287,7 @@ namespace MultiplayFishing.Gameplay
             var splashParticle = GetComponentInChildren<ParticleSystem>();
             
             // 카메라 검색 (로컬 플레이어인 경우만 필요)
-            Camera pCam = GetComponentInChildren<Camera>();
-            if (pCam == null && isLocalPlayer) pCam = Camera.main;
+            Camera pCam = isLocalPlayer ? Camera.main : null;
 
             var waterResolver = new FishingWaterSurfaceResolver(
                 pCam,

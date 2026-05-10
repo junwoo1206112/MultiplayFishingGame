@@ -10,6 +10,7 @@ using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using Unity.Networking.Transport;
 using Unity.Networking.Transport.Relay;
+using Unity.Networking.Transport.Utilities;
 using NetworkConnection = Unity.Networking.Transport.NetworkConnection;
 
 namespace MultiplayFishing.Network
@@ -18,9 +19,12 @@ namespace MultiplayFishing.Network
     {
         [Header("Transport Configuration")]
         public int maxPacketSize = 1400;
+        [SerializeField] private float clientConnectTimeoutSeconds = 15f;
 
         private NetworkDriver serverDriver;
         private NetworkDriver clientDriver;
+        private NetworkPipeline serverReliablePipeline;
+        private NetworkPipeline clientReliablePipeline;
 
 
         private bool serverActive;
@@ -28,6 +32,9 @@ namespace MultiplayFishing.Network
         private int nextConnectionId = 1;
 
         private bool clientActive;
+        private bool clientConnecting;
+        private bool clientDisconnectNotified;
+        private float clientConnectStartedTime;
         private NetworkConnection clientConnection;
 
         private ConcurrentQueue<ServerSendMessage> serverSendQueue = new ConcurrentQueue<ServerSendMessage>();
@@ -90,9 +97,12 @@ namespace MultiplayFishing.Network
 
         public override void ClientConnect(string address)
         {
+            clientDisconnectNotified = false;
+
             if (string.IsNullOrEmpty(pendingJoinCode))
             {
                 Debug.LogError("[UnityRelayTransport] No join code. Call PrepareRelayJoin() first.");
+                NotifyClientDisconnected();
                 return;
             }
             _ = ConnectRelayAsync();
@@ -103,20 +113,41 @@ namespace MultiplayFishing.Network
             try
             {
                 await InitServices();
-                JoinAllocation joinAllocation = await RelayService.Instance.JoinAllocationAsync(pendingJoinCode);
+                string joinCodeToUse = pendingJoinCode.Trim();
                 pendingJoinCode = null;
+
+                JoinAllocation joinAllocation = await RelayService.Instance.JoinAllocationAsync(joinCodeToUse);
 
                 var relayData = joinAllocation.ToRelayServerData("dtls");
                 var settings = new NetworkSettings();
                 settings.WithRelayParameters(ref relayData, maxPacketSize);
 
+                if (clientDriver.IsCreated)
+                    clientDriver.Dispose();
+
                 clientDriver = NetworkDriver.Create(settings);
-                clientConnection = clientDriver.Connect(NetworkEndpoint.AnyIpv4);
+                clientReliablePipeline = clientDriver.CreatePipeline(typeof(ReliableSequencedPipelineStage));
+                clientConnection = clientDriver.Connect();
+                clientActive = false;
+                clientConnecting = clientConnection.IsCreated;
+                clientDisconnectNotified = false;
+                clientConnectStartedTime = Time.realtimeSinceStartup;
                 Debug.Log($"[UnityRelayTransport] Client connecting... IsCreated={clientConnection.IsCreated}");
+
+                if (!clientConnection.IsCreated)
+                {
+                    clientConnecting = false;
+                    Debug.LogError("[UnityRelayTransport] Client connection was not created.");
+                    NotifyClientDisconnected();
+                }
             }
             catch (Exception e)
             {
                 Debug.LogError($"[UnityRelayTransport] Relay connect failed: {e.Message}");
+                pendingJoinCode = null;
+                clientActive = false;
+                clientConnecting = false;
+                NotifyClientDisconnected();
             }
         }
 
@@ -132,6 +163,9 @@ namespace MultiplayFishing.Network
             if (clientDriver.IsCreated && clientConnection.IsCreated)
                 clientDriver.Disconnect(clientConnection);
             clientActive = false;
+            clientConnecting = false;
+            while (clientSendQueue.TryDequeue(out _)) { }
+            NotifyClientDisconnected();
         }
 
         public override Uri ServerUri() => null;
@@ -151,17 +185,23 @@ namespace MultiplayFishing.Network
                 var settings = new NetworkSettings();
                 settings.WithRelayParameters(ref relayData, maxPacketSize);
 
+                if (serverDriver.IsCreated)
+                    serverDriver.Dispose();
+
                 serverDriver = NetworkDriver.Create(settings);
+                serverReliablePipeline = serverDriver.CreatePipeline(typeof(ReliableSequencedPipelineStage));
                 int bindResult = serverDriver.Bind(NetworkEndpoint.AnyIpv4);
                 if (bindResult != 0)
                 {
                     Debug.LogError($"[UnityRelayTransport] Bind failed: {bindResult}");
+                    serverDriver.Dispose();
                     return;
                 }
                 int listenResult = serverDriver.Listen();
                 if (listenResult != 0)
                 {
                     Debug.LogError($"[UnityRelayTransport] Listen failed: {listenResult}");
+                    serverDriver.Dispose();
                     return;
                 }
                 serverActive = true;
@@ -198,6 +238,8 @@ namespace MultiplayFishing.Network
         {
             serverActive = false;
             connections.Clear();
+            nextConnectionId = 1;
+            while (serverSendQueue.TryDequeue(out _)) { }
         }
 
         public override void Shutdown()
@@ -214,6 +256,14 @@ namespace MultiplayFishing.Network
 
             clientDriver.ScheduleUpdate().Complete();
 
+            if (clientConnecting && !clientActive && Time.realtimeSinceStartup - clientConnectStartedTime > clientConnectTimeoutSeconds)
+            {
+                Debug.LogWarning("[UnityRelayTransport] Client relay connection timed out.");
+                clientConnecting = false;
+                ClientDisconnect();
+                return;
+            }
+
             NetworkEvent.Type evt;
             while ((evt = clientDriver.PopEvent(out NetworkConnection conn, out Unity.Collections.DataStreamReader reader)) != NetworkEvent.Type.Empty)
             {
@@ -223,6 +273,7 @@ namespace MultiplayFishing.Network
                         Debug.Log("[UnityRelayTransport] *** CLIENT CONNECT EVENT! ***");
                         clientConnection = conn;
                         clientActive = true;
+                        clientConnecting = false;
                         OnClientConnected?.Invoke();
                         break;
 
@@ -234,7 +285,8 @@ namespace MultiplayFishing.Network
 
                     case NetworkEvent.Type.Disconnect:
                         clientActive = false;
-                        OnClientDisconnected?.Invoke();
+                        clientConnecting = false;
+                        NotifyClientDisconnected();
                         break;
                 }
             }
@@ -246,7 +298,7 @@ namespace MultiplayFishing.Network
 
             while (clientSendQueue.TryDequeue(out byte[] data))
             {
-                if (clientDriver.BeginSend(NetworkPipeline.Null, clientConnection, out Unity.Collections.DataStreamWriter writer) == 0)
+                if (clientDriver.BeginSend(clientReliablePipeline, clientConnection, out Unity.Collections.DataStreamWriter writer) == 0)
                 {
                     writer.WriteBytes(data);
                     clientDriver.EndSend(writer);
@@ -260,16 +312,22 @@ namespace MultiplayFishing.Network
 
             serverDriver.ScheduleUpdate().Complete();
 
+            NetworkConnection acceptedConnection;
+            while ((acceptedConnection = serverDriver.Accept()).IsCreated)
+            {
+                Debug.Log("[UnityRelayTransport] *** SERVER ACCEPT EVENT! ***");
+                int newId = nextConnectionId++;
+                connections[newId] = acceptedConnection;
+                OnServerConnectedWithAddress?.Invoke(newId, "relay");
+            }
+
             NetworkEvent.Type evt;
             while ((evt = serverDriver.PopEvent(out NetworkConnection conn, out Unity.Collections.DataStreamReader reader)) != NetworkEvent.Type.Empty)
             {
                 switch (evt)
                 {
                     case NetworkEvent.Type.Connect:
-                        Debug.Log("[UnityRelayTransport] *** SERVER CONNECT EVENT! ***");
-                        int newId = nextConnectionId++;
-                        connections[newId] = conn;
-                        OnServerConnectedWithAddress?.Invoke(newId, "relay");
+                        Debug.Log("[UnityRelayTransport] Ignored server connect event after Accept().");
                         break;
 
                     case NetworkEvent.Type.Data:
@@ -302,7 +360,7 @@ namespace MultiplayFishing.Network
             {
                 if (connections.TryGetValue(msg.connectionId, out NetworkConnection conn))
                 {
-                    if (serverDriver.BeginSend(NetworkPipeline.Null, conn, out Unity.Collections.DataStreamWriter writer) == 0)
+                    if (serverDriver.BeginSend(serverReliablePipeline, conn, out Unity.Collections.DataStreamWriter writer) == 0)
                     {
                         writer.WriteBytes(msg.data);
                         serverDriver.EndSend(writer);
@@ -319,6 +377,14 @@ namespace MultiplayFishing.Network
                     return kvp.Key;
             }
             return -1;
+        }
+
+        private void NotifyClientDisconnected()
+        {
+            if (clientDisconnectNotified) return;
+
+            clientDisconnectNotified = true;
+            OnClientDisconnected?.Invoke();
         }
     }
 }

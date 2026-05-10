@@ -1,3 +1,13 @@
+## 2026-05-09 Server Feature Usage Tasks
+
+- [x] Document active Unity Relay join-code flow in `Docs/SERVER_FEATURE_USAGE.md`.
+- [x] Document active Unity Anonymous Authentication usage.
+- [x] Document active QoS-selected Relay allocation usage.
+- [x] Document active Unity Transport Relay over DTLS usage.
+- [x] Document active Mirror host/client mode usage.
+- [x] Document custom `UnityRelayTransport` requirements: `NetworkDriver.Connect()`, server `NetworkDriver.Accept()`, reliable pipeline, and guarded disconnect callback.
+- [x] Document inactive features: Unity Lobby Service, Edgegap Relay/Lobby, LAN IP join, dedicated server build, matchmaking, and room list browsing.
+
 # Tasks
 
 ## 1. FishingNetworkManager 이벤트 시스템 확장

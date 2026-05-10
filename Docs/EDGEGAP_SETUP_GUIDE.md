@@ -1,3 +1,7 @@
+> 2026-05-09 status: Edgegap Relay/Lobby is not active in the current runtime flow.
+> Current gameplay networking uses Unity Relay join codes through `UnityRelayTransport`.
+> See `SERVER_FEATURE_USAGE.md` for the active server feature list before following this legacy Edgegap guide.
+
 # Edgegap Relay + Lobby — 셋업 가이드
 
 외부 IP에서도 접속 가능한 멀티플레이를 위한 Edgegap 릴레이 서버 설정 방법입니다.

@@ -1,9 +1,5 @@
 fileFormatVersion: 2
-<<<<<<<< HEAD:Assets/Models/Fishes/Coryphaena_hippurus/Corypheaena_hippuris_textura.png.meta
 guid: 6618b718bdb8d6d4691c241b7961bd26
-========
-guid: 01a8fbbd9aebae54ab2fcbe7fb57be83
->>>>>>>> master:Assets/Screenshots/codex_game_cast_latest.png.meta
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -31,7 +27,7 @@ TextureImporter:
   vTOnly: 0
   ignoreMipmapLimit: 0
   grayScaleToAlpha: 0
-  generateCubemap: 6
+  generateCubemap: 0
   cubemapConvolution: 0
   seamlessCubemap: 0
   textureFormat: 1
@@ -108,7 +104,6 @@ TextureImporter:
     allowsAlphaSplitting: 0
     overridden: 0
     ignorePlatformSupport: 0
-<<<<<<<< HEAD:Assets/Models/Fishes/Coryphaena_hippurus/Corypheaena_hippuris_textura.png.meta
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
@@ -122,8 +117,6 @@ TextureImporter:
     allowsAlphaSplitting: 0
     overridden: 0
     ignorePlatformSupport: 0
-========
->>>>>>>> master:Assets/Screenshots/codex_game_cast_latest.png.meta
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:

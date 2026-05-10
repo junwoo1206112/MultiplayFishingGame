@@ -1,9 +1,5 @@
 fileFormatVersion: 2
-<<<<<<<< HEAD:Assets/Models/Fishes/Cobitis_paludica/Cobitis_paludica_textura.png.meta
 guid: 7a066ab345c9abf4fb4acb16162207bf
-========
-guid: 32d47bf2053eb6e49a9539de12a100c3
->>>>>>>> master:Assets/Screenshots/codex_game_after_detach_wait.png.meta
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -31,7 +27,7 @@ TextureImporter:
   vTOnly: 0
   ignoreMipmapLimit: 0
   grayScaleToAlpha: 0
-  generateCubemap: 6
+  generateCubemap: 0
   cubemapConvolution: 0
   seamlessCubemap: 0
   textureFormat: 1
@@ -108,7 +104,6 @@ TextureImporter:
     allowsAlphaSplitting: 0
     overridden: 0
     ignorePlatformSupport: 0
-<<<<<<<< HEAD:Assets/Models/Fishes/Cobitis_paludica/Cobitis_paludica_textura.png.meta
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
@@ -122,8 +117,6 @@ TextureImporter:
     allowsAlphaSplitting: 0
     overridden: 0
     ignorePlatformSupport: 0
-========
->>>>>>>> master:Assets/Screenshots/codex_game_after_detach_wait.png.meta
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:

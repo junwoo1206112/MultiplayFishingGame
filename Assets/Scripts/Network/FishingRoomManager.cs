@@ -58,9 +58,6 @@ namespace MultiplayFishing.Network
         public override void OnClientConnect()
         {
             base.OnClientConnect();
-            if (NetworkServer.active) return;
-            NetworkClient.Ready();
-            NetworkClient.AddPlayer();
         }
 
         public override void OnStartClient() 
@@ -80,7 +77,14 @@ namespace MultiplayFishing.Network
                 : Instantiate(playerPrefab);
 
             NetworkServer.AddPlayerForConnection(conn, playerObj);
-            Debug.Log($"[NetworkManager] 플레이어 {conn.connectionId} 입장 완료.");
+            if (startPos != null)
+            {
+                Debug.Log($"[FishingRoomManager] Player {conn.connectionId} spawned at {startPos.name} ({startPos.position}).");
+            }
+            else
+            {
+                Debug.LogWarning($"[FishingRoomManager] Player {conn.connectionId} spawned without a NetworkStartPosition.");
+            }
         }
 
         public override void OnClientDisconnect()

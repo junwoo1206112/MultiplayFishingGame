@@ -43,6 +43,8 @@ namespace MultiplayFishing.UI
 
         private void Awake()
         {
+            AutoBindReferences();
+
             if (backgroundRect != null)
                 originalAnchoredPos = backgroundRect.anchoredPosition;
 
@@ -67,6 +69,61 @@ namespace MultiplayFishing.UI
         {
             HideAllPanels();
             FindLocalFishingController();
+        }
+
+        private void AutoBindReferences()
+        {
+            if (chargingPanel == null)
+            {
+                var timer = transform.Find("Timer");
+                if (timer != null)
+                    chargingPanel = timer.gameObject;
+            }
+
+            if (catchingPanel == null)
+            {
+                var catchingBar = transform.Find("CatchingBar");
+                if (catchingBar != null)
+                    catchingPanel = catchingBar.gameObject;
+            }
+
+            if (alertPanel == null)
+            {
+                var message = transform.Find("F_Message");
+                if (message != null)
+                    alertPanel = message.gameObject;
+            }
+
+            if (chargingBar == null && chargingPanel != null)
+                chargingBar = chargingPanel.GetComponent<Slider>();
+
+            if (backgroundRect == null)
+            {
+                var background = transform.Find("CatchingBar/C_Background");
+                if (background != null)
+                    backgroundRect = background.GetComponent<RectTransform>();
+            }
+
+            if (borderRect == null)
+            {
+                var border = transform.Find("CatchingBar/Border");
+                if (border != null)
+                    borderRect = border.GetComponent<RectTransform>();
+            }
+
+            if (fillImage == null)
+            {
+                var fill = transform.Find("CatchingBar/C_Background/Fill Area/C_Fill");
+                if (fill != null)
+                    fillImage = fill.GetComponent<Image>();
+            }
+
+            if (tFillImage == null)
+            {
+                var timerFill = transform.Find("Timer/Fill Area/T_Fill");
+                if (timerFill != null)
+                    tFillImage = timerFill.GetComponent<Image>();
+            }
         }
 
         private void FindLocalFishingController()
@@ -168,7 +225,7 @@ namespace MultiplayFishing.UI
                 return;
             }
 
-            if (Input.GetKeyDown(KeyCode.Space) && isTimerRunning)
+            if (UnityEngine.Input.GetKeyDown(KeyCode.Space) && isTimerRunning)
             {
                 if (fillImage != null)
                 {
@@ -176,10 +233,11 @@ namespace MultiplayFishing.UI
                     fillImage.fillAmount = Mathf.Clamp01(fillImage.fillAmount);
                     UpdateFillColor();
                 }
-                Shake();
+                if (backgroundRect != null)
+                    Shake();
             }
 
-            if (Input.GetKeyDown(KeyCode.R))
+            if (UnityEngine.Input.GetKeyDown(KeyCode.R))
             {
                 if (fillImage != null)
                 {
@@ -221,6 +279,9 @@ namespace MultiplayFishing.UI
             float elapsed = 0f;
             while (elapsed < shakeDuration)
             {
+                if (backgroundRect == null)
+                    yield break;
+
                 float x = Random.Range(-1f, 1f) * shakeIntensity;
                 backgroundRect.anchoredPosition = originalAnchoredPos + new Vector2(x, 0f);
                 if (borderRect != null)
