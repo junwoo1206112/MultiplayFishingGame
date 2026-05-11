@@ -20,8 +20,18 @@ namespace MultiplayFishing.Core
             var loadedFishes = Resources.LoadAll<FishDataSO>("Data/Fish");
             foreach (var fish in loadedFishes)
             {
-                if (!fishDataMap.ContainsKey(fish.id))
-                    fishDataMap.Add(fish.id, fish);
+                if (fishDataMap.ContainsKey(fish.id)) continue;
+
+                if (string.IsNullOrEmpty(fish.rank) || fish.catchChance <= 0f)
+                {
+                    Debug.LogWarning($"[ExcelDataService] Skipping ghost fish: '{fish.fishName}' (id: {fish.id}) — not in Excel data.");
+                    continue;
+                }
+
+                fishDataMap.Add(fish.id, fish);
+
+                if (fish.fishIcon == null)
+                    Debug.LogWarning($"[ExcelDataService] Fish '{fish.fishName}' (id: {fish.id}) has NO icon sprite. Run Tools > Fish > Match Icons to Assets.");
             }
 
             var loadedRods = Resources.LoadAll<RodDataSO>("Data/Rods");

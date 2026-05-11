@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MultiplayFishing.Data::MultiplayFishing.Data.Models.FishDataSO
   id: fish_lionfish
   fishName: "\uC3E0\uBC30\uAC10\uD3AD"
-  fishIcon: {fileID: 0}
+  fishIcon: {fileID: 21300000, guid: 5c0edfbee1903fb4d972300cbf7de641, type: 3}
   rank: "\u2605\u2605\u2605"
   catchChance: 2
   expReward: 250
@@ -23,5 +23,6 @@ MonoBehaviour:
   maxSize: 35
   weight: 1.88
   requiredSpam: 5
-  description: "\uD3C9\uBC94\uD558\uC9C0\uB9CC \uD2B9\uBCC4\uD55C \uB2F9\uC2E0\uB9CC\uC758
-    \uBB3C\uACE0\uAE30\uC785\uB2C8\uB2E4."
+  description: "\uD654\uB824\uD55C \uC904\uBB34\uB2AC\uC640 \uB3C5\uAC00\uC2DC\uB97C
+    \uAC00\uC9C4 \uC704\uD5D8\uD55C \uBBF8\uB140. \uC808\uB300 \uB9CC\uC9C0\uBA74
+    \uC548 \uB429\uB2C8\uB2E4."

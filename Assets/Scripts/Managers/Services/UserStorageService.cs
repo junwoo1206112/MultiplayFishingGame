@@ -184,10 +184,43 @@ namespace MultiplayFishing.Core
             {
                 string json = File.ReadAllText(savePath);
                 userData = JsonUtility.FromJson<UserSaveData>(json);
+                CleanGhostData();
             }
             else
             {
                 userData = new UserSaveData();
+            }
+            EnsureDefaultItems();
+        }
+
+        private void EnsureDefaultItems()
+        {
+            if (!userData.ownedRodIds.Contains("rod_basic"))
+            {
+                userData.ownedRodIds.Add("rod_basic");
+                Debug.Log("[UserStorageService] 기본 낚싯대가 지급되었습니다.");
+                Save();
+            }
+        }
+
+        private void CleanGhostData()
+        {
+            int removedInventory = userData.inventory.RemoveAll(item =>
+            {
+                var fishData = dataService.GetFishData(item.fishId);
+                return fishData == null;
+            });
+
+            int removedEncyclopedia = userData.encyclopedia.RemoveAll(record =>
+            {
+                var fishData = dataService.GetFishData(record.fishId);
+                return fishData == null;
+            });
+
+            if (removedInventory > 0 || removedEncyclopedia > 0)
+            {
+                Debug.Log($"[UserStorageService] Cleaned {removedInventory} ghost inventory items and {removedEncyclopedia} ghost encyclopedia records.");
+                Save();
             }
         }
     }

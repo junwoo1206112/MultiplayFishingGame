@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MultiplayFishing.Data::MultiplayFishing.Data.Models.FishDataSO
   id: fish_manowar
   fishName: "\uB9CC\uC624\uC6CC"
-  fishIcon: {fileID: 0}
+  fishIcon: {fileID: 21300000, guid: 4b6244557c785f842a85e76f17a44d5e, type: 3}
   rank: "\u2605\u2605\u2605\u2605"
   catchChance: 0.7
   expReward: 1000
@@ -23,5 +23,5 @@ MonoBehaviour:
   maxSize: 30
   weight: 2.53
   requiredSpam: 6
-  description: "\uD3C9\uBC94\uD558\uC9C0\uB9CC \uD2B9\uBCC4\uD55C \uB2F9\uC2E0\uB9CC\uC758
-    \uBB3C\uACE0\uAE30\uC785\uB2C8\uB2E4."
+  description: "\uBC14\uB2E4\uC758 \uB3C5\uAC00\uC2A4 \uD48D\uC120. \uAE34 \uCD09\uC218\uC5D0
+    \uCE58\uBA85\uC801\uC778 \uB3C5\uC774 \uC788\uC2B5\uB2C8\uB2E4."

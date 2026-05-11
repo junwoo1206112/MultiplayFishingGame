@@ -179,6 +179,12 @@ namespace MultiplayFishing.UI
             }
         }
 
+        public void SetVisible(bool visible)
+        {
+            if (offlineControlsRoot != null) offlineControlsRoot.SetActive(visible);
+            if (onlineControlsRoot != null) onlineControlsRoot.SetActive(visible);
+        }
+
         void OnEnable()
         {
             FishingRoomManager.NetworkStateChanged += Refresh;
