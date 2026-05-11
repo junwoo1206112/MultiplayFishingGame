@@ -32,6 +32,8 @@ namespace MultiplayFishing.Gameplay
         private bool isPreviewFish;
         private bool isAnimating;
 
+        public bool IsAnimating => isAnimating;
+
         public void Initialize(Animator playerAnimator, string hasFishParam)
         {
             animator = playerAnimator;

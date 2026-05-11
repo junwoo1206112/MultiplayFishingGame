@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace MultiplayFishing.Gameplay
@@ -142,15 +143,34 @@ namespace MultiplayFishing.Gameplay
                 return;
             }
 
-            GameObject waterObject = GameObject.Find("WaterBlock_50m");
-            if (waterObject == null)
+            string[] waterObjectNames =
             {
-                waterObject = GameObject.Find("WaterBlock_50m (1)");
+                "Water",
+                "WaterBlock_50m",
+                "WaterBlock_50m (1)"
+            };
+
+            foreach (string waterObjectName in waterObjectNames)
+            {
+                GameObject waterObject = GameObject.Find(waterObjectName);
+                if (waterObject != null)
+                {
+                    WaterSurfaceTransform = waterObject.transform;
+                    return;
+                }
             }
 
-            if (waterObject != null)
+            Transform[] sceneTransforms = UnityEngine.Object.FindObjectsByType<Transform>(
+                FindObjectsInactive.Exclude,
+                FindObjectsSortMode.None);
+
+            foreach (Transform sceneTransform in sceneTransforms)
             {
-                WaterSurfaceTransform = waterObject.transform;
+                if (sceneTransform.name.IndexOf("Water", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    WaterSurfaceTransform = sceneTransform;
+                    return;
+                }
             }
         }
     }

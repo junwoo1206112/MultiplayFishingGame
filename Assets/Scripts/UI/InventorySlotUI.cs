@@ -1,9 +1,10 @@
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
+using System;
 using TMPro;
-using MultiplayFishing.Data.Models;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 using MultiplayFishing.Core;
+using MultiplayFishing.Data.Models;
 
 namespace MultiplayFishing.UI
 {
@@ -17,16 +18,105 @@ namespace MultiplayFishing.UI
 
         public InventoryItem ItemData => itemData;
         public FishDataSO FishInfo => fishInfo;
+        public string ItemId => itemId;
 
         private InventoryItem itemData;
         private FishDataSO fishInfo;
-        private IUserService userService;
+        private string itemId;
+        private Action<InventorySlotUI> buttonAction;
 
-        public event System.Action<InventorySlotUI> OnSlotClicked;
+        public event Action<InventorySlotUI> OnSlotClicked;
 
         private void Awake()
         {
             AutoBindReferences();
+        }
+
+        public void SetupInventoryFish(InventoryItem item, FishDataSO data, IUserService userService)
+        {
+            Setup(
+                item != null ? item.fishId : string.Empty,
+                data != null ? data.fishName : "Unknown",
+                data != null ? data.fishIcon : null,
+                item != null ? $"{item.length:F1} cm" : string.Empty,
+                "판매",
+                () => userService?.SellFish(item.instanceId));
+
+            itemData = item;
+            fishInfo = data;
+        }
+
+        public void SetupFishCatalog(FishDataSO data, Action<InventorySlotUI> onBuy)
+        {
+            Setup(
+                data != null ? data.id : string.Empty,
+                data != null ? data.fishName : "Unknown",
+                data != null ? data.fishIcon : null,
+                data != null ? $"{data.sellPrice:N0} G" : string.Empty,
+                data != null ? $"{data.sellPrice:N0} G" : string.Empty,
+                () => onBuy?.Invoke(this));
+
+            fishInfo = data;
+        }
+
+        public void SetupRod(RodDataSO data, bool owned, bool equipped, Action<InventorySlotUI> onAction)
+        {
+            string actionText = equipped ? "해제" : owned ? "장착" : data != null ? $"{data.price:N0} G" : string.Empty;
+            Setup(
+                data != null ? data.id : string.Empty,
+                data != null ? data.rodName : "Unknown",
+                data != null ? data.icon : null,
+                data != null ? data.rank : string.Empty,
+                actionText,
+                () => onAction?.Invoke(this));
+        }
+
+        public void SetupBait(BaitDataSO data, bool owned, bool equipped, Action<InventorySlotUI> onAction)
+        {
+            string actionText = equipped ? "해제" : owned ? "장착" : data != null ? $"{data.price:N0} G" : string.Empty;
+            Setup(
+                data != null ? data.id : string.Empty,
+                data != null ? data.baitName : "Unknown",
+                data != null ? data.icon : null,
+                data != null ? data.rank : string.Empty,
+                actionText,
+                () => onAction?.Invoke(this));
+        }
+
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            if (eventData.button == PointerEventData.InputButton.Left)
+            {
+                OnSlotClicked?.Invoke(this);
+            }
+        }
+
+        private void Setup(string id, string displayName, Sprite icon, string subText, string actionText, Action action)
+        {
+            AutoBindReferences();
+
+            itemData = null;
+            fishInfo = null;
+            itemId = id;
+            buttonAction = _ => action?.Invoke();
+
+            if (nameText != null) nameText.text = displayName;
+            if (lengthText != null) lengthText.text = subText;
+
+            if (fishIcon != null)
+            {
+                fishIcon.sprite = icon != null ? icon : CreatePlaceholderSprite();
+                fishIcon.preserveAspect = true;
+            }
+
+            if (sellButton == null) return;
+
+            TMP_Text buttonText = sellButton.GetComponentInChildren<TMP_Text>(true);
+            if (buttonText != null) buttonText.text = actionText;
+
+            sellButton.onClick.RemoveAllListeners();
+            sellButton.onClick.AddListener(() => buttonAction?.Invoke(this));
+            sellButton.gameObject.SetActive(!string.IsNullOrEmpty(actionText));
         }
 
         private void AutoBindReferences()
@@ -72,83 +162,6 @@ namespace MultiplayFishing.UI
             }
         }
 
-        public void Setup(InventoryItem item, FishDataSO fishInfo, IUserService userService)
-        {
-            AutoBindReferences();
-
-            this.itemData = item;
-            this.fishInfo = fishInfo;
-            this.userService = userService;
-
-            if (fishInfo != null)
-            {
-                if (nameText != null) nameText.text = fishInfo.fishName;
-                if (fishIcon != null)
-                {
-                    fishIcon.sprite = fishInfo.fishIcon;
-                    if (fishInfo.fishIcon == null)
-                    {
-                        Debug.LogWarning($"[InventorySlotUI] Fish '{fishInfo.fishName}' (id: {fishInfo.id}) has no icon sprite.");
-                        fishIcon.sprite = CreatePlaceholderSprite();
-                    }
-                }
-            }
-            else
-            {
-                if (fishIcon != null) fishIcon.sprite = CreatePlaceholderSprite();
-            }
-
-            if (lengthText != null) lengthText.text = $"{item.length:F1} cm";
-
-            if (sellButton != null) sellButton.gameObject.SetActive(true);
-
-            if (sellButton != null)
-            {
-                sellButton.onClick.RemoveAllListeners();
-                sellButton.onClick.AddListener(OnSellClicked);
-            }
-        }
-
-        public void SetupCatalog(FishDataSO fishInfo, System.Action<InventorySlotUI> onBuy)
-        {
-            AutoBindReferences();
-
-            this.itemData = null;
-            this.fishInfo = fishInfo;
-            this.userService = null;
-
-            if (nameText != null) nameText.text = fishInfo != null ? fishInfo.fishName : "???";
-            if (fishIcon != null)
-            {
-                fishIcon.sprite = fishInfo != null && fishInfo.fishIcon != null ? fishInfo.fishIcon : CreatePlaceholderSprite();
-            }
-            if (lengthText != null) lengthText.text = fishInfo != null ? $"{fishInfo.sellPrice}G" : "";
-
-            if (sellButton != null)
-            {
-                var btnText = sellButton.GetComponentInChildren<TMP_Text>();
-                if (btnText != null) btnText.text = fishInfo != null ? $"{fishInfo.sellPrice}G" : "";
-                sellButton.onClick.RemoveAllListeners();
-                sellButton.onClick.AddListener(() => onBuy?.Invoke(this));
-                sellButton.gameObject.SetActive(true);
-            }
-
-            OnSlotClicked += onBuy;
-        }
-
-        public void OnPointerClick(PointerEventData eventData)
-        {
-            if (eventData.button == PointerEventData.InputButton.Left)
-            {
-                OnSlotClicked?.Invoke(this);
-            }
-        }
-
-        private void OnSellClicked()
-        {
-            userService.SellFish(itemData.instanceId);
-        }
-
         private static Sprite CreatePlaceholderSprite()
         {
             Texture2D tex = new Texture2D(64, 64);
@@ -157,10 +170,14 @@ namespace MultiplayFishing.UI
             {
                 int x = i % 64;
                 int y = i / 64;
-                pixels[i] = (x / 8 + y / 8) % 2 == 0 ? new Color(0.3f, 0.3f, 0.3f) : new Color(0.5f, 0.5f, 0.5f);
+                pixels[i] = (x / 8 + y / 8) % 2 == 0
+                    ? new Color(0.3f, 0.3f, 0.3f)
+                    : new Color(0.5f, 0.5f, 0.5f);
             }
+
             tex.SetPixels(pixels);
             tex.Apply();
+
             Sprite sprite = Sprite.Create(tex, new Rect(0, 0, 64, 64), new Vector2(0.5f, 0.5f), 100);
             sprite.name = "PlaceholderIcon";
             return sprite;

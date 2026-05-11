@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MultiplayFishing.Data::MultiplayFishing.Data.Models.BaitDataSO
   id: bait_ancient
   baitName: "\uACE0\uB300\uC758 \uBBF8\uB07C"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: ba76a7a8d36c7e04494e07cdcce12fdb, type: 3}
   rank: "\u2605\u2605\u2605\u2605\u2605"
   price: 20000
   attractionFishIds:

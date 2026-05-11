@@ -27,6 +27,8 @@ namespace MultiplayFishing.Gameplay
         [Header("Setup References")]
         [SerializeField] private Renderer characterRenderer;
         [SerializeField] private float walkStopDelay = 0.3f;
+        [SerializeField] private float groundSnapSearchHeight = 5f;
+        [SerializeField] private float groundSnapSearchDistance = 20f;
 
         [Header("Movement Settings")]
         [SerializeField] private float walkSpeed = 8f;
@@ -39,7 +41,13 @@ namespace MultiplayFishing.Gameplay
         private MonoBehaviour playerController;
         private FieldInfo maxMoveSpeedField;
         private int walkParamHash;
+        private int rodEquippedParamHash;
+        private int rodTakeOutTriggerHash;
+        private int rodPutAwayTriggerHash;
         private bool hasWalkParam;
+        private bool hasRodEquippedParam;
+        private bool hasRodTakeOutTrigger;
+        private bool hasRodPutAwayTrigger;
         private float walkStopTimer;
         private Vector3 lastPosition;
         private bool isSprinting;
@@ -61,8 +69,14 @@ namespace MultiplayFishing.Gameplay
         {
             if (characterRenderer == null) characterRenderer = GetComponentInChildren<Renderer>();
             animator = GetComponent<Animator>();
+            if (animator == null) animator = GetComponentInChildren<Animator>();
+            if (animator != null)
+            {
+                animator.applyRootMotion = false;
+            }
+
             characterController = GetComponent<CharacterController>();
-            CacheWalkParam();
+            CacheAnimatorParameters();
         }
 
         public override void OnStartServer()
@@ -161,6 +175,7 @@ namespace MultiplayFishing.Gameplay
         void OnEquippedRodChanged(string oldValue, string newValue)
         {
             Debug.Log($"[FishingPlayer] Equipped rod changed: {oldValue} -> {newValue}");
+            ApplyRodAnimationState(!string.IsNullOrEmpty(newValue));
         }
 
         void OnEquippedBaitChanged(string oldValue, string newValue)
@@ -202,10 +217,54 @@ namespace MultiplayFishing.Gameplay
             if (cc != null)
             {
                 cc.enabled = false;
-                transform.position += Vector3.up * 0.2f; 
+                SnapToGround(cc);
                 yield return new WaitForFixedUpdate();
                 cc.enabled = true;
             }
+        }
+
+        private void SnapToGround(CharacterController cc)
+        {
+            if (cc == null) return;
+
+            Vector3 rayOrigin = transform.position + Vector3.up * groundSnapSearchHeight;
+            int groundMask = Physics.DefaultRaycastLayers & ~LayerMask.GetMask("Water");
+            RaycastHit[] hits = Physics.RaycastAll(
+                rayOrigin,
+                Vector3.down,
+                groundSnapSearchDistance,
+                groundMask,
+                QueryTriggerInteraction.Ignore);
+
+            if (hits == null || hits.Length == 0)
+            {
+                return;
+            }
+
+            RaycastHit bestHit = default;
+            bool hasHit = false;
+            float bestDistance = float.MaxValue;
+
+            foreach (RaycastHit hit in hits)
+            {
+                if (hit.transform == null || hit.transform.IsChildOf(transform)) continue;
+                if (hit.collider != null && hit.collider.gameObject.layer == LayerMask.NameToLayer("Water")) continue;
+                if (hit.distance >= bestDistance) continue;
+
+                bestHit = hit;
+                bestDistance = hit.distance;
+                hasHit = true;
+            }
+
+            if (!hasHit)
+            {
+                return;
+            }
+
+            float controllerBottomOffset = cc.center.y - (cc.height * 0.5f);
+            Vector3 position = transform.position;
+            position.y = bestHit.point.y - controllerBottomOffset;
+            transform.position = position;
         }
 
         // ==================== 달리기 시스템 ====================
@@ -583,24 +642,49 @@ namespace MultiplayFishing.Gameplay
 
         private void CacheWalkParam()
         {
+            CacheAnimatorParameters();
+        }
+
+        private void CacheAnimatorParameters()
+        {
             hasWalkParam = false;
+            hasRodEquippedParam = false;
+            hasRodTakeOutTrigger = false;
+            hasRodPutAwayTrigger = false;
+
             if (animator == null) return;
+
+            walkParamHash = Animator.StringToHash("Walk");
+            rodEquippedParamHash = Animator.StringToHash("RodEquipped");
+            rodTakeOutTriggerHash = Animator.StringToHash("RodTakeOut");
+            rodPutAwayTriggerHash = Animator.StringToHash("RodPutAway");
 
             foreach (AnimatorControllerParameter param in animator.parameters)
             {
-                if (param.type == AnimatorControllerParameterType.Bool && param.name == "Walk")
+                if (param.type == AnimatorControllerParameterType.Bool && param.nameHash == walkParamHash)
                 {
                     hasWalkParam = true;
-                    walkParamHash = param.nameHash;
-                    break;
+                }
+                else if (param.type == AnimatorControllerParameterType.Bool && param.nameHash == rodEquippedParamHash)
+                {
+                    hasRodEquippedParam = true;
+                }
+                else if (param.type == AnimatorControllerParameterType.Trigger && param.nameHash == rodTakeOutTriggerHash)
+                {
+                    hasRodTakeOutTrigger = true;
+                }
+                else if (param.type == AnimatorControllerParameterType.Trigger && param.nameHash == rodPutAwayTriggerHash)
+                {
+                    hasRodPutAwayTrigger = true;
                 }
             }
         }
 
         private void Start()
         {
-            CacheWalkParam();
+            CacheAnimatorParameters();
             lastPosition = transform.position;
+            ApplyRodAnimationState(!string.IsNullOrEmpty(equippedRodId), false);
         }
 
 
@@ -617,6 +701,29 @@ namespace MultiplayFishing.Gameplay
 
             animator.SetBool(walkParamHash, walkStopTimer > 0f);
             lastPosition = transform.position;
+        }
+
+        private void ApplyRodAnimationState(bool equipped, bool playTrigger = true)
+        {
+            if (animator == null) return;
+
+            if (hasRodEquippedParam)
+            {
+                animator.SetBool(rodEquippedParamHash, equipped);
+            }
+
+            if (!playTrigger) return;
+
+            if (equipped && hasRodTakeOutTrigger)
+            {
+                if (hasRodPutAwayTrigger) animator.ResetTrigger(rodPutAwayTriggerHash);
+                animator.SetTrigger(rodTakeOutTriggerHash);
+            }
+            else if (!equipped && hasRodPutAwayTrigger)
+            {
+                if (hasRodTakeOutTrigger) animator.ResetTrigger(rodTakeOutTriggerHash);
+                animator.SetTrigger(rodPutAwayTriggerHash);
+            }
         }
     }
 }

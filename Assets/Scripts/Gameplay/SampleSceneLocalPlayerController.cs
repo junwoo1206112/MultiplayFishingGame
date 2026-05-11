@@ -425,15 +425,18 @@ namespace MultiplayFishing.Gameplay
             {
                 onWaterHit = () =>
                 {
-                    fishingSplashController.UpdatePendingPosition(
-                        hasLastWaterHitPoint,
-                        lastWaterHitPoint,
-                        targetPosition,
-                        splashWorldOffset,
-                        clampSplashToWaterSurface,
-                        minimumSplashHeightOffset);
-                    
-                    fishingSplashController.Play();
+                    bool hasSurfaceHit = hasLastWaterHitPoint;
+                    Vector3 surfaceHitPoint = lastWaterHitPoint;
+                    Vector3 fallbackPosition = targetPosition;
+
+                    if (splashDelay > 0f)
+                    {
+                        StartCoroutine(PlaySplashAfterDelay(hasSurfaceHit, surfaceHitPoint, fallbackPosition));
+                    }
+                    else
+                    {
+                        PlaySplash(hasSurfaceHit, surfaceHitPoint, fallbackPosition);
+                    }
                 };
             }
 
@@ -461,6 +464,27 @@ namespace MultiplayFishing.Gameplay
             }
 
             hookMoveRoutine = null;
+        }
+
+        private IEnumerator PlaySplashAfterDelay(bool hasSurfaceHit, Vector3 surfaceHitPoint, Vector3 fallbackPosition)
+        {
+            yield return new WaitForSeconds(splashDelay);
+            PlaySplash(hasSurfaceHit, surfaceHitPoint, fallbackPosition);
+        }
+
+        private void PlaySplash(bool hasSurfaceHit, Vector3 surfaceHitPoint, Vector3 fallbackPosition)
+        {
+            if (fishingSplashController == null) return;
+
+            fishingSplashController.UpdatePendingPosition(
+                hasSurfaceHit,
+                surfaceHitPoint,
+                fallbackPosition,
+                splashWorldOffset,
+                clampSplashToWaterSurface,
+                minimumSplashHeightOffset);
+
+            fishingSplashController.Play();
         }
     }
 }

@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using Mirror;
 
@@ -34,8 +36,9 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private float catchingDuration = 10f;
 
         [Header("Input Safety")]
-        [SerializeField] private bool blockCastWhileMoving = true;
+        [SerializeField] private bool blockCastWhileMoving;
         [SerializeField] private float castInputLockDuration = 0.5f;
+        [SerializeField] private float castReleaseFallbackDelay = 2.1f;
 
         [Header("References")]
         private FishingPlayer fishingPlayer;
@@ -56,9 +59,14 @@ namespace MultiplayFishing.Gameplay
         private int spamCount;
         private int targetSpamCount;
         private int fishingCastTriggerHash;
+        private int fishingBoolHash;
         private bool hasFishingCastTrigger;
+        private bool hasFishingBool;
         private float inputLockedUntil;
         private bool wasLockedThisFrame;
+        private Coroutine castReleaseFallbackRoutine;
+        private bool waitingForCastRelease;
+        private readonly List<RaycastResult> uiRaycastResults = new List<RaycastResult>();
 
         public void Initialize(
             FishingPlayer player,
@@ -70,6 +78,11 @@ namespace MultiplayFishing.Gameplay
         {
             fishingPlayer = player;
             animator = anim;
+            if (animator != null)
+            {
+                animator.applyRootMotion = false;
+            }
+
             fishingLineVisual = lineVisual;
             ropeController = rope;
             splashController = splash;
@@ -87,13 +100,13 @@ namespace MultiplayFishing.Gameplay
         private void HandleInput()
         {
             if (Mouse.current == null) return;
-            if (Cursor.lockState == CursorLockMode.None) return;
+            if (IsPointerOverUI()) return;
 
             wasLockedThisFrame = Time.time < inputLockedUntil;
             bool leftPressed = Mouse.current.leftButton.wasPressedThisFrame;
             bool leftHeld = Mouse.current.leftButton.isPressed;
             bool leftReleased = Mouse.current.leftButton.wasReleasedThisFrame;
-            bool spacePressed = Keyboard.current.spaceKey.wasPressedThisFrame;
+            bool spacePressed = Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame;
 
             if (wasLockedThisFrame) return;
 
@@ -105,7 +118,7 @@ namespace MultiplayFishing.Gameplay
 
                 case FishingState.Charging:
                     if (leftHeld) UpdateCharging();
-                    if (leftReleased) Cast();
+                    if (leftReleased || !leftHeld) Cast();
                     break;
 
                 case FishingState.Nibble:
@@ -116,6 +129,29 @@ namespace MultiplayFishing.Gameplay
                     if (leftPressed || spacePressed) RecordSpam();
                     break;
             }
+        }
+
+        private bool IsPointerOverUI()
+        {
+            if (EventSystem.current == null || Mouse.current == null) return false;
+
+            PointerEventData eventData = new PointerEventData(EventSystem.current)
+            {
+                position = Mouse.current.position.ReadValue()
+            };
+
+            uiRaycastResults.Clear();
+            EventSystem.current.RaycastAll(eventData, uiRaycastResults);
+
+            foreach (RaycastResult result in uiRaycastResults)
+            {
+                if (result.gameObject == null) continue;
+                if (result.gameObject.transform.IsChildOf(transform)) continue;
+
+                return true;
+            }
+
+            return false;
         }
 
         private bool IsMovementInputPressed()
@@ -139,7 +175,7 @@ namespace MultiplayFishing.Gameplay
 
             if (animator != null)
             {
-                animator.SetBool("fishing", newState == FishingState.Casting);
+                SetFishingBool(false);
             }
         }
 
@@ -165,6 +201,13 @@ namespace MultiplayFishing.Gameplay
 
         private void Cast()
         {
+            if (waterResolver == null)
+            {
+                Debug.LogWarning("[FishingController] Water resolver is missing. Cast cancelled.");
+                ChangeState(FishingState.Idle);
+                return;
+            }
+
             Vector3 castOffset = new Vector3(0, 0, currentChargeDistance);
             Vector3 hitPoint;
 
@@ -193,16 +236,22 @@ namespace MultiplayFishing.Gameplay
             inputLockedUntil = Time.time + castInputLockDuration;
             ChangeState(FishingState.Casting);
             PlayCastAnimation();
+            waitingForCastRelease = true;
+            StartCastReleaseFallback();
         }
 
         public void OnCastRelease()
         {
+            if (!waitingForCastRelease) return;
+
             if (CurrentState != FishingState.Casting)
             {
                 Debug.LogWarning($"[FishingController] OnCastRelease ignored: current state is {CurrentState}, expected Casting.");
                 return;
             }
 
+            waitingForCastRelease = false;
+            StopCastReleaseFallback();
             fishingPlayer.CmdStartFishing(targetPosition);
 
             if (stateRoutine != null) StopCoroutine(stateRoutine);
@@ -211,6 +260,13 @@ namespace MultiplayFishing.Gameplay
 
         private IEnumerator CastingRoutine(Vector3 target, Vector3 hitPoint, bool hasHit)
         {
+            if (ropeController == null || !ropeController.IsConfigured)
+            {
+                Debug.LogWarning("[FishingController] Fishing rope is not configured. Starting fishing wait state without hook animation.");
+                ChangeState(FishingState.Waiting);
+                yield break;
+            }
+
             yield return ropeController.MoveHook(
                 target,
                 0.15f, // startDelay
@@ -224,8 +280,8 @@ namespace MultiplayFishing.Gameplay
                 true,  // stopAtWater
                 target.y,
                 () => {
-                    splashController.UpdatePendingPosition(hasHit, hitPoint, target, Vector3.zero, true, 0.02f);
-                    splashController.Play();
+                    splashController?.UpdatePendingPosition(hasHit, hitPoint, target, Vector3.zero, true, 0.02f);
+                    splashController?.Play();
                 },
                 fishingLineVisual);
 
@@ -309,6 +365,8 @@ namespace MultiplayFishing.Gameplay
         public void OnFishingResult(bool success)
         {
             if (stateRoutine != null) StopCoroutine(stateRoutine);
+            waitingForCastRelease = false;
+            StopCastReleaseFallback();
 
             if (success)
             {
@@ -336,6 +394,8 @@ namespace MultiplayFishing.Gameplay
 
         private void Miss()
         {
+            waitingForCastRelease = false;
+            StopCastReleaseFallback();
             fishingPlayer.CmdFishingMissed();
             ChangeState(FishingState.Failure);
             StartCoroutine(FailureRoutine());
@@ -343,33 +403,74 @@ namespace MultiplayFishing.Gameplay
 
         private void EndFishing()
         {
-            ropeController.RestoreHookToRod();
-            ropeController.SetVisible(false);
-            fishingLineVisual.SetFishingActive(false);
+            waitingForCastRelease = false;
+            StopCastReleaseFallback();
+            ropeController?.RestoreHookToRod();
+            ropeController?.SetVisible(false);
+            fishingLineVisual?.SetFishingActive(false);
             ChangeState(FishingState.Idle);
+        }
+
+        private void StartCastReleaseFallback()
+        {
+            StopCastReleaseFallback();
+            castReleaseFallbackRoutine = StartCoroutine(CastReleaseFallbackRoutine());
+        }
+
+        private void StopCastReleaseFallback()
+        {
+            if (castReleaseFallbackRoutine == null) return;
+
+            StopCoroutine(castReleaseFallbackRoutine);
+            castReleaseFallbackRoutine = null;
+        }
+
+        private IEnumerator CastReleaseFallbackRoutine()
+        {
+            yield return new WaitForSeconds(castReleaseFallbackDelay);
+            castReleaseFallbackRoutine = null;
+
+            if (waitingForCastRelease && CurrentState == FishingState.Casting)
+            {
+                OnCastRelease();
+            }
         }
 
         private void CacheAnimatorParameters()
         {
             hasFishingCastTrigger = false;
+            hasFishingBool = false;
             if (animator == null) return;
 
             fishingCastTriggerHash = Animator.StringToHash("FishingCast");
+            fishingBoolHash = Animator.StringToHash("fishing");
             foreach (AnimatorControllerParameter parameter in animator.parameters)
             {
                 if (parameter.type == AnimatorControllerParameterType.Trigger &&
                     parameter.nameHash == fishingCastTriggerHash)
                 {
                     hasFishingCastTrigger = true;
-                    break;
+                }
+                else if (parameter.type == AnimatorControllerParameterType.Bool &&
+                         parameter.nameHash == fishingBoolHash)
+                {
+                    hasFishingBool = true;
                 }
             }
+        }
+
+        private void SetFishingBool(bool value)
+        {
+            if (animator == null || !hasFishingBool) return;
+
+            animator.SetBool(fishingBoolHash, value);
         }
 
         private void PlayCastAnimation()
         {
             if (animator == null || !hasFishingCastTrigger) return;
 
+            SetFishingBool(false);
             animator.ResetTrigger(fishingCastTriggerHash);
             animator.SetTrigger(fishingCastTriggerHash);
         }
