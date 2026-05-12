@@ -62,7 +62,10 @@ namespace MultiplayFishing.Gameplay
                 return;
             }
 
-            ApplyHookPosition();
+            if (!isFishingActive)
+            {
+                ApplyHookPosition();
+            }
             RefreshLines();
         }
 
@@ -75,7 +78,6 @@ namespace MultiplayFishing.Gameplay
                 return;
             }
 
-            ApplyHookPosition();
             RefreshLines();
         }
 
