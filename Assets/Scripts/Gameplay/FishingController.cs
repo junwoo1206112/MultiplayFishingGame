@@ -35,6 +35,7 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private float castStartDelay = 0.18f;
         [SerializeField] private float castDuration = 0.45f;
         [SerializeField] private float castArcHeight = 0.35f;
+        [SerializeField] private float castArcDistanceRatio = 0.18f;
         [SerializeField] private float castRopeLength = 1.8f;
         [SerializeField] private float castRopeSlack = 0.05f;
         [SerializeField] private float hookWaterSubmergeDepth = 0.08f;
@@ -138,6 +139,7 @@ namespace MultiplayFishing.Gameplay
             if (waterDetector == null) waterDetector = gameObject.AddComponent<WaterDetector>();
 
             CacheAnimatorParameters();
+            EnsureAnimationEventRelay();
 
             if (catchPresenter != null && animator != null)
             {
@@ -245,7 +247,8 @@ namespace MultiplayFishing.Gameplay
 
         private static bool IsFishingLoopState(FishingState state)
         {
-            return state == FishingState.Waiting
+            return state == FishingState.Casting
+                || state == FishingState.Waiting
                 || state == FishingState.Nibble
                 || state == FishingState.Catching;
         }
@@ -321,7 +324,11 @@ namespace MultiplayFishing.Gameplay
             PlayCastAnimation();
             waitingForCastRelease = true;
             castReleaseReceived = false;
-            StartCastReleaseFallback();
+
+            float fallbackDelay = useCastReleaseAnimationEvent && animator != null && hasFishingBool
+                ? castReleaseFallbackDelay
+                : castStartDelay;
+            StartCastReleaseFallback(fallbackDelay);
         }
 
         public void OnCastRelease()
@@ -337,6 +344,7 @@ namespace MultiplayFishing.Gameplay
             waitingForCastRelease = false;
             castReleaseReceived = true;
             StopCastReleaseFallback();
+            fishingLineVisual?.SetFishingActiveVisualOnly(true);
             fishingPlayer.CmdStartFishing(targetPosition);
 
             if (stateRoutine != null) StopCoroutine(stateRoutine);
@@ -356,7 +364,7 @@ namespace MultiplayFishing.Gameplay
                 target,
                 () => useCastReleaseAnimationEvent && castReleaseReceived ? 0f : castStartDelay,
                 () => castDuration,
-                () => castArcHeight,
+                () => GetCastArcHeight(target),
                 () => castRopeSlack,
                 () => castRopeLength,
                 true,
@@ -379,6 +387,7 @@ namespace MultiplayFishing.Gameplay
                 fishingLineVisual);
 
             ChangeState(FishingState.Waiting);
+            fishingLineVisual?.SetFishingActiveVisualOnly(true);
         }
 
         private void TryHooking()
@@ -494,7 +503,11 @@ namespace MultiplayFishing.Gameplay
 
         public void CancelFishingFromRodPutAway()
         {
-            if (CurrentState == FishingState.Idle) return;
+            if (CurrentState == FishingState.Idle)
+            {
+                HideRodLineVisuals();
+                return;
+            }
 
             waitingForCastRelease = false;
             StopCastReleaseFallback();
@@ -511,15 +524,28 @@ namespace MultiplayFishing.Gameplay
                 biteSystem.StopBiteLogic();
             }
 
-            ropeController?.RestoreHookToRod();
-            ropeController?.SetVisible(false);
-            fishingLineVisual?.SetFishingActive(false);
+            HideRodLineVisuals();
             ChangeState(FishingState.Idle);
 
             if (fishingPlayer != null && fishingPlayer.isLocalPlayer)
             {
                 fishingPlayer.CmdFishingMissed();
             }
+        }
+
+        public void HideRodLineVisuals()
+        {
+            ropeController?.RestoreHookToRod();
+            ropeController?.SetVisible(false);
+            fishingLineVisual?.SetFishingActive(false);
+            fishingLineVisual?.SetVisible(false);
+        }
+
+        public void ShowRodLineVisuals()
+        {
+            fishingLineVisual?.SetVisible(true);
+            fishingLineVisual?.SetFishingActive(false);
+            ropeController?.RestoreHookToRod();
         }
 
         private IEnumerator SuccessRoutine()
@@ -588,10 +614,10 @@ namespace MultiplayFishing.Gameplay
                 fishingLineVisual);
         }
 
-        private void StartCastReleaseFallback()
+        private void StartCastReleaseFallback(float fallbackDelay)
         {
             StopCastReleaseFallback();
-            castReleaseFallbackRoutine = StartCoroutine(CastReleaseFallbackRoutine());
+            castReleaseFallbackRoutine = StartCoroutine(CastReleaseFallbackRoutine(fallbackDelay));
         }
 
         private void StopCastReleaseFallback()
@@ -610,9 +636,9 @@ namespace MultiplayFishing.Gameplay
             autoDrawCastRoutine = null;
         }
 
-        private IEnumerator CastReleaseFallbackRoutine()
+        private IEnumerator CastReleaseFallbackRoutine(float fallbackDelay)
         {
-            yield return new WaitForSeconds(castReleaseFallbackDelay);
+            yield return new WaitForSeconds(Mathf.Max(0f, fallbackDelay));
             castReleaseFallbackRoutine = null;
 
             if (waitingForCastRelease && CurrentState == FishingState.Casting)
@@ -631,13 +657,14 @@ namespace MultiplayFishing.Gameplay
             Vector3 offset = castTargetOffset;
             offset.z = Mathf.Approximately(offset.z, 0f) ? currentChargeDistance : offset.z;
 
-            Vector3 target = waterResolver.ResolveCastTarget(
+            _ = waterResolver.ResolveCastTarget(
                 transform,
                 offset,
                 Mathf.Max(fallbackCastDistance, currentChargeDistance),
                 out hasSurfaceHit,
                 out surfaceHitPoint);
 
+            Vector3 target = GetPlanarCastTarget(offset);
             if (waterResolver.TryGetSurfaceHeight(out float waterSurfaceY))
             {
                 target.y = waterSurfaceY + waterSurfaceYOffset - hookWaterSubmergeDepth;
@@ -649,6 +676,43 @@ namespace MultiplayFishing.Gameplay
             }
 
             return target;
+        }
+
+        private Vector3 GetPlanarCastTarget(Vector3 offset)
+        {
+            Vector3 start = ropeController != null && ropeController.GetTipPoint() != null
+                ? ropeController.GetTipPoint().position
+                : transform.position;
+            Vector3 forward = GetPlanarCastForward();
+            Vector3 right = Vector3.Cross(Vector3.up, forward).normalized;
+
+            return start
+                + right * offset.x
+                + Vector3.up * offset.y
+                + forward * Mathf.Max(minCastDistance, offset.z);
+        }
+
+        private Vector3 GetPlanarCastForward()
+        {
+            Camera playerCamera = fishingPlayer != null && fishingPlayer.isLocalPlayer ? Camera.main : null;
+            Vector3 forward = playerCamera != null ? playerCamera.transform.forward : transform.forward;
+            forward.y = 0f;
+
+            if (forward.sqrMagnitude < 0.001f)
+            {
+                forward = transform.forward;
+                forward.y = 0f;
+            }
+
+            return forward.sqrMagnitude > 0.001f ? forward.normalized : Vector3.forward;
+        }
+
+        private float GetCastArcHeight(Vector3 target)
+        {
+            Transform tipPoint = ropeController != null ? ropeController.GetTipPoint() : null;
+            Vector3 start = tipPoint != null ? tipPoint.position : transform.position;
+            float distance = Vector3.Distance(start, target);
+            return Mathf.Max(castArcHeight, distance * castArcDistanceRatio);
         }
 
         private float GetCastWaterSurfaceY()
@@ -728,6 +792,22 @@ namespace MultiplayFishing.Gameplay
             }
         }
 
+        private void EnsureAnimationEventRelay()
+        {
+            if (animator == null)
+            {
+                return;
+            }
+
+            FishingAnimationEventRelay relay = animator.GetComponent<FishingAnimationEventRelay>();
+            if (relay == null)
+            {
+                relay = animator.gameObject.AddComponent<FishingAnimationEventRelay>();
+            }
+
+            relay.Initialize(this);
+        }
+
         private void SetFishingBool(bool value)
         {
             if (animator == null || !hasFishingBool) return;
@@ -744,11 +824,9 @@ namespace MultiplayFishing.Gameplay
 
         private void PlayCastAnimation()
         {
-            if (animator == null || !hasFishingCastTrigger) return;
+            if (animator == null) return;
 
-            SetFishingBool(false);
-            animator.ResetTrigger(fishingCastTriggerHash);
-            animator.SetTrigger(fishingCastTriggerHash);
+            SetFishingBool(true);
         }
     }
 }

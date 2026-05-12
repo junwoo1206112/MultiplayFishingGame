@@ -26,6 +26,7 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private float pitch = 18f;
         [SerializeField] private float followSharpness = 18f;
         [SerializeField] private float rotationSharpness = 20f;
+        [SerializeField] private float keyboardYawSpeed = 120f;
         [SerializeField] private float mouseYawSpeed = 0.12f;
 
         [Header("Scene Camera")]
@@ -106,7 +107,16 @@ namespace MultiplayFishing.Gameplay
                 manualYaw = mainCamera.transform.eulerAngles.y;
                 hasManualYaw = true;
             }
-            else if (Mouse.current != null && Mouse.current.rightButton.isPressed)
+
+            if (Keyboard.current != null)
+            {
+                float keyboardYawInput = 0f;
+                if (Keyboard.current.qKey.isPressed) keyboardYawInput -= 1f;
+                if (Keyboard.current.eKey.isPressed) keyboardYawInput += 1f;
+                manualYaw += keyboardYawInput * keyboardYawSpeed * Time.deltaTime;
+            }
+
+            if (Mouse.current != null && Mouse.current.rightButton.isPressed)
             {
                 manualYaw += Mouse.current.delta.ReadValue().x * mouseYawSpeed;
             }
