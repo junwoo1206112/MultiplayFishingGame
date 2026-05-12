@@ -57,7 +57,7 @@ namespace MultiplayFishing.Gameplay
 
         public void ProcessInput(bool isFishingActive, bool isRodEquipped, bool isClickChallengeRunning)
         {
-            // Tab: ToggleRod via InputAction
+            // G: ToggleRod via InputAction
             if (inputProvider != null && inputProvider.WasToggleRodPressedThisFrame())
             {
                 OnToggleRodRequested?.Invoke();
@@ -65,7 +65,7 @@ namespace MultiplayFishing.Gameplay
             }
 
             // Fallback to Keyboard.current if InputActionProvider not available
-            if (inputProvider == null && Keyboard.current != null && Keyboard.current.tabKey.wasPressedThisFrame)
+            if (inputProvider == null && Keyboard.current != null && Keyboard.current.gKey.wasPressedThisFrame)
             {
                 OnToggleRodRequested?.Invoke();
                 return;

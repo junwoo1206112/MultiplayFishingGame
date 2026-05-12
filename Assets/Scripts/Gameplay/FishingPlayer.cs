@@ -4,6 +4,7 @@ using Mirror;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using UnityEngine.InputSystem;
 using MultiplayFishing.Core;
 using MultiplayFishing.Data.Models;
 
@@ -23,6 +24,7 @@ namespace MultiplayFishing.Gameplay
         [Header("Equipment (Shop)")]
         [SyncVar(hook = nameof(OnEquippedRodChanged))] public string equippedRodId = "";
         [SyncVar(hook = nameof(OnEquippedBaitChanged))] public string equippedBaitId = "";
+        [SyncVar(hook = nameof(OnRodDrawnChanged))] private bool isRodDrawn;
 
         [Header("Setup References")]
         [SerializeField] private Animator animator;
@@ -40,6 +42,7 @@ namespace MultiplayFishing.Gameplay
         [Header("Sprint UI")]
 
         private CharacterController characterController;
+        private FishingRodVisibility rodVisibility;
         private MonoBehaviour playerController;
         private FieldInfo maxMoveSpeedField;
         private FieldInfo maxTurnSpeedField;
@@ -75,6 +78,9 @@ namespace MultiplayFishing.Gameplay
                 return fishingController != null && fishingController.CurrentState != FishingState.Idle;
             }
         }
+
+        public bool IsRodDrawn => isRodDrawn;
+
         private void Awake()
         {
             if (characterRenderer == null) characterRenderer = GetComponentInChildren<Renderer>();
@@ -86,6 +92,7 @@ namespace MultiplayFishing.Gameplay
             }
 
             characterController = GetComponent<CharacterController>();
+            rodVisibility = GetComponentInChildren<FishingRodVisibility>(true);
             CacheAnimatorParameters();
         }
 
@@ -101,6 +108,8 @@ namespace MultiplayFishing.Gameplay
                 equippedRodId = userService.UserData.equippedRodId;
                 equippedBaitId = userService.UserData.equippedBaitId;
             }
+
+            isRodDrawn = false;
         }
 
         public override void OnStartClient()
@@ -199,12 +208,18 @@ namespace MultiplayFishing.Gameplay
         void OnEquippedRodChanged(string oldValue, string newValue)
         {
             Debug.Log($"[FishingPlayer] Equipped rod changed: {oldValue} -> {newValue}");
-            ApplyRodAnimationState(!string.IsNullOrEmpty(newValue));
+            ApplyRodAnimationState(IsRodDrawn, false);
         }
 
         void OnEquippedBaitChanged(string oldValue, string newValue)
         {
             Debug.Log($"[FishingPlayer] Equipped bait changed: {oldValue} -> {newValue}");
+        }
+
+        void OnRodDrawnChanged(bool oldValue, bool newValue)
+        {
+            Debug.Log($"[FishingPlayer] Rod drawn changed: {oldValue} -> {newValue}");
+            ApplyRodAnimationState(IsRodDrawn);
         }
 
         private void UpdateCharacterColor(Color color)
@@ -299,9 +314,27 @@ namespace MultiplayFishing.Gameplay
 
             if (!isLocalPlayer) return;
 
+            HandleRodToggleInput();
+
             if (IsFishing) return;
 
             HandleSprintInput();
+        }
+
+        private void HandleRodToggleInput()
+        {
+            if (Keyboard.current == null || !Keyboard.current.gKey.wasPressedThisFrame) return;
+
+            SetRodDrawnLocal(!IsRodDrawn);
+            CmdSetRodDrawn(isRodDrawn);
+        }
+
+        public void DrawRodForFishing()
+        {
+            if (IsRodDrawn) return;
+
+            SetRodDrawnLocal(true);
+            CmdSetRodDrawn(true);
         }
 
         private void HandleSprintInput()
@@ -626,8 +659,30 @@ namespace MultiplayFishing.Gameplay
             if (userService == null) userService = DIContainer.Resolve<IUserService>();
             if (userService == null) return;
 
+            isRodDrawn = false;
             userService.UnequipRod();
             equippedRodId = "";
+        }
+
+        [Command]
+        public void CmdSetRodDrawn(bool drawn)
+        {
+            if (isRodDrawn == drawn) return;
+
+            SetRodDrawnLocal(drawn);
+            RpcApplyRodDrawn(drawn);
+        }
+
+        [ClientRpc(includeOwner = false)]
+        private void RpcApplyRodDrawn(bool drawn)
+        {
+            SetRodDrawnLocal(drawn);
+        }
+
+        private void SetRodDrawnLocal(bool drawn)
+        {
+            isRodDrawn = drawn;
+            ApplyRodAnimationState(drawn);
         }
 
         [Command]
@@ -780,7 +835,7 @@ namespace MultiplayFishing.Gameplay
         {
             CacheAnimatorParameters();
             lastPosition = transform.position;
-            ApplyRodAnimationState(!string.IsNullOrEmpty(equippedRodId), false);
+            ApplyRodAnimationState(IsRodDrawn, false);
         }
 
 
@@ -845,22 +900,28 @@ namespace MultiplayFishing.Gameplay
         {
             if (animator == null) return;
 
-            if (hasRodEquippedParam)
+            if (playTrigger && equipped && hasRodTakeOutTrigger)
+            {
+                if (hasRodPutAwayTrigger) animator.ResetTrigger(rodPutAwayTriggerHash);
+                if (hasRodEquippedParam) animator.SetBool(rodEquippedParamHash, true);
+                rodVisibility?.SetRodVisible(true);
+                animator.SetTrigger(rodTakeOutTriggerHash);
+            }
+            else if (playTrigger && !equipped && hasRodPutAwayTrigger)
+            {
+                if (hasRodTakeOutTrigger) animator.ResetTrigger(rodTakeOutTriggerHash);
+                if (hasRodEquippedParam) animator.SetBool(rodEquippedParamHash, false);
+                fishingController?.CancelFishingFromRodPutAway();
+                animator.SetTrigger(rodPutAwayTriggerHash);
+            }
+            else if (hasRodEquippedParam)
             {
                 animator.SetBool(rodEquippedParamHash, equipped);
             }
 
-            if (!playTrigger) return;
-
-            if (equipped && hasRodTakeOutTrigger)
+            if (!playTrigger)
             {
-                if (hasRodPutAwayTrigger) animator.ResetTrigger(rodPutAwayTriggerHash);
-                animator.SetTrigger(rodTakeOutTriggerHash);
-            }
-            else if (!equipped && hasRodPutAwayTrigger)
-            {
-                if (hasRodTakeOutTrigger) animator.ResetTrigger(rodTakeOutTriggerHash);
-                animator.SetTrigger(rodPutAwayTriggerHash);
+                rodVisibility?.SetRodVisible(equipped);
             }
         }
     }
