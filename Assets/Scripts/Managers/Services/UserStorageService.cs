@@ -24,6 +24,8 @@ namespace MultiplayFishing.Core
 
         public void AddFish(string fishId, float length)
         {
+            EnsureUserData();
+
             // 1. 인벤토리 추가
             userData.AddToInventory(fishId, length);
             
@@ -82,6 +84,8 @@ namespace MultiplayFishing.Core
 
         public bool BuyItem(ShopItemType itemType, string itemId)
         {
+            EnsureUserData();
+
             int price = 0;
 
             if (itemType == ShopItemType.Rod)
@@ -128,6 +132,8 @@ namespace MultiplayFishing.Core
 
         public bool EquipRod(string rodId)
         {
+            EnsureUserData();
+
             if (!IsRodOwned(rodId)) return false;
             userData.equippedRodId = rodId;
             Debug.Log($"[UserStorageService] Equipped rod: {rodId}");
@@ -138,6 +144,8 @@ namespace MultiplayFishing.Core
 
         public bool EquipBait(string baitId)
         {
+            EnsureUserData();
+
             if (!IsBaitOwned(baitId)) return false;
             userData.equippedBaitId = baitId;
             Debug.Log($"[UserStorageService] Equipped bait: {baitId}");
@@ -148,6 +156,8 @@ namespace MultiplayFishing.Core
 
         public void UnequipRod()
         {
+            EnsureUserData();
+
             userData.equippedRodId = "";
             Debug.Log($"[UserStorageService] Unequipped rod.");
             Save();
@@ -156,6 +166,8 @@ namespace MultiplayFishing.Core
 
         public void UnequipBait()
         {
+            EnsureUserData();
+
             userData.equippedBaitId = "";
             Debug.Log($"[UserStorageService] Unequipped bait.");
             Save();
@@ -164,16 +176,19 @@ namespace MultiplayFishing.Core
 
         public bool IsRodOwned(string rodId)
         {
+            EnsureUserData();
             return userData.ownedRodIds.Contains(rodId);
         }
 
         public bool IsBaitOwned(string baitId)
         {
+            EnsureUserData();
             return userData.ownedBaitIds.Contains(baitId);
         }
 
         public void Save()
         {
+            EnsureUserData();
             string json = JsonUtility.ToJson(userData, true);
             File.WriteAllText(savePath, json);
         }
@@ -184,6 +199,7 @@ namespace MultiplayFishing.Core
             {
                 string json = File.ReadAllText(savePath);
                 userData = JsonUtility.FromJson<UserSaveData>(json);
+                EnsureUserData();
                 CleanGhostData();
             }
             else
@@ -195,6 +211,8 @@ namespace MultiplayFishing.Core
 
         private void EnsureDefaultItems()
         {
+            EnsureUserData();
+
             if (!userData.ownedRodIds.Contains("rod_basic"))
             {
                 userData.ownedRodIds.Add("rod_basic");
@@ -205,6 +223,9 @@ namespace MultiplayFishing.Core
 
         private void CleanGhostData()
         {
+            EnsureUserData();
+            if (dataService == null) return;
+
             int removedInventory = userData.inventory.RemoveAll(item =>
             {
                 var fishData = dataService.GetFishData(item.fishId);
@@ -222,6 +243,19 @@ namespace MultiplayFishing.Core
                 Debug.Log($"[UserStorageService] Cleaned {removedInventory} ghost inventory items and {removedEncyclopedia} ghost encyclopedia records.");
                 Save();
             }
+        }
+
+        private void EnsureUserData()
+        {
+            if (userData == null)
+                userData = new UserSaveData();
+
+            userData.inventory ??= new List<InventoryItem>();
+            userData.encyclopedia ??= new List<FishRecord>();
+            userData.ownedRodIds ??= new List<string>();
+            userData.ownedBaitIds ??= new List<string>();
+            userData.equippedRodId ??= "";
+            userData.equippedBaitId ??= "";
         }
     }
 }

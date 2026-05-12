@@ -20,6 +20,8 @@ namespace MultiplayFishing.Network
         [Header("Transport Configuration")]
         public int maxPacketSize = 1400;
         [SerializeField] private float clientConnectTimeoutSeconds = 15f;
+        [SerializeField] private int relayHeartbeatIntervalMs = 1000;
+        [SerializeField] private int maxFrameTimeMs = 100;
 
         private NetworkDriver serverDriver;
         private NetworkDriver clientDriver;
@@ -97,6 +99,7 @@ namespace MultiplayFishing.Network
 
         public override void ClientConnect(string address)
         {
+            DisposeClientDriver();
             clientDisconnectNotified = false;
 
             if (string.IsNullOrEmpty(pendingJoinCode))
@@ -120,12 +123,19 @@ namespace MultiplayFishing.Network
 
                 var relayData = joinAllocation.ToRelayServerData("dtls");
                 var settings = new NetworkSettings();
-                settings.WithRelayParameters(ref relayData, maxPacketSize);
+                try
+                {
+                    ApplyRelaySettings(ref settings, ref relayData);
 
-                if (clientDriver.IsCreated)
-                    clientDriver.Dispose();
+                    DisposeClientDriver();
 
-                clientDriver = NetworkDriver.Create(settings);
+                    clientDriver = NetworkDriver.Create(settings);
+                }
+                finally
+                {
+                    settings.Dispose();
+                }
+
                 clientReliablePipeline = clientDriver.CreatePipeline(typeof(ReliableSequencedPipelineStage));
                 clientConnection = clientDriver.Connect();
                 clientActive = false;
@@ -166,6 +176,7 @@ namespace MultiplayFishing.Network
             clientConnecting = false;
             while (clientSendQueue.TryDequeue(out _)) { }
             NotifyClientDisconnected();
+            DisposeClientDriver();
         }
 
         public override Uri ServerUri() => null;
@@ -183,12 +194,19 @@ namespace MultiplayFishing.Network
             {
                 var relayData = pendingAllocation.ToRelayServerData("dtls");
                 var settings = new NetworkSettings();
-                settings.WithRelayParameters(ref relayData, maxPacketSize);
+                try
+                {
+                    ApplyRelaySettings(ref settings, ref relayData);
 
-                if (serverDriver.IsCreated)
-                    serverDriver.Dispose();
+                    DisposeServerDriver();
 
-                serverDriver = NetworkDriver.Create(settings);
+                    serverDriver = NetworkDriver.Create(settings);
+                }
+                finally
+                {
+                    settings.Dispose();
+                }
+
                 serverReliablePipeline = serverDriver.CreatePipeline(typeof(ReliableSequencedPipelineStage));
                 int bindResult = serverDriver.Bind(NetworkEndpoint.AnyIpv4);
                 if (bindResult != 0)
@@ -236,10 +254,8 @@ namespace MultiplayFishing.Network
 
         public override void ServerStop()
         {
-            serverActive = false;
-            connections.Clear();
-            nextConnectionId = 1;
-            while (serverSendQueue.TryDequeue(out _)) { }
+            DisconnectAllServerConnections();
+            DisposeServerDriver();
         }
 
         public override void Shutdown()
@@ -255,6 +271,16 @@ namespace MultiplayFishing.Network
             if (!clientDriver.IsCreated) return;
 
             clientDriver.ScheduleUpdate().Complete();
+
+            if (clientDriver.GetRelayConnectionStatus() == RelayConnectionStatus.AllocationInvalid)
+            {
+                Debug.LogWarning("[UnityRelayTransport] Relay allocation became invalid on client. Disconnecting.");
+                clientActive = false;
+                clientConnecting = false;
+                NotifyClientDisconnected();
+                DisposeClientDriver();
+                return;
+            }
 
             if (clientConnecting && !clientActive && Time.realtimeSinceStartup - clientConnectStartedTime > clientConnectTimeoutSeconds)
             {
@@ -311,6 +337,15 @@ namespace MultiplayFishing.Network
             if (!serverActive || !serverDriver.IsCreated) return;
 
             serverDriver.ScheduleUpdate().Complete();
+
+            if (serverDriver.GetRelayConnectionStatus() == RelayConnectionStatus.AllocationInvalid)
+            {
+                Debug.LogWarning("[UnityRelayTransport] Relay allocation became invalid on server. Disconnecting clients.");
+                DisconnectAllServerConnections();
+                serverActive = false;
+                DisposeServerDriver();
+                return;
+            }
 
             NetworkConnection acceptedConnection;
             while ((acceptedConnection = serverDriver.Accept()).IsCreated)
@@ -377,6 +412,49 @@ namespace MultiplayFishing.Network
                     return kvp.Key;
             }
             return -1;
+        }
+
+        private void ApplyRelaySettings(ref NetworkSettings settings, ref RelayServerData relayData)
+        {
+            settings.WithNetworkConfigParameters(
+                maxFrameTimeMS: Mathf.Max(0, maxFrameTimeMs),
+                maxMessageSize: maxPacketSize);
+            settings.WithRelayParameters(
+                ref relayData,
+                Mathf.Clamp(relayHeartbeatIntervalMs, 1, 9000));
+        }
+
+        private void DisconnectAllServerConnections()
+        {
+            foreach (int connectionId in new List<int>(connections.Keys))
+            {
+                OnServerDisconnected?.Invoke(connectionId);
+            }
+
+            connections.Clear();
+            while (serverSendQueue.TryDequeue(out _)) { }
+        }
+
+        private void DisposeClientDriver()
+        {
+            if (clientDriver.IsCreated)
+                clientDriver.Dispose();
+
+            clientConnection = default;
+            clientActive = false;
+            clientConnecting = false;
+            while (clientSendQueue.TryDequeue(out _)) { }
+        }
+
+        private void DisposeServerDriver()
+        {
+            if (serverDriver.IsCreated)
+                serverDriver.Dispose();
+
+            serverActive = false;
+            connections.Clear();
+            nextConnectionId = 1;
+            while (serverSendQueue.TryDequeue(out _)) { }
         }
 
         private void NotifyClientDisconnected()

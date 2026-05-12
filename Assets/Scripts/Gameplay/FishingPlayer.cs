@@ -25,26 +25,36 @@ namespace MultiplayFishing.Gameplay
         [SyncVar(hook = nameof(OnEquippedBaitChanged))] public string equippedBaitId = "";
 
         [Header("Setup References")]
+        [SerializeField] private Animator animator;
         [SerializeField] private Renderer characterRenderer;
         [SerializeField] private float walkStopDelay = 0.3f;
         [SerializeField] private float groundSnapSearchHeight = 5f;
         [SerializeField] private float groundSnapSearchDistance = 20f;
+        [SerializeField] private float walkStartSpeed = 0.12f;
+        [SerializeField] private float walkStopSpeed = 0.04f;
 
         [Header("Movement Settings")]
-        [SerializeField] private float walkSpeed = 8f;
-        [SerializeField] private float sprintSpeed = 14f;
+        [SerializeField] private float walkSpeed = 4.5f;
+        [SerializeField] private float sprintSpeed = 7.5f;
 
         [Header("Sprint UI")]
 
-        private Animator animator;
         private CharacterController characterController;
         private MonoBehaviour playerController;
         private FieldInfo maxMoveSpeedField;
+        private FieldInfo maxTurnSpeedField;
+        private FieldInfo moveKeysField;
+        private object originalMoveKeys;
+        private bool hasOriginalMoveKeys;
+        private float originalMaxTurnSpeed;
+        private bool hasOriginalMaxTurnSpeed;
         private int walkParamHash;
+        private int walkSpeedParamHash;
         private int rodEquippedParamHash;
         private int rodTakeOutTriggerHash;
         private int rodPutAwayTriggerHash;
         private bool hasWalkParam;
+        private bool hasWalkSpeedParam;
         private bool hasRodEquippedParam;
         private bool hasRodTakeOutTrigger;
         private bool hasRodPutAwayTrigger;
@@ -157,6 +167,20 @@ namespace MultiplayFishing.Gameplay
                         maxMoveSpeedField = mb.GetType().GetField("maxMoveSpeed");
                         if (maxMoveSpeedField != null)
                             maxMoveSpeedField.SetValue(mb, walkSpeed);
+
+                        maxTurnSpeedField = mb.GetType().GetField("maxTurnSpeed");
+                        if (maxTurnSpeedField != null && !hasOriginalMaxTurnSpeed)
+                        {
+                            originalMaxTurnSpeed = (float)maxTurnSpeedField.GetValue(mb);
+                            hasOriginalMaxTurnSpeed = true;
+                        }
+
+                        moveKeysField = mb.GetType().GetField("moveKeys");
+                        if (moveKeysField != null && !hasOriginalMoveKeys)
+                        {
+                            originalMoveKeys = moveKeysField.GetValue(mb);
+                            hasOriginalMoveKeys = true;
+                        }
 
                         Debug.Log($"[FishingPlayer] Mirror PlayerController 활성화됨");
                     }
@@ -327,6 +351,9 @@ namespace MultiplayFishing.Gameplay
             fishingController = GetComponent<FishingController>();
             if (fishingController == null) fishingController = gameObject.AddComponent<FishingController>();
 
+            // AudioSource 보장
+            if (GetComponent<AudioSource>() == null) gameObject.AddComponent<AudioSource>();
+
             // 컴포넌트 및 오브젝트 검색 (방어적 코딩)
             var lineVisual = GetComponentInChildren<FishingLineVisual>();
             
@@ -358,7 +385,11 @@ namespace MultiplayFishing.Gameplay
             var ropeController = new FishingRopeController(tip, hook, ropeObject, ropeComponent);
             var splashController = new FishingSplashController(splashParticle);
 
-            fishingController.Initialize(this, animator, lineVisual, ropeController, splashController, waterResolver);
+            // 추가 컴포넌트 검색 (CatchPresenter, BiteSystem)
+            var catchPresenter = GetComponentInChildren<FishingCatchPresenter>();
+            var biteSystem = GetComponentInChildren<FishingBiteSystem>();
+
+            fishingController.Initialize(this, animator, lineVisual, ropeController, splashController, waterResolver, catchPresenter, biteSystem);
             
             // 낚시 상태 변경 시 PlayerController 토글 (낚시 중 이동 차단)
             if (isLocalPlayer)
@@ -372,19 +403,52 @@ namespace MultiplayFishing.Gameplay
             }
         }
 
+        private bool EnsureFishingController()
+        {
+            if (fishingController == null)
+                SetupFishingController();
+
+            if (fishingController != null)
+                return true;
+
+            Debug.LogWarning("[FishingPlayer] FishingController is not ready.");
+            return false;
+        }
+
         private void OnFishingStateChanged(FishingState newState)
         {
             if (playerController == null) return;
-            playerController.enabled = newState == FishingState.Idle;
 
             // 낚시 시작 시 Sprint 해제
             if (newState != FishingState.Idle && isSprinting)
             {
                 isSprinting = false;
-                if (maxMoveSpeedField != null)
-                    maxMoveSpeedField.SetValue(playerController, walkSpeed);
                 UpdateSprintUI();
             }
+
+            SetFishingMovementLocked(newState != FishingState.Idle);
+        }
+
+        private void SetFishingMovementLocked(bool locked)
+        {
+            if (playerController == null) return;
+
+            if (locked)
+            {
+                playerController.enabled = false;
+                return;
+            }
+
+            playerController.enabled = true;
+
+            if (moveKeysField != null && hasOriginalMoveKeys)
+                moveKeysField.SetValue(playerController, originalMoveKeys);
+
+            if (maxTurnSpeedField != null && hasOriginalMaxTurnSpeed)
+                maxTurnSpeedField.SetValue(playerController, originalMaxTurnSpeed);
+
+            if (maxMoveSpeedField != null)
+                maxMoveSpeedField.SetValue(playerController, isSprinting ? sprintSpeed : walkSpeed);
         }
 
         private Transform FindChildRecursive(Transform parent, string nameContains)
@@ -402,14 +466,18 @@ namespace MultiplayFishing.Gameplay
         [Command]
         public void CmdStartFishing(Vector3 targetPos)
         {
-            if (serverFishingRoutine != null) StopCoroutine(serverFishingRoutine);
+            if (serverFishingRoutine != null)
+            {
+                Debug.LogWarning("[FishingPlayer] CmdStartFishing ignored: server fishing routine already running.");
+                return;
+            }
             serverFishingRoutine = StartCoroutine(ServerFishingTimer());
         }
 
         private IEnumerator ServerFishingTimer()
         {
             // 3~30초 대기
-            float waitTime = UnityEngine.Random.Range(3f, 30f);
+            float waitTime = UnityEngine.Random.Range(3f, 10f);
             yield return new WaitForSeconds(waitTime);
 
             // 물고기 결정
@@ -431,6 +499,8 @@ namespace MultiplayFishing.Gameplay
                 // 물고기 없음 (실패)
                 TargetOnFishingResult(connectionToClient, false, "", 0, 0);
             }
+
+            serverFishingRoutine = null;
         }
 
         private int GetRequiredSpam(FishDataSO fish)
@@ -453,6 +523,7 @@ namespace MultiplayFishing.Gameplay
         [TargetRpc]
         private void TargetOnNibble(NetworkConnection target, int requiredSpam)
         {
+            if (!EnsureFishingController()) return;
             fishingController.OnServerNibble(requiredSpam);
         }
 
@@ -466,13 +537,18 @@ namespace MultiplayFishing.Gameplay
         [TargetRpc]
         private void TargetOnEnterCatching(NetworkConnection target)
         {
+            if (!EnsureFishingController()) return;
             fishingController.OnServerEnterCatching();
         }
 
         [Command]
         public void CmdCompleteCatching(int spamCount)
         {
-            if (pendingFish == null) return;
+            if (pendingFish == null)
+            {
+                serverFishingRoutine = null;
+                return;
+            }
 
             int required = GetRequiredSpam(pendingFish);
             bool success = spamCount >= required;
@@ -494,12 +570,17 @@ namespace MultiplayFishing.Gameplay
             }
 
             pendingFish = null;
+            serverFishingRoutine = null;
         }
 
         [Command]
         public void CmdFishingMissed()
         {
-            if (serverFishingRoutine != null) StopCoroutine(serverFishingRoutine);
+            if (serverFishingRoutine != null)
+            {
+                StopCoroutine(serverFishingRoutine);
+                serverFishingRoutine = null;
+            }
             pendingFish = null;
         }
 
@@ -580,6 +661,11 @@ namespace MultiplayFishing.Gameplay
             if (success)
             {
                 if (userService == null) userService = DIContainer.Resolve<IUserService>();
+                if (userService == null)
+                {
+                    Debug.LogWarning("[FishingPlayer] UserService is not ready. Fishing reward was skipped.");
+                    return;
+                }
                 
                 // IUserService.AddFish는 내부적으로 경험치 추가, 도감 갱신, 저장을 모두 수행합니다.
                 userService.AddFish(fishId, length);
@@ -588,11 +674,15 @@ namespace MultiplayFishing.Gameplay
                 OnSystemMessage?.Invoke($"[낚시 성공] {fishId} 획득!");
             }
 
+            if (!EnsureFishingController()) return;
             fishingController.OnFishingResult(success);
         }
 
         FishDataSO CalculateCatch()
         {
+            if (dataService == null) dataService = DIContainer.Resolve<IDataService>();
+            if (dataService == null) return null;
+
             List<FishDataSO> allFish = dataService.GetAllFishData();
             if (allFish == null || allFish.Count == 0) return null;
 
@@ -648,6 +738,7 @@ namespace MultiplayFishing.Gameplay
         private void CacheAnimatorParameters()
         {
             hasWalkParam = false;
+            hasWalkSpeedParam = false;
             hasRodEquippedParam = false;
             hasRodTakeOutTrigger = false;
             hasRodPutAwayTrigger = false;
@@ -655,6 +746,7 @@ namespace MultiplayFishing.Gameplay
             if (animator == null) return;
 
             walkParamHash = Animator.StringToHash("Walk");
+            walkSpeedParamHash = Animator.StringToHash("WalkSpeed");
             rodEquippedParamHash = Animator.StringToHash("RodEquipped");
             rodTakeOutTriggerHash = Animator.StringToHash("RodTakeOut");
             rodPutAwayTriggerHash = Animator.StringToHash("RodPutAway");
@@ -664,6 +756,10 @@ namespace MultiplayFishing.Gameplay
                 if (param.type == AnimatorControllerParameterType.Bool && param.nameHash == walkParamHash)
                 {
                     hasWalkParam = true;
+                }
+                else if (param.type == AnimatorControllerParameterType.Float && param.nameHash == walkSpeedParamHash)
+                {
+                    hasWalkSpeedParam = true;
                 }
                 else if (param.type == AnimatorControllerParameterType.Bool && param.nameHash == rodEquippedParamHash)
                 {
@@ -690,16 +786,58 @@ namespace MultiplayFishing.Gameplay
 
         private void UpdateWalkAnimation()
         {
-            if (animator == null || !hasWalkParam) return;
+            if (animator == null || (!hasWalkSpeedParam && !hasWalkParam))
+            {
+                lastPosition = transform.position;
+                return;
+            }
 
-            Vector3 delta = transform.position - lastPosition;
-            delta.y = 0f;
-            float moveSpeed = delta.sqrMagnitude / (Time.deltaTime * Time.deltaTime);
+            bool isMoving;
+            if (isLocalPlayer)
+            {
+                isMoving = UnityEngine.Input.GetKey(KeyCode.W) ||
+                           UnityEngine.Input.GetKey(KeyCode.A) ||
+                           UnityEngine.Input.GetKey(KeyCode.S) ||
+                           UnityEngine.Input.GetKey(KeyCode.D) ||
+                           UnityEngine.Input.GetKey(KeyCode.UpArrow) ||
+                           UnityEngine.Input.GetKey(KeyCode.DownArrow) ||
+                           UnityEngine.Input.GetKey(KeyCode.LeftArrow) ||
+                           UnityEngine.Input.GetKey(KeyCode.RightArrow);
+            }
+            else
+            {
+                float deltaTime = Time.deltaTime;
+                if (deltaTime <= Mathf.Epsilon)
+                {
+                    lastPosition = transform.position;
+                    return;
+                }
+                Vector3 delta = transform.position - lastPosition;
+                delta.y = 0f;
+                float horizontalSpeed = delta.magnitude / deltaTime;
+                isMoving = horizontalSpeed > 0.1f;
+            }
 
-            if (moveSpeed > 0.1f) walkStopTimer = walkStopDelay;
-            else walkStopTimer -= Time.deltaTime;
+            if (isMoving)
+            {
+                walkStopTimer = walkStopDelay;
+            }
+            else
+            {
+                walkStopTimer = Mathf.Max(0f, walkStopTimer - Time.deltaTime);
+            }
 
-            animator.SetBool(walkParamHash, walkStopTimer > 0f);
+            bool shouldAnimateMoving = walkStopTimer > 0f;
+            if (hasWalkSpeedParam)
+            {
+                float targetSpeed = shouldAnimateMoving ? (isSprinting ? 2f : 1f) : 0f;
+                animator.SetFloat(walkSpeedParamHash, targetSpeed, 0.1f, Time.deltaTime);
+            }
+            else if (hasWalkParam)
+            {
+                animator.SetBool(walkParamHash, shouldAnimateMoving);
+            }
+
             lastPosition = transform.position;
         }
 

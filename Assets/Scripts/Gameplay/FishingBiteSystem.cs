@@ -57,6 +57,19 @@ namespace MultiplayFishing.Gameplay
             isBiteHeldForChallenge = true;
         }
 
+        public void ShowBiteSignal()
+        {
+            StopBiteLogic();
+            isBiteActive = true;
+            Debug.Log("<color=red>BITE SIGNAL TRIGGERED!</color>");
+            BiteStarted?.Invoke();
+
+            if (biteSignalPrefab != null)
+            {
+                activeBiteSignal = Instantiate(biteSignalPrefab, transform.position + biteSignalOffset, Quaternion.identity);
+            }
+        }
+
         private IEnumerator WaitForBite()
         {
             float waitTime = Random.Range(minBiteWaitTime, maxBiteWaitTime);

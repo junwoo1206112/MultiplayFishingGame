@@ -19,7 +19,6 @@ namespace MultiplayFishing.UI
         [SerializeField] private Image fillImage;
         [SerializeField] private RectTransform backgroundRect;
         [SerializeField] private RectTransform borderRect;
-        [SerializeField] private float fillAmount = 0.1f;
         [SerializeField] private float shakeIntensity = 10f;
         [SerializeField] private float shakeDuration = 0.15f;
 
@@ -44,6 +43,7 @@ namespace MultiplayFishing.UI
         private void Awake()
         {
             AutoBindReferences();
+            ApplyDefaultLayout();
 
             if (backgroundRect != null)
                 originalAnchoredPos = backgroundRect.anchoredPosition;
@@ -63,6 +63,98 @@ namespace MultiplayFishing.UI
 
             if (borderRect != null)
                 originalBorderPos = borderRect.anchoredPosition;
+        }
+
+        private void ApplyDefaultLayout()
+        {
+            RectTransform root = transform as RectTransform;
+            if (root != null)
+            {
+                root.anchorMin = Vector2.zero;
+                root.anchorMax = Vector2.one;
+                root.pivot = new Vector2(0.5f, 0.5f);
+                root.anchoredPosition = Vector2.zero;
+                root.sizeDelta = Vector2.zero;
+                root.localScale = Vector3.one;
+            }
+
+            SetPanelLayout(chargingPanel, new Vector2(0f, 1f), new Vector2(88f, -88f), new Vector2(96f, 96f));
+            SetPanelLayout(alertPanel, new Vector2(0.5f, 1f), new Vector2(0f, -150f), new Vector2(280f, 88f));
+            SetPanelLayout(catchingPanel, new Vector2(0.5f, 0f), new Vector2(0f, 96f), new Vector2(420f, 72f));
+
+            ApplyCatchingBarLayout();
+            ApplyTimerLayout();
+        }
+
+        private static void SetPanelLayout(GameObject panel, Vector2 anchor, Vector2 anchoredPosition, Vector2 size)
+        {
+            if (panel == null) return;
+
+            RectTransform rect = panel.transform as RectTransform;
+            if (rect == null) return;
+
+            rect.anchorMin = anchor;
+            rect.anchorMax = anchor;
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = anchoredPosition;
+            rect.sizeDelta = size;
+            rect.localScale = Vector3.one;
+        }
+
+        private void ApplyCatchingBarLayout()
+        {
+            if (catchingPanel == null) return;
+
+            RectTransform panelRect = catchingPanel.transform as RectTransform;
+            if (panelRect != null)
+                panelRect.localScale = Vector3.one;
+
+            if (backgroundRect != null)
+                SetStretchLayout(backgroundRect, new Vector2(0f, 0f), new Vector2(0f, 0f));
+
+            if (borderRect != null)
+                SetStretchLayout(borderRect, new Vector2(0f, 0f), new Vector2(0f, 0f));
+
+            Transform fillArea = catchingPanel.transform.Find("C_Background/Fill Area");
+            if (fillArea is RectTransform fillAreaRect)
+                SetStretchLayout(fillAreaRect, new Vector2(18f, 16f), new Vector2(-18f, -16f));
+
+            if (fillImage != null)
+            {
+                RectTransform fillRect = fillImage.transform as RectTransform;
+                if (fillRect != null)
+                    SetStretchLayout(fillRect, Vector2.zero, Vector2.zero);
+
+                fillImage.type = Image.Type.Filled;
+                fillImage.fillMethod = Image.FillMethod.Horizontal;
+                fillImage.fillOrigin = 0;
+            }
+        }
+
+        private void ApplyTimerLayout()
+        {
+            if (chargingPanel == null) return;
+
+            Transform fillArea = chargingPanel.transform.Find("Fill Area");
+            if (fillArea is RectTransform fillAreaRect)
+                SetStretchLayout(fillAreaRect, new Vector2(12f, 12f), new Vector2(-12f, -12f));
+
+            if (tFillImage != null)
+            {
+                RectTransform fillRect = tFillImage.transform as RectTransform;
+                if (fillRect != null)
+                    SetStretchLayout(fillRect, Vector2.zero, Vector2.zero);
+            }
+        }
+
+        private static void SetStretchLayout(RectTransform rect, Vector2 offsetMin, Vector2 offsetMax)
+        {
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.offsetMin = offsetMin;
+            rect.offsetMax = offsetMax;
+            rect.localScale = Vector3.one;
         }
 
         private void Start()
@@ -173,6 +265,9 @@ namespace MultiplayFishing.UI
                     if (catchingPanel) catchingPanel.SetActive(true);
                     OnCatchingStarted();
                     break;
+                default:
+                    OnFishingEnded();
+                    break;
             }
         }
 
@@ -225,27 +320,6 @@ namespace MultiplayFishing.UI
                 return;
             }
 
-            if (UnityEngine.Input.GetKeyDown(KeyCode.Space) && isTimerRunning)
-            {
-                if (fillImage != null)
-                {
-                    fillImage.fillAmount += fillAmount;
-                    fillImage.fillAmount = Mathf.Clamp01(fillImage.fillAmount);
-                    UpdateFillColor();
-                }
-                if (backgroundRect != null)
-                    Shake();
-            }
-
-            if (UnityEngine.Input.GetKeyDown(KeyCode.R))
-            {
-                if (fillImage != null)
-                {
-                    fillImage.fillAmount = 0f;
-                    fillImage.color = colorLow;
-                }
-            }
-
             if (isTimerRunning)
                 UpdateTimer();
         }
@@ -254,11 +328,17 @@ namespace MultiplayFishing.UI
         {
             if (tFillImage == null) return;
 
+            float duration = timerDuration;
+            if (targetController != null)
+            {
+                duration = targetController.CatchingDuration;
+            }
+
             timerElapsed += Time.deltaTime;
-            float progress = Mathf.Clamp01(timerElapsed / timerDuration);
+            float progress = Mathf.Clamp01(timerElapsed / duration);
             tFillImage.fillAmount = progress;
 
-            if (timerElapsed >= timerDuration)
+            if (timerElapsed >= duration)
                 StopTimer();
         }
 
@@ -311,11 +391,15 @@ namespace MultiplayFishing.UI
 
         public void UpdateCatchBar(float current, float target)
         {
+            if (target <= 0f) return;
+
             if (fillImage != null)
             {
                 fillImage.fillAmount = Mathf.Clamp01(current / target);
                 UpdateFillColor();
             }
+            if (current > 0 && backgroundRect != null)
+                Shake();
         }
     }
 }

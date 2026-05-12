@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 namespace MultiplayFishing.Gameplay
@@ -122,18 +121,22 @@ namespace MultiplayFishing.Gameplay
 
         private Vector3 GetFallbackCastTarget(Transform owner, Vector3 castTargetOffset, float fallbackCastDistance)
         {
+            float forwardDistance = Mathf.Approximately(castTargetOffset.z, 0f)
+                ? fallbackCastDistance
+                : castTargetOffset.z;
+
             if (tipPoint != null)
             {
                 return tipPoint.position
                     + owner.right * castTargetOffset.x
                     + owner.up * castTargetOffset.y
-                    + owner.forward * (fallbackCastDistance + castTargetOffset.z);
+                    + owner.forward * forwardDistance;
             }
 
             return owner.position
                 + owner.right * castTargetOffset.x
                 + owner.up * castTargetOffset.y
-                + owner.forward * (fallbackCastDistance + castTargetOffset.z);
+                + owner.forward * forwardDistance;
         }
 
         private void EnsureWaterSurfaceTransform()
@@ -143,34 +146,20 @@ namespace MultiplayFishing.Gameplay
                 return;
             }
 
-            string[] waterObjectNames =
+            GameObject waterObject = GameObject.Find("WaterBlock_50m");
+            if (waterObject == null)
             {
-                "Water",
-                "WaterBlock_50m",
-                "WaterBlock_50m (1)"
-            };
-
-            foreach (string waterObjectName in waterObjectNames)
-            {
-                GameObject waterObject = GameObject.Find(waterObjectName);
-                if (waterObject != null)
-                {
-                    WaterSurfaceTransform = waterObject.transform;
-                    return;
-                }
+                waterObject = GameObject.Find("WaterBlock_50m (1)");
             }
 
-            Transform[] sceneTransforms = UnityEngine.Object.FindObjectsByType<Transform>(
-                FindObjectsInactive.Exclude,
-                FindObjectsSortMode.None);
-
-            foreach (Transform sceneTransform in sceneTransforms)
+            if (waterObject == null)
             {
-                if (sceneTransform.name.IndexOf("Water", StringComparison.OrdinalIgnoreCase) >= 0)
-                {
-                    WaterSurfaceTransform = sceneTransform;
-                    return;
-                }
+                waterObject = GameObject.Find("Water");
+            }
+
+            if (waterObject != null)
+            {
+                WaterSurfaceTransform = waterObject.transform;
             }
         }
     }

@@ -34,6 +34,7 @@ namespace MultiplayFishing.Gameplay
         [Header("Timing Settings")]
         [SerializeField] private float nibbleReactionWindow = 3f;
         [SerializeField] private float catchingDuration = 10f;
+        public float CatchingDuration => catchingDuration;
 
         [Header("Input Safety")]
         [SerializeField] private bool blockCastWhileMoving;
@@ -47,6 +48,16 @@ namespace MultiplayFishing.Gameplay
         private FishingRopeController ropeController;
         private FishingSplashController splashController;
         private FishingWaterSurfaceResolver waterResolver;
+        private FishingCatchPresenter catchPresenter;
+        private FishingBiteSystem biteSystem;
+
+        [Header("Sound Effects")]
+        [SerializeField] private AudioSource audioSource;
+        [SerializeField] private AudioClip waterSplashSound;
+        [SerializeField] private AudioClip biteSound;
+        [SerializeField] private AudioClip successSound;
+        [SerializeField] private AudioClip failureSound;
+
         public event Action<FishingState> OnStateChanged;
         public event Action<float> OnChargeProgressChanged; // 0 ~ 1
         public event Action<float, float> OnCatchProgressChanged; // current, target
@@ -74,7 +85,9 @@ namespace MultiplayFishing.Gameplay
             FishingLineVisual lineVisual,
             FishingRopeController rope,
             FishingSplashController splash,
-            FishingWaterSurfaceResolver resolver)
+            FishingWaterSurfaceResolver resolver,
+            FishingCatchPresenter presenter = null,
+            FishingBiteSystem bite = null)
         {
             fishingPlayer = player;
             animator = anim;
@@ -87,11 +100,30 @@ namespace MultiplayFishing.Gameplay
             ropeController = rope;
             splashController = splash;
             waterResolver = resolver;
+            catchPresenter = presenter;
+            biteSystem = bite;
+
+            if (audioSource == null) audioSource = GetComponent<AudioSource>();
+
             CacheAnimatorParameters();
+
+            if (catchPresenter != null && animator != null)
+            {
+                catchPresenter.Initialize(animator, "HasFish");
+            }
+        }
+
+        private void PlaySound(AudioClip clip)
+        {
+            if (audioSource != null && clip != null)
+            {
+                audioSource.PlayOneShot(clip);
+            }
         }
 
         private void Update()
         {
+            if (fishingPlayer == null) return;
             if (!fishingPlayer.isLocalPlayer) return;
 
             HandleInput();
@@ -173,10 +205,14 @@ namespace MultiplayFishing.Gameplay
             CurrentState = newState;
             OnStateChanged?.Invoke(newState);
 
-            if (animator != null)
-            {
-                SetFishingBool(false);
-            }
+            SetFishingBool(IsFishingLoopState(newState));
+        }
+
+        private static bool IsFishingLoopState(FishingState state)
+        {
+            return state == FishingState.Waiting
+                || state == FishingState.Nibble
+                || state == FishingState.Catching;
         }
 
         private void StartCharging()
@@ -282,6 +318,7 @@ namespace MultiplayFishing.Gameplay
                 () => {
                     splashController?.UpdatePendingPosition(hasHit, hitPoint, target, Vector3.zero, true, 0.02f);
                     splashController?.Play();
+                    PlaySound(waterSplashSound);
                 },
                 fishingLineVisual);
 
@@ -309,6 +346,12 @@ namespace MultiplayFishing.Gameplay
             stateTimer = 0f;
             ChangeState(FishingState.Nibble);
 
+            if (biteSystem != null)
+            {
+                biteSystem.ShowBiteSignal();
+            }
+            PlaySound(biteSound);
+
             if (stateRoutine != null) StopCoroutine(stateRoutine);
             stateRoutine = StartCoroutine(NibbleTimeoutRoutine());
         }
@@ -332,6 +375,11 @@ namespace MultiplayFishing.Gameplay
             ChangeState(FishingState.Catching);
             stateTimer = 0f;
             OnCatchProgressChanged?.Invoke(spamCount, targetSpamCount);
+
+            if (biteSystem != null)
+            {
+                biteSystem.StopBiteLogic();
+            }
 
             if (stateRoutine != null) StopCoroutine(stateRoutine);
             stateRoutine = StartCoroutine(CatchingRoutine());
@@ -368,21 +416,41 @@ namespace MultiplayFishing.Gameplay
             waitingForCastRelease = false;
             StopCastReleaseFallback();
 
+            if (biteSystem != null)
+            {
+                biteSystem.StopBiteLogic();
+            }
+
             if (success)
             {
                 ChangeState(FishingState.Success);
+                PlaySound(successSound);
                 StartCoroutine(SuccessRoutine());
             }
             else
             {
                 ChangeState(FishingState.Failure);
+                PlaySound(failureSound);
                 StartCoroutine(FailureRoutine());
             }
         }
 
         private IEnumerator SuccessRoutine()
         {
-            yield return new WaitForSeconds(2f);
+            if (catchPresenter != null && ropeController != null)
+            {
+                // HookPoint is where the hook is currently
+                Transform hookPoint = ropeController.GetHookPoint();
+                catchPresenter.PerformCatch(hookPoint, 1.2f);
+                
+                // Wait for catch animation (Lifting etc)
+                yield return new WaitUntil(() => !catchPresenter.IsAnimating);
+            }
+            else
+            {
+                yield return new WaitForSeconds(2f);
+            }
+
             EndFishing();
         }
 

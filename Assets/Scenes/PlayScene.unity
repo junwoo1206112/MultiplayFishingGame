@@ -6064,11 +6064,9 @@ MonoBehaviour:
   slotPrefab: {fileID: 7345492491631023592, guid: b01a124e6360baf4fafa503206282e2a, type: 3}
   contentParent: {fileID: 2111874490}
   toggleKey: 9
-  inventoryTabButton: {fileID: 0}
-  shopTabButton: {fileID: 0}
-  rodTabButton: {fileID: 0}
-  tapButtons: []
-  tapTexts: []
+  categoryButtons: []
+  inventoryButton: {fileID: 0}
+  shopButton: {fileID: 0}
   detailNameText: {fileID: 250589244}
   detailDescriptionText: {fileID: 785048075}
   detailIconImage: {fileID: 1183129252}

@@ -18,9 +18,10 @@ namespace MultiplayFishing.Gameplay
 
         private void Awake()
         {
-            if (animator == null) animator = GetComponent<Animator>();
+            if (animator == null) animator = GetComponentInChildren<Animator>();
             rodHideStateHash = Animator.StringToHash(rodHideStateName);
             rodShowStateHash = Animator.StringToHash(rodShowStateName);
+            ValidateAssignedRodRoot();
             ResolveRodVisualRoot();
         }
 
@@ -37,7 +38,7 @@ namespace MultiplayFishing.Gameplay
             }
         }
 
-        // Animation Events에서 호출
+        // Called by Animation Events on rod-in/rod-out.
         public void HideRodEvent()
         {
             SetRodVisible(false);
@@ -48,16 +49,40 @@ namespace MultiplayFishing.Gameplay
             SetRodVisible(true);
         }
 
+        public void RefreshReferences()
+        {
+            if (animator == null) animator = GetComponentInChildren<Animator>();
+            ValidateAssignedRodRoot();
+            ResolveRodVisualRoot();
+        }
+
+        private void ValidateAssignedRodRoot()
+        {
+            if (rodVisualRoot == null) return;
+            if (rodVisualRoot.transform.root == transform.root) return;
+
+            Debug.LogWarning($"[FishingRodVisibility] Ignoring rod visual outside this player hierarchy: {rodVisualRoot.name}");
+            rodVisualRoot = null;
+        }
+
         private void ResolveRodVisualRoot()
         {
             if (rodVisualRoot != null) return;
 
+            Transform rodSocket = FindChildRecursive(transform.root, "RodSocket");
+            if (rodSocket != null)
+            {
+                Transform model = FindBestRodVisual(rodSocket);
+                rodVisualRoot = model != null ? model.gameObject : rodSocket.gameObject;
+                Debug.Log($"[FishingRodVisibility] Auto-resolved rod visual: {rodVisualRoot.name}");
+                return;
+            }
+
             Transform[] children = GetComponentsInChildren<Transform>(true);
-            // Try multiple common rod names
             foreach (Transform child in children)
             {
-                string lower = child.name.ToLower();
-                if (lower.Contains("rod") || lower.Contains("fishing") || lower.Contains("낚시"))
+                if (child == transform) continue;
+                if (IsRodVisualCandidate(child))
                 {
                     rodVisualRoot = child.gameObject;
                     Debug.Log($"[FishingRodVisibility] Auto-resolved rod visual: {child.name}");
@@ -71,6 +96,58 @@ namespace MultiplayFishing.Gameplay
                 rodVisualRoot = transform.GetChild(0).gameObject;
                 Debug.Log($"[FishingRodVisibility] Fallback to first child: {rodVisualRoot.name}");
             }
+        }
+
+        private static Transform FindChildRecursive(Transform parent, string exactName)
+        {
+            foreach (Transform child in parent)
+            {
+                if (child.name == exactName)
+                {
+                    return child;
+                }
+
+                Transform result = FindChildRecursive(child, exactName);
+                if (result != null)
+                {
+                    return result;
+                }
+            }
+
+            return null;
+        }
+
+        private static Transform FindBestRodVisual(Transform rodSocket)
+        {
+            foreach (Transform child in rodSocket.GetComponentsInChildren<Transform>(true))
+            {
+                if (child == rodSocket) continue;
+                if (IsRodVisualCandidate(child))
+                {
+                    return child;
+                }
+            }
+
+            return null;
+        }
+
+        private static bool IsRodVisualCandidate(Transform child)
+        {
+            string lower = child.name.ToLowerInvariant();
+            if (lower.Contains("line") ||
+                lower.Contains("hook") ||
+                lower.Contains("tip") ||
+                lower.Contains("guide") ||
+                lower.Contains("socket") ||
+                lower.Contains("lure"))
+            {
+                return false;
+            }
+
+            return lower == "model" ||
+                   lower.Contains("rod") ||
+                   lower.Contains("fishingrod") ||
+                   lower.Contains("sk_fishingrod");
         }
 
         private void UpdateRodVisibilityFromAnimator()

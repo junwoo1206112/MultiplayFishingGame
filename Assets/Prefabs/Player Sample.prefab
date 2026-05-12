@@ -1255,6 +1255,7 @@ GameObject:
   - component: {fileID: 1191068289322922115}
   - component: {fileID: 3974794051072384695}
   - component: {fileID: 2895638865676939351}
+  - component: {fileID: 3728491056712345678}
   m_Layer: 0
   m_Name: Player Sample
   m_TagString: Untagged
@@ -1471,73 +1472,18 @@ MonoBehaviour:
   m_GameObject: {fileID: 2199994792208976159}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fbc57f10806e74f4c8bbbfb1d31b8725, type: 3}
+  m_Script: {fileID: 11500000, guid: 05a893b532a46bf479c3785edd17325f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MultiplayFishing.Gameplay::MultiplayFishing.Gameplay.FishingController
-  movement: {fileID: 296195286698845221}
-  biteSystem: {fileID: 5356259300119587112}
-  catchPresenter: {fileID: 1191068289322922115}
-  waterDetector: {fileID: 2895638865676939351}
-  animator: {fileID: 4840261169809639903}
-  fishingParameter: fishing
-  hasFishParameter: HasFish
-  rodEquippedParameter: RodEquipped
-  rodTakeOutTrigger: RodTakeOut
-  rodPutAwayTrigger: RodPutAway
-  fishingLineVisual: {fileID: 2736683615954768657}
-  fishingRopeObject: {fileID: 424869486725688458}
-  fishingSplashParticle: {fileID: 3736205677627389063, guid: e5240a7174dd38d4a8e149c11035fbb9, type: 3}
-  bobberWaveEffect: {fileID: 5699146169660020085}
-  clickChallengeUI: {fileID: 0}
-  rodVisualRoot: {fileID: 0}
-  rodHideStateName: rod-out
-  rodShowStateName: rod-in
-  rodHideNormalizedTime: 0.95
-  playerCamera: {fileID: 4963897933854538703}
-  tipPoint: {fileID: 7006738512652515204}
-  hookPoint: {fileID: 357577035313628902}
-  idleAnchorPoint: {fileID: 6884179207576262455}
-  waterSurfaceTransform: {fileID: 2174610998671273471, guid: 3cff7ff53077f61419c5f9c661acfd43, type: 3}
-  waterLayerMask:
-    serializedVersion: 2
-    m_Bits: 16
-  waterRayStartHeight: 1.5
-  downwardCastBias: 0.2
-  fallbackCastDistance: 6
+  CurrentState: 0
+  minCastDistance: 2
   maxCastDistance: 12
-  castInputLockDuration: 1
-  reelInputLockDuration: 1.3
+  chargeSpeed: 10
+  nibbleReactionWindow: 3
+  catchingDuration: 10
   blockCastWhileMoving: 1
-  useCastReleaseAnimationEvent: 1
-  castStartDelay: 1.011
-  castDuration: 1.011
-  reelDuration: 1.8
-  reelDurationWithFish: 1.8
-  castArcHeight: 5
-  reelArcHeight: 5
-  idleRopeLength: 3
-  castRopeLength: 3
-  idleRopeSlack: 0.1
-  castRopeSlack: 1
-  hookWaterSubmergeDepth: 0
-  waterSurfaceYOffset: 0.5
-  castTargetOffset: {x: 0, y: 0.1, z: 0}
-  idleHookOffset: {x: 0, y: 0, z: 0}
-  splashWorldOffset: {x: 0, y: 0, z: 0}
-  splashDelay: 1
-  clampSplashToWaterSurface: 1
-  minimumSplashHeightOffset: 0
-  useSplashEffect: 1
-  lineWidth: 0
-  enableBobbing: 1
-  bobAmplitude: 0.03
-  bobFrequency: 1.2
-  bobSecondaryRatio: 0.3
-  bobSecondaryFrequencyMultiplier: 1.7
-  swayAmplitude: 0.01
-  swayFrequency: 0.8
-  bobFadeInDuration: 0.5
-  bobberWaveDelay: 2.5
+  castInputLockDuration: 1
+  castReleaseFallbackDelay: 2.1
 --- !u!114 &2895638865676939351
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1557,6 +1503,23 @@ MonoBehaviour:
   rayStartHeight: 2
   downCheckDistance: 5
   triggerInteraction: 2
+--- !u!114 &3728491056712345678
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2199994792208976159}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2098c41e499dd2d469d84bca8135ddd0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MultiplayFishing.Gameplay::MultiplayFishing.Gameplay.FishingRodVisibility
+  rodVisualRoot: {fileID: 0}
+  animator: {fileID: 0}
+  rodHideStateName: rod-out
+  rodShowStateName: rod-in
+  rodHideNormalizedTime: 0.95
 --- !u!1 &2453267273373660918
 GameObject:
   m_ObjectHideFlags: 0

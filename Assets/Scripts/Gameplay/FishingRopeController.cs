@@ -37,6 +37,8 @@ namespace MultiplayFishing.Gameplay
 
         public bool IsConfigured => tipPoint != null && hookPoint != null;
 
+        public Transform GetHookPoint() => hookPoint;
+
         public Vector3 GetIdleHookPosition(Transform owner, Vector3 idleHookOffset)
         {
             if (tipPoint == null)

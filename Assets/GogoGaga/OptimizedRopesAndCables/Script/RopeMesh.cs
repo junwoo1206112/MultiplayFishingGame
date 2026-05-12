@@ -22,6 +22,8 @@ namespace GogoGaga.OptimizedRopesAndCables
         private MeshRenderer meshRenderer;
         private Mesh ropeMesh;
         private bool isStartOrEndPointMissing;
+        private Vector3 prevStartPos;
+        private Vector3 prevEndPos;
 
         // Use fields to store lists
         private List<Vector3> vertices = new List<Vector3>();
@@ -233,9 +235,9 @@ namespace GogoGaga.OptimizedRopesAndCables
                 uvs.Add(new Vector2((Mathf.Cos(angle) + 1) / 2, (Mathf.Sin(angle) + 1) / 2));
             }
 
-            ropeMesh.vertices = vertices.ToArray();
-            ropeMesh.triangles = triangles.ToArray();
-            ropeMesh.uv = uvs.ToArray();
+            ropeMesh.SetVertices(vertices);
+            ropeMesh.SetTriangles(triangles, 0);
+            ropeMesh.SetUVs(0, uvs);
             ropeMesh.RecalculateNormals();
         }
 
@@ -270,7 +272,20 @@ namespace GogoGaga.OptimizedRopesAndCables
 
             if (Application.isPlaying)
             {
-                GenerateMesh();
+                Transform startPoint = rope.StartPoint;
+                Transform endPoint = rope.EndPoint;
+                if (startPoint != null && endPoint != null)
+                {
+                    Vector3 startPos = startPoint.position;
+                    Vector3 endPos = endPoint.position;
+                    if (Vector3.SqrMagnitude(startPos - prevStartPos) > 0.0001f ||
+                        Vector3.SqrMagnitude(endPos - prevEndPos) > 0.0001f)
+                    {
+                        prevStartPos = startPos;
+                        prevEndPos = endPos;
+                        GenerateMesh();
+                    }
+                }
             }
         }
 
