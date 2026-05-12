@@ -78,7 +78,7 @@ namespace MultiplayFishing.Input
             InteractAction = playerActionMap.FindAction("Interact");
 
             ToggleRodAction = new InputAction("ToggleRod", InputActionType.Button);
-            ToggleRodAction.AddBinding("<Keyboard>/tab");
+            ToggleRodAction.AddBinding("<Keyboard>/g");
 
             CastReelAction = AttackAction;
         }

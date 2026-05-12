@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 using Mirror;
 
 namespace MultiplayFishing.Gameplay
@@ -55,17 +56,7 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private bool blockCastWhileMoving;
         [SerializeField] private float castInputLockDuration = 0.5f;
         [SerializeField] private float castReleaseFallbackDelay = 2.1f;
-        [SerializeField] private bool useCastReleaseAnimationEvent = true;
-
-        [Header("Water Detection")]
-        [SerializeField] private WaterDetector waterDetector;
-        [SerializeField] private Transform waterSurfaceTransform;
-        [SerializeField] private LayerMask waterLayerMask;
-        [SerializeField] private float waterRayStartHeight = 1.5f;
-        [SerializeField] private float downwardCastBias = 0.2f;
-        [SerializeField] private float minimumSplashHeightOffset = 0.02f;
-        [SerializeField] private Vector3 splashWorldOffset = new Vector3(0f, 0.01f, 0f);
-        [SerializeField] private bool clampSplashToWaterSurface = true;
+        [SerializeField] private float autoDrawCastDelay = 0.25f;
 
         [Header("References")]
         private FishingPlayer fishingPlayer;
@@ -104,6 +95,7 @@ namespace MultiplayFishing.Gameplay
         private float inputLockedUntil;
         private bool wasLockedThisFrame;
         private Coroutine castReleaseFallbackRoutine;
+        private Coroutine autoDrawCastRoutine;
         private bool waitingForCastRelease;
         private bool castReleaseReceived;
         private readonly List<RaycastResult> uiRaycastResults = new List<RaycastResult>();
@@ -211,7 +203,10 @@ namespace MultiplayFishing.Gameplay
                 if (result.gameObject == null) continue;
                 if (result.gameObject.transform.IsChildOf(transform)) continue;
 
-                return true;
+                if (result.gameObject.GetComponentInParent<Selectable>() != null)
+                {
+                    return true;
+                }
             }
 
             return false;
@@ -248,8 +243,18 @@ namespace MultiplayFishing.Gameplay
 
         private void StartCharging()
         {
-            if (blockCastWhileMoving && IsMovementInputPressed()) return;
-            if (waterDetector != null && !waterDetector.CanFish()) return;
+            if (!fishingPlayer.IsRodDrawn)
+            {
+                fishingPlayer.DrawRodForFishing();
+                StartAutoDrawCast();
+                return;
+            }
+
+            if (blockCastWhileMoving && IsMovementInputPressed())
+            {
+                Debug.LogWarning("[FishingController] Cast ignored while moving.");
+                return;
+            }
 
             if (animator != null && hasFishingCastTrigger)
             {
@@ -258,6 +263,29 @@ namespace MultiplayFishing.Gameplay
 
             currentChargeDistance = minCastDistance;
             ChangeState(FishingState.Charging);
+        }
+
+        private void StartAutoDrawCast()
+        {
+            if (autoDrawCastRoutine != null)
+            {
+                StopCoroutine(autoDrawCastRoutine);
+            }
+
+            autoDrawCastRoutine = StartCoroutine(AutoDrawCastRoutine());
+        }
+
+        private IEnumerator AutoDrawCastRoutine()
+        {
+            yield return new WaitForSeconds(autoDrawCastDelay);
+            autoDrawCastRoutine = null;
+
+            if (CurrentState != FishingState.Idle || !fishingPlayer.IsRodDrawn)
+            {
+                yield break;
+            }
+
+            StartCharging();
         }
 
         private void UpdateCharging()
@@ -455,6 +483,36 @@ namespace MultiplayFishing.Gameplay
             }
         }
 
+        public void CancelFishingFromRodPutAway()
+        {
+            if (CurrentState == FishingState.Idle) return;
+
+            waitingForCastRelease = false;
+            StopCastReleaseFallback();
+            StopAutoDrawCast();
+
+            if (stateRoutine != null)
+            {
+                StopCoroutine(stateRoutine);
+                stateRoutine = null;
+            }
+
+            if (biteSystem != null)
+            {
+                biteSystem.StopBiteLogic();
+            }
+
+            ropeController?.RestoreHookToRod();
+            ropeController?.SetVisible(false);
+            fishingLineVisual?.SetFishingActive(false);
+            ChangeState(FishingState.Idle);
+
+            if (fishingPlayer != null && fishingPlayer.isLocalPlayer)
+            {
+                fishingPlayer.CmdFishingMissed();
+            }
+        }
+
         private IEnumerator SuccessRoutine()
         {
             if (catchPresenter != null && ropeController != null)
@@ -533,6 +591,14 @@ namespace MultiplayFishing.Gameplay
 
             StopCoroutine(castReleaseFallbackRoutine);
             castReleaseFallbackRoutine = null;
+        }
+
+        private void StopAutoDrawCast()
+        {
+            if (autoDrawCastRoutine == null) return;
+
+            StopCoroutine(autoDrawCastRoutine);
+            autoDrawCastRoutine = null;
         }
 
         private IEnumerator CastReleaseFallbackRoutine()

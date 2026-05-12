@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace MultiplayFishing.Gameplay
 {
@@ -10,11 +11,13 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private string rodHideStateName = "rod-out";
         [SerializeField] private string rodShowStateName = "rod-in";
         [SerializeField, Range(0f, 1f)] private float rodHideNormalizedTime = 0.95f;
+        [SerializeField] private float rodHideFallbackDelay = 0.65f;
 
         private int rodHideStateHash;
         private int rodShowStateHash;
         private bool wasInRodHideState;
         private bool wasInRodShowState;
+        private float rodHideStartedAt = -1f;
 
         private void Awake()
         {
@@ -23,6 +26,7 @@ namespace MultiplayFishing.Gameplay
             rodShowStateHash = Animator.StringToHash(rodShowStateName);
             ValidateAssignedRodRoot();
             ResolveRodVisualRoot();
+            DisableRodShadows();
         }
 
         private void Update()
@@ -54,6 +58,7 @@ namespace MultiplayFishing.Gameplay
             if (animator == null) animator = GetComponentInChildren<Animator>();
             ValidateAssignedRodRoot();
             ResolveRodVisualRoot();
+            DisableRodShadows();
         }
 
         private void ValidateAssignedRodRoot()
@@ -67,16 +72,18 @@ namespace MultiplayFishing.Gameplay
 
         private void ResolveRodVisualRoot()
         {
-            if (rodVisualRoot != null) return;
-
             Transform rodSocket = FindChildRecursive(transform.root, "RodSocket");
             if (rodSocket != null)
             {
-                Transform model = FindBestRodVisual(rodSocket);
-                rodVisualRoot = model != null ? model.gameObject : rodSocket.gameObject;
-                Debug.Log($"[FishingRodVisibility] Auto-resolved rod visual: {rodVisualRoot.name}");
+                if (rodVisualRoot != rodSocket.gameObject)
+                {
+                    rodVisualRoot = rodSocket.gameObject;
+                    Debug.Log($"[FishingRodVisibility] Using rod socket as visual root: {rodVisualRoot.name}");
+                }
                 return;
             }
+
+            if (rodVisualRoot != null) return;
 
             Transform[] children = GetComponentsInChildren<Transform>(true);
             foreach (Transform child in children)
@@ -98,6 +105,21 @@ namespace MultiplayFishing.Gameplay
             }
         }
 
+        private void DisableRodShadows()
+        {
+            Transform rodRoot = rodVisualRoot != null
+                ? rodVisualRoot.transform
+                : FindChildRecursive(transform.root, "RodSocket");
+
+            if (rodRoot == null) return;
+
+            Renderer[] renderers = rodRoot.GetComponentsInChildren<Renderer>(true);
+            foreach (Renderer renderer in renderers)
+            {
+                renderer.shadowCastingMode = ShadowCastingMode.Off;
+            }
+        }
+
         private static Transform FindChildRecursive(Transform parent, string exactName)
         {
             foreach (Transform child in parent)
@@ -111,20 +133,6 @@ namespace MultiplayFishing.Gameplay
                 if (result != null)
                 {
                     return result;
-                }
-            }
-
-            return null;
-        }
-
-        private static Transform FindBestRodVisual(Transform rodSocket)
-        {
-            foreach (Transform child in rodSocket.GetComponentsInChildren<Transform>(true))
-            {
-                if (child == rodSocket) continue;
-                if (IsRodVisualCandidate(child))
-                {
-                    return child;
                 }
             }
 
@@ -160,12 +168,22 @@ namespace MultiplayFishing.Gameplay
 
             if (isInRodShowState && !wasInRodShowState)
             {
+                rodHideStartedAt = -1f;
                 SetRodVisible(true);
             }
 
-            if (isInRodHideState && stateInfo.normalizedTime >= rodHideNormalizedTime)
+            if (isInRodHideState && !wasInRodHideState)
+            {
+                rodHideStartedAt = Time.time;
+            }
+
+            bool reachedHideTime = isInRodHideState && stateInfo.normalizedTime >= rodHideNormalizedTime;
+            bool reachedFallbackDelay = rodHideStartedAt >= 0f && Time.time - rodHideStartedAt >= rodHideFallbackDelay;
+
+            if (reachedHideTime || reachedFallbackDelay)
             {
                 SetRodVisible(false);
+                rodHideStartedAt = -1f;
             }
 
             wasInRodHideState = isInRodHideState;
