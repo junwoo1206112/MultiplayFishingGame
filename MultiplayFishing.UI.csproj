@@ -52,6 +52,7 @@
     <Compile Include="Assets\Scripts\UI\PlayerNameDisplay.cs" />
     <Compile Include="Assets\Scripts\UI\NetworkMenuUI.cs" />
     <Compile Include="Assets\Scripts\UI\NotificationUI.cs" />
+    <Compile Include="Assets\Scripts\UI\StartSceneTransition.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Scripts\UI\MultiplayFishing.UI.asmdef" />
