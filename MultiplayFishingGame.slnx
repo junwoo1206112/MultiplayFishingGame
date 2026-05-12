@@ -4,11 +4,6 @@
   <Project Path="Mirror.Components.csproj" />
   <Project Path="Mirror.Editor.csproj" />
   <Project Path="Mirror.Examples.csproj" />
-<<<<<<< Updated upstream
-=======
-  <Project Path="MultiplayFishing.Core.csproj" />
-  <Project Path="MultiplayFishing.Data.csproj" />
->>>>>>> Stashed changes
   <Project Path="kcp2k.csproj" />
   <Project Path="MultiplayFishing.Network.csproj" />
   <Project Path="UnityCliConnector.Editor.csproj" />
@@ -24,8 +19,5 @@
   <Project Path="MultiplayFishing.UI.csproj" />
   <Project Path="MultiplayFishing.Input.csproj" />
   <Project Path="Mirror.CompilerSymbols.csproj" />
-<<<<<<< Updated upstream
   <Project Path="MultiplayFishing.Gameplay.Tests.csproj" />
-=======
->>>>>>> Stashed changes
 </Solution>
