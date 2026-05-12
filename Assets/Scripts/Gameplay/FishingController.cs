@@ -38,7 +38,14 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private float castRopeLength = 1.8f;
         [SerializeField] private float castRopeSlack = 0.05f;
         [SerializeField] private float hookWaterSubmergeDepth = 0.08f;
+        [SerializeField] private Transform waterSurfaceTransform;
+        [SerializeField] private LayerMask waterLayerMask;
+        [SerializeField] private float waterRayStartHeight = 1.5f;
+        [SerializeField] private float downwardCastBias = 0.2f;
         [SerializeField] private float waterSurfaceYOffset;
+        [SerializeField] private Vector3 splashWorldOffset = new Vector3(0f, 0.01f, 0f);
+        [SerializeField] private bool clampSplashToWaterSurface = true;
+        [SerializeField] private float minimumSplashHeightOffset = 0.02f;
         private float currentChargeDistance;
 
         [Header("Timing Settings")]
@@ -54,6 +61,7 @@ namespace MultiplayFishing.Gameplay
 
         [Header("Input Safety")]
         [SerializeField] private bool blockCastWhileMoving;
+        [SerializeField] private bool useCastReleaseAnimationEvent = true;
         [SerializeField] private float castInputLockDuration = 0.5f;
         [SerializeField] private float castReleaseFallbackDelay = 2.1f;
         [SerializeField] private float autoDrawCastDelay = 0.25f;
@@ -67,6 +75,7 @@ namespace MultiplayFishing.Gameplay
         private FishingWaterSurfaceResolver waterResolver;
         private FishingCatchPresenter catchPresenter;
         private FishingBiteSystem biteSystem;
+        private WaterDetector waterDetector;
 
         [Header("Sound Effects")]
         [SerializeField] private AudioSource audioSource;

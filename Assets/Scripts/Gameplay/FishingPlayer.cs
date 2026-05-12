@@ -35,6 +35,7 @@ namespace MultiplayFishing.Gameplay
         [Header("Sprint UI")]
 
         private CharacterController characterController;
+        private IPlayerMovementController movementController;
         private FishingRodVisibility rodVisibility;
         private MonoBehaviour playerController;
         private FieldInfo maxMoveSpeedField;
@@ -53,6 +54,7 @@ namespace MultiplayFishing.Gameplay
         private bool hasRodTakeOutTrigger;
         private bool hasRodPutAwayTrigger;
         private bool isSprinting;
+        private Vector3 lastPosition;
         [SerializeField]         private TMPro.TMP_Text sprintStatusText;
         private bool sprintUISearched;
 
