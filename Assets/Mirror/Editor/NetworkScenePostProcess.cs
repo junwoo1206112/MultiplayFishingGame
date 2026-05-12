@@ -71,6 +71,11 @@ namespace Mirror
                         // if an unopened scene needs resaving
                         else
                         {
+                            if (path.EndsWith(".prefab"))
+                            {
+                                Debug.LogWarning($"{identity.name} is open in Prefab Edit Mode while launching with Mirror. Open a scene before entering Play Mode if this causes issues.");
+                                continue;
+                            }
 
                             // nothing good will happen when trying to launch with invalid sceneIds.
                             // show an error and stop playing immediately.

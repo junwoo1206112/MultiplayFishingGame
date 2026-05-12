@@ -17,7 +17,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &8358740526730520406
 Transform:
   m_ObjectHideFlags: 0
@@ -1667,6 +1667,9 @@ MonoBehaviour:
   hookPoint: {fileID: 6280358915695032048}
   idleHookOffset: {x: 0, y: 0, z: 0}
   castHookOffset: {x: 0, y: 0, z: 3}
+  castArcSegments: 16
+  castLineArcHeight: 0.45
+  castLineArcDistanceRatio: 0.12
 --- !u!114 &-4883142771165559314
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1680,7 +1683,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
   sceneId: 0
-  _assetId: 852144307
+  _assetId: 2237223917
   serverOnly: 0
   visibility: 0
   hasSpawned: 0
@@ -1714,7 +1717,7 @@ MonoBehaviour:
   showOverlay: 0
   overlayColor: {r: 0, g: 0, b: 0, a: 0.5}
   onlySyncOnChangeCorrectionMultiplier: 2
-  useFixedUpdate: 0
+  useFixedUpdate: 1
   rotationSensitivity: 0.01
   positionPrecision: 0.01
   scalePrecision: 0.01

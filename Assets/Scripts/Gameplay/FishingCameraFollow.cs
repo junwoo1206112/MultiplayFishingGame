@@ -37,6 +37,7 @@ namespace MultiplayFishing.Gameplay
         private Transform currentTarget;
         private bool warnedMissingVcam;
         private bool hasManualYaw;
+        private bool manualCameraConfigured;
         private float manualYaw;
 
         private void LateUpdate()
@@ -99,8 +100,12 @@ namespace MultiplayFishing.Gameplay
             EnsureMainCamera();
             if (mainCamera == null) return;
 
-            DisableCinemachine();
-            DestroyMirrorControllerUI();
+            if (!manualCameraConfigured)
+            {
+                DisableCinemachine();
+                DestroyMirrorControllerUI();
+                manualCameraConfigured = true;
+            }
 
             if (!hasManualYaw)
             {

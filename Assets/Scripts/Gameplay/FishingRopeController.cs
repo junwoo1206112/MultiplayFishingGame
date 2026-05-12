@@ -14,6 +14,8 @@ namespace MultiplayFishing.Gameplay
         private readonly Vector3 originalHookLocalPosition;
         private readonly Quaternion originalHookLocalRotation;
         private readonly Vector3 originalHookLocalScale;
+        private Vector3 lastExpectedHookPosition;
+        private bool hasExpectedHookPosition;
 
         public FishingRopeController(
             Transform tipPoint,
@@ -319,6 +321,7 @@ namespace MultiplayFishing.Gameplay
                 float elapsed = 0f;
                 bool hasHitWater = false;
                 float lastT = 0f;
+                bool loggedTrajectory = false;
 
                 while (lastT < 1f)
                 {
@@ -328,6 +331,15 @@ namespace MultiplayFishing.Gameplay
                     float currentMinimumRopeLength = minimumRopeLengthProvider != null ? minimumRopeLengthProvider() : 0f;
                     float currentWaterSurfaceY = waterSurfaceYProvider != null ? waterSurfaceYProvider() : 0f;
                     Vector3 controlPoint = GetArcControlPoint(startPosition, targetPosition, currentArcHeight);
+                    if (!loggedTrajectory)
+                    {
+                        loggedTrajectory = true;
+                        Debug.Log(
+                            $"[HookTrace] Trajectory start={startPosition:F3}, control={controlPoint:F3}, target={targetPosition:F3}, " +
+                            $"arcHeight={currentArcHeight:F3}, duration={currentDuration:F3}, useArc={useArcPath}, " +
+                            $"stopAtWater={stopAtWaterSurface}, waterY={currentWaterSurfaceY:F3}, " +
+                            $"parent={(hookPoint.parent != null ? hookPoint.parent.name : "null")}");
+                    }
 
                     if (currentDuration <= 0f)
                     {
@@ -359,7 +371,10 @@ namespace MultiplayFishing.Gameplay
                     }
 
                     hookPoint.position = nextPosition;
+                    TrackExpectedHookPosition(nextPosition);
                     SetRopeLength(GetDesiredRopeLength(nextPosition, currentMinimumRopeLength, currentRopeSlack));
+                    yield return new WaitForEndOfFrame();
+                    WarnIfHookPositionWasOverwritten("MoveHook frame");
                     yield return null;
                 }
 
@@ -386,7 +401,10 @@ namespace MultiplayFishing.Gameplay
                 }
 
                 hookPoint.position = finalPosition;
+                TrackExpectedHookPosition(finalPosition);
                 SetRopeLength(GetDesiredRopeLength(finalPosition, finalMinimumRopeLength, finalRopeSlack));
+                yield return new WaitForEndOfFrame();
+                WarnIfHookPositionWasOverwritten("MoveHook final");
 
                 if (hideRopeOnComplete)
                 {
@@ -404,9 +422,35 @@ namespace MultiplayFishing.Gameplay
             }
             finally
             {
+                hasExpectedHookPosition = false;
                 // Hand hook control back to FishingLineVisual when rope motion ends.
                 lineVisual?.SetHookControlledByRope(false);
             }
+        }
+
+        private void TrackExpectedHookPosition(Vector3 expectedPosition)
+        {
+            lastExpectedHookPosition = expectedPosition;
+            hasExpectedHookPosition = true;
+        }
+
+        private void WarnIfHookPositionWasOverwritten(string phase)
+        {
+            if (!hasExpectedHookPosition || hookPoint == null)
+            {
+                return;
+            }
+
+            float delta = Vector3.Distance(hookPoint.position, lastExpectedHookPosition);
+            if (delta <= 0.02f)
+            {
+                return;
+            }
+
+            Debug.LogWarning(
+                $"[HookTrace] HookPoint overwritten during {phase}. " +
+                $"expected={lastExpectedHookPosition:F3}, actual={hookPoint.position:F3}, delta={delta:F3}, " +
+                $"parent={(hookPoint.parent != null ? hookPoint.parent.name : "null")}");
         }
 
         private Vector3 GetArcControlPoint(Vector3 startPosition, Vector3 targetPosition, float baseArcHeight)

@@ -712,7 +712,8 @@ namespace MultiplayFishing.Gameplay
             Transform tipPoint = ropeController != null ? ropeController.GetTipPoint() : null;
             Vector3 start = tipPoint != null ? tipPoint.position : transform.position;
             float distance = Vector3.Distance(start, target);
-            return Mathf.Max(castArcHeight, distance * castArcDistanceRatio);
+            float verticalDrop = Mathf.Max(0f, start.y - target.y);
+            return Mathf.Max(castArcHeight, distance * castArcDistanceRatio, verticalDrop * 0.6f);
         }
 
         private float GetCastWaterSurfaceY()
