@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: d76e6bdc5ccbdd64889d83648af85b42
+timeCreated: 1527343295
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 119111
+  packageName: Little Low Poly World - LITE SRP/URP
+  packageVersion: 1.36
+  assetPath: Assets/LowPolyEnviroPack_LITE_builtIn/BeachArea_Set1/Prefabs/Bin_A.prefab
+  uploadId: 576017

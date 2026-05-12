@@ -29,17 +29,43 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private float minCastDistance = 2f;
         [SerializeField] private float maxCastDistance = 15f;
         [SerializeField] private float chargeSpeed = 10f;
+        [SerializeField] private float fallbackCastDistance = 6f;
+        [SerializeField] private Vector3 castTargetOffset = Vector3.zero;
+        [SerializeField] private float castStartDelay = 0.18f;
+        [SerializeField] private float castDuration = 0.45f;
+        [SerializeField] private float castArcHeight = 0.35f;
+        [SerializeField] private float castRopeLength = 1.8f;
+        [SerializeField] private float castRopeSlack = 0.05f;
+        [SerializeField] private float hookWaterSubmergeDepth = 0.08f;
+        [SerializeField] private float waterSurfaceYOffset;
         private float currentChargeDistance;
 
         [Header("Timing Settings")]
         [SerializeField] private float nibbleReactionWindow = 3f;
         [SerializeField] private float catchingDuration = 10f;
+        [SerializeField] private float reelDuration = 0.8f;
+        [SerializeField] private float reelDurationWithFish = 2f;
+        [SerializeField] private float reelArcHeight = 0.2f;
+        [SerializeField] private float idleRopeLength = 1.8f;
+        [SerializeField] private float idleRopeSlack = 0.1f;
+        [SerializeField] private Vector3 idleHookOffset = new Vector3(0f, 0f, 0.1f);
         public float CatchingDuration => catchingDuration;
 
         [Header("Input Safety")]
         [SerializeField] private bool blockCastWhileMoving;
         [SerializeField] private float castInputLockDuration = 0.5f;
         [SerializeField] private float castReleaseFallbackDelay = 2.1f;
+        [SerializeField] private bool useCastReleaseAnimationEvent = true;
+
+        [Header("Water Detection")]
+        [SerializeField] private WaterDetector waterDetector;
+        [SerializeField] private Transform waterSurfaceTransform;
+        [SerializeField] private LayerMask waterLayerMask;
+        [SerializeField] private float waterRayStartHeight = 1.5f;
+        [SerializeField] private float downwardCastBias = 0.2f;
+        [SerializeField] private float minimumSplashHeightOffset = 0.02f;
+        [SerializeField] private Vector3 splashWorldOffset = new Vector3(0f, 0.01f, 0f);
+        [SerializeField] private bool clampSplashToWaterSurface = true;
 
         [Header("References")]
         private FishingPlayer fishingPlayer;
@@ -71,12 +97,15 @@ namespace MultiplayFishing.Gameplay
         private int targetSpamCount;
         private int fishingCastTriggerHash;
         private int fishingBoolHash;
+        private int hasFishBoolHash;
         private bool hasFishingCastTrigger;
         private bool hasFishingBool;
+        private bool hasHasFishBool;
         private float inputLockedUntil;
         private bool wasLockedThisFrame;
         private Coroutine castReleaseFallbackRoutine;
         private bool waitingForCastRelease;
+        private bool castReleaseReceived;
         private readonly List<RaycastResult> uiRaycastResults = new List<RaycastResult>();
 
         public void Initialize(
@@ -99,11 +128,13 @@ namespace MultiplayFishing.Gameplay
             fishingLineVisual = lineVisual;
             ropeController = rope;
             splashController = splash;
-            waterResolver = resolver;
+            waterResolver = resolver != null ? resolver : CreateWaterSurfaceResolver();
             catchPresenter = presenter;
             biteSystem = bite;
 
             if (audioSource == null) audioSource = GetComponent<AudioSource>();
+            if (waterDetector == null) waterDetector = GetComponent<WaterDetector>();
+            if (waterDetector == null) waterDetector = gameObject.AddComponent<WaterDetector>();
 
             CacheAnimatorParameters();
 
@@ -218,6 +249,7 @@ namespace MultiplayFishing.Gameplay
         private void StartCharging()
         {
             if (blockCastWhileMoving && IsMovementInputPressed()) return;
+            if (waterDetector != null && !waterDetector.CanFish()) return;
 
             if (animator != null && hasFishingCastTrigger)
             {
@@ -237,33 +269,11 @@ namespace MultiplayFishing.Gameplay
 
         private void Cast()
         {
-            if (waterResolver == null)
-            {
-                Debug.LogWarning("[FishingController] Water resolver is missing. Cast cancelled.");
-                ChangeState(FishingState.Idle);
-                return;
-            }
-
-            Vector3 castOffset = new Vector3(0, 0, currentChargeDistance);
-            Vector3 hitPoint;
-
-            targetPosition = waterResolver.ResolveCastTarget(
-                transform,
-                castOffset,
-                currentChargeDistance,
-                out castHasHit,
-                out hitPoint);
-
-            if (!castHasHit && waterResolver != null && waterResolver.TryGetSurfaceHeight(out float waterSurfaceY))
-            {
-                targetPosition.y = waterSurfaceY;
-                hitPoint = targetPosition;
-                castHasHit = true;
-            }
+            targetPosition = GetCastTargetPosition(out castHasHit, out Vector3 hitPoint);
 
             if (!castHasHit)
             {
-                Debug.Log("물이 없는 곳에 낚시질 할 수 없습니다.");
+                Debug.Log("[FishingController] Cannot cast because no water surface was found.");
                 ChangeState(FishingState.Idle);
                 return;
             }
@@ -273,6 +283,7 @@ namespace MultiplayFishing.Gameplay
             ChangeState(FishingState.Casting);
             PlayCastAnimation();
             waitingForCastRelease = true;
+            castReleaseReceived = false;
             StartCastReleaseFallback();
         }
 
@@ -287,6 +298,7 @@ namespace MultiplayFishing.Gameplay
             }
 
             waitingForCastRelease = false;
+            castReleaseReceived = true;
             StopCastReleaseFallback();
             fishingPlayer.CmdStartFishing(targetPosition);
 
@@ -303,20 +315,27 @@ namespace MultiplayFishing.Gameplay
                 yield break;
             }
 
-            yield return ropeController.MoveHook(
+            yield return ropeController.MoveHookDynamic(
                 target,
-                0.15f, // startDelay
-                0.5f,  // duration
-                0.5f,  // arcHeight
-                0.05f, // slack
-                1.5f,  // minLength
-                true,  // showRope
-                false, // hideRopeOnComplete
-                true,  // useArc
-                true,  // stopAtWater
-                target.y,
-                () => {
-                    splashController?.UpdatePendingPosition(hasHit, hitPoint, target, Vector3.zero, true, 0.02f);
+                () => useCastReleaseAnimationEvent && castReleaseReceived ? 0f : castStartDelay,
+                () => castDuration,
+                () => castArcHeight,
+                () => castRopeSlack,
+                () => castRopeLength,
+                true,
+                false,
+                true,
+                true,
+                GetCastWaterSurfaceY,
+                hitPosition =>
+                {
+                    splashController?.UpdatePendingPosition(
+                        hasHit,
+                        hitPosition,
+                        target,
+                        splashWorldOffset,
+                        clampSplashToWaterSurface,
+                        minimumSplashHeightOffset);
                     splashController?.Play();
                     PlaySound(waterSplashSound);
                 },
@@ -424,6 +443,7 @@ namespace MultiplayFishing.Gameplay
             if (success)
             {
                 ChangeState(FishingState.Success);
+                SetHasFishBool(true);
                 PlaySound(successSound);
                 StartCoroutine(SuccessRoutine());
             }
@@ -473,10 +493,32 @@ namespace MultiplayFishing.Gameplay
         {
             waitingForCastRelease = false;
             StopCastReleaseFallback();
-            ropeController?.RestoreHookToRod();
+            if (stateRoutine != null) StopCoroutine(stateRoutine);
+            stateRoutine = ropeController != null && ropeController.IsConfigured
+                ? StartCoroutine(ReelToIdleRoutine())
+                : null;
             ropeController?.SetVisible(false);
             fishingLineVisual?.SetFishingActive(false);
+            SetHasFishBool(false);
             ChangeState(FishingState.Idle);
+        }
+
+        private IEnumerator ReelToIdleRoutine()
+        {
+            yield return ropeController.MoveHook(
+                GetIdleHookPosition(),
+                0f,
+                reelDuration,
+                reelArcHeight,
+                idleRopeSlack,
+                idleRopeLength,
+                true,
+                true,
+                true,
+                false,
+                0f,
+                (Action<Vector3>)null,
+                fishingLineVisual);
         }
 
         private void StartCastReleaseFallback()
@@ -504,14 +546,93 @@ namespace MultiplayFishing.Gameplay
             }
         }
 
+        private Vector3 GetCastTargetPosition(out bool hasSurfaceHit, out Vector3 surfaceHitPoint)
+        {
+            if (waterResolver == null)
+            {
+                waterResolver = CreateWaterSurfaceResolver();
+            }
+
+            Vector3 offset = castTargetOffset;
+            offset.z = Mathf.Approximately(offset.z, 0f) ? currentChargeDistance : offset.z;
+
+            Vector3 target = waterResolver.ResolveCastTarget(
+                transform,
+                offset,
+                Mathf.Max(fallbackCastDistance, currentChargeDistance),
+                out hasSurfaceHit,
+                out surfaceHitPoint);
+
+            if (waterResolver.TryGetSurfaceHeight(out float waterSurfaceY))
+            {
+                target.y = waterSurfaceY + waterSurfaceYOffset - hookWaterSubmergeDepth;
+                if (!hasSurfaceHit)
+                {
+                    surfaceHitPoint = target;
+                    hasSurfaceHit = true;
+                }
+            }
+
+            return target;
+        }
+
+        private float GetCastWaterSurfaceY()
+        {
+            if (waterResolver == null)
+            {
+                waterResolver = CreateWaterSurfaceResolver();
+            }
+            return waterResolver.TryGetSurfaceHeight(out float waterSurfaceY)
+                ? waterSurfaceY + waterSurfaceYOffset - hookWaterSubmergeDepth
+                : targetPosition.y;
+        }
+
+        private Vector3 GetIdleHookPosition()
+        {
+            return ropeController != null
+                ? ropeController.GetIdleHookPosition(transform, idleHookOffset)
+                : transform.position;
+        }
+
+        private FishingWaterSurfaceResolver CreateWaterSurfaceResolver()
+        {
+            Camera playerCamera = fishingPlayer != null && fishingPlayer.isLocalPlayer ? Camera.main : null;
+            Transform tipPoint = ropeController != null ? ropeController.GetTipPoint() : null;
+            LayerMask resolvedWaterLayerMask = ResolveWaterLayerMask();
+
+            return new FishingWaterSurfaceResolver(
+                playerCamera,
+                tipPoint,
+                waterSurfaceTransform,
+                resolvedWaterLayerMask,
+                waterRayStartHeight,
+                downwardCastBias,
+                maxCastDistance);
+        }
+
+        private LayerMask ResolveWaterLayerMask()
+        {
+            if (waterLayerMask.value != 0) return waterLayerMask;
+
+            int waterLayer = LayerMask.NameToLayer("Water");
+            if (waterLayer >= 0) return 1 << waterLayer;
+
+            int oceanLayer = LayerMask.NameToLayer("Ocean");
+            if (oceanLayer >= 0) return 1 << oceanLayer;
+
+            return Physics.DefaultRaycastLayers;
+        }
+
         private void CacheAnimatorParameters()
         {
             hasFishingCastTrigger = false;
             hasFishingBool = false;
+            hasHasFishBool = false;
             if (animator == null) return;
 
             fishingCastTriggerHash = Animator.StringToHash("FishingCast");
             fishingBoolHash = Animator.StringToHash("fishing");
+            hasFishBoolHash = Animator.StringToHash("HasFish");
             foreach (AnimatorControllerParameter parameter in animator.parameters)
             {
                 if (parameter.type == AnimatorControllerParameterType.Trigger &&
@@ -524,6 +645,11 @@ namespace MultiplayFishing.Gameplay
                 {
                     hasFishingBool = true;
                 }
+                else if (parameter.type == AnimatorControllerParameterType.Bool &&
+                         parameter.nameHash == hasFishBoolHash)
+                {
+                    hasHasFishBool = true;
+                }
             }
         }
 
@@ -532,6 +658,13 @@ namespace MultiplayFishing.Gameplay
             if (animator == null || !hasFishingBool) return;
 
             animator.SetBool(fishingBoolHash, value);
+        }
+
+        private void SetHasFishBool(bool value)
+        {
+            if (animator == null || !hasHasFishBool) return;
+
+            animator.SetBool(hasFishBoolHash, value);
         }
 
         private void PlayCastAnimation()

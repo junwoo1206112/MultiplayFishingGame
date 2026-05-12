@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 163a1ba6c99319043ac696524e2f3ef2
+timeCreated: 1539615849
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 119111
+  packageName: Little Low Poly World - LITE SRP/URP
+  packageVersion: 1.36
+  assetPath: Assets/LowPolyEnviroPack_LITE_builtIn/BlocksAndTrees/Materials/BlocksAndTrees/BlocksAndTrees_AtlasMaterial.mat
+  uploadId: 576017

@@ -1,6 +1,7 @@
 using Mirror;
 using Unity.Cinemachine;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
 
 namespace MultiplayFishing.Gameplay
@@ -25,6 +26,7 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private float pitch = 18f;
         [SerializeField] private float followSharpness = 18f;
         [SerializeField] private float rotationSharpness = 20f;
+        [SerializeField] private float mouseYawSpeed = 0.12f;
 
         [Header("Scene Camera")]
         [SerializeField] private bool disableExtraCameras = true;
@@ -33,6 +35,8 @@ namespace MultiplayFishing.Gameplay
         private Camera mainCamera;
         private Transform currentTarget;
         private bool warnedMissingVcam;
+        private bool hasManualYaw;
+        private float manualYaw;
 
         private void LateUpdate()
         {
@@ -97,8 +101,18 @@ namespace MultiplayFishing.Gameplay
             DisableCinemachine();
             DestroyMirrorControllerUI();
 
+            if (!hasManualYaw)
+            {
+                manualYaw = mainCamera.transform.eulerAngles.y;
+                hasManualYaw = true;
+            }
+            else if (Mouse.current != null && Mouse.current.rightButton.isPressed)
+            {
+                manualYaw += Mouse.current.delta.ReadValue().x * mouseYawSpeed;
+            }
+
             Vector3 lookAtPosition = cameraTarget.position + Vector3.up * lookAtHeight;
-            Quaternion orbitRotation = Quaternion.Euler(pitch, localPlayer.eulerAngles.y, 0f);
+            Quaternion orbitRotation = Quaternion.Euler(pitch, manualYaw, 0f);
             Vector3 desiredPosition = lookAtPosition + orbitRotation * new Vector3(0f, shoulderHeight * 0.15f, -cameraDistance);
             Quaternion desiredRotation = Quaternion.LookRotation(lookAtPosition - desiredPosition, Vector3.up);
 

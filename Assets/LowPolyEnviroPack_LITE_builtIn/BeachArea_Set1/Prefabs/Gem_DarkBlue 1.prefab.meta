@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 077fc73b7af1867468af7d9f647fe3da
+timeCreated: 1527343489
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 119111
+  packageName: Little Low Poly World - LITE SRP/URP
+  packageVersion: 1.36
+  assetPath: Assets/LowPolyEnviroPack_LITE_builtIn/BeachArea_Set1/Prefabs/Gem_DarkBlue
+    1.prefab
+  uploadId: 576017

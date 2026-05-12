@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 684a0461eaa38804d8bd4dc8a489b706
+timeCreated: 1527343522
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 119111
+  packageName: Little Low Poly World - LITE SRP/URP
+  packageVersion: 1.36
+  assetPath: Assets/LowPolyEnviroPack_LITE_builtIn/BeachArea_Set1/Prefabs/Grass_Flat_Medium_A.prefab
+  uploadId: 576017

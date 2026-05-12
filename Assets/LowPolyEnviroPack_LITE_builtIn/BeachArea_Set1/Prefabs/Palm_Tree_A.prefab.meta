@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 555e93de837ea8b4888af1b497c5f012
+timeCreated: 1527343581
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 119111
+  packageName: Little Low Poly World - LITE SRP/URP
+  packageVersion: 1.36
+  assetPath: Assets/LowPolyEnviroPack_LITE_builtIn/BeachArea_Set1/Prefabs/Palm_Tree_A.prefab
+  uploadId: 576017

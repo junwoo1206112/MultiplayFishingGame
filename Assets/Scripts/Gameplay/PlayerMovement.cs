@@ -15,7 +15,8 @@ namespace MultiplayFishing.Gameplay
 
         [Header("Animation")]
         [SerializeField] private Animator animator;
-        [SerializeField] private string walkParameter = "Walk";
+        [SerializeField] private string walkParameter = "WalkSpeed";
+        [SerializeField] private float walkAnimDampTime = 0.15f;
 
         private CharacterController characterController;
         private Vector3 velocity;
@@ -138,11 +139,15 @@ namespace MultiplayFishing.Gameplay
         {
             if (!hasWalkParameter && animator != null) CacheAnimatorParameter();
 
+            // 입력 크기를 0~1 사이 값으로 정규화하여 부드러운 블렌딩에 사용.
             bool isMoving = !isMovementBlocked && movementInput.magnitude > 0.1f;
+            bool isRunning = Keyboard.current != null && Keyboard.current.shiftKey.isPressed && isMoving;
+            float targetSpeed = isMoving ? (isRunning ? 2f : 1f) : 0f;
 
             if (animator != null && hasWalkParameter)
             {
-                animator.SetBool(walkParameterHash, isMoving);
+                // dampTime을 사용하여 급격한 전환 없이 부드럽게 블렌딩.
+                animator.SetFloat(walkParameterHash, targetSpeed, walkAnimDampTime, Time.deltaTime);
             }
         }
 
