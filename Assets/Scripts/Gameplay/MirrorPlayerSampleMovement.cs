@@ -41,10 +41,6 @@ namespace MultiplayFishing.Gameplay
         private void Awake()
         {
             characterController = GetComponent<CharacterController>();
-            if (characterController != null && !characterController.enabled)
-            {
-                characterController.enabled = true;
-            }
 
             if (animator == null) animator = GetComponent<Animator>();
             if (animator == null) animator = GetComponentInChildren<Animator>();
@@ -54,6 +50,25 @@ namespace MultiplayFishing.Gameplay
             walkParameterHash = Animator.StringToHash(walkParameter);
             ResolveInputSource();
             CacheAnimatorParameter();
+        }
+
+        public override void OnStartServer()
+        {
+            base.OnStartServer();
+            SetCharacterControllerActive(true);
+        }
+
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
+
+            // 원격 플레이어(다른 클라이언트의 캐릭터)는 NetworkTransform 보간으로
+            // 위치를 받아 표시만 하면 되므로 CharacterController를 비활성화합니다.
+            // 이를 통해 물리 엔진과 NetworkTransform의 위치 덮어쓰기 충돌을 방지합니다.
+            if (!isLocalPlayer)
+            {
+                SetCharacterControllerActive(false);
+            }
         }
 
         private void Update()
@@ -89,8 +104,20 @@ namespace MultiplayFishing.Gameplay
             }
         }
 
+        private bool EnsureInputSource()
+        {
+            if (inputSource == null)
+            {
+                ResolveInputSource();
+            }
+
+            return inputSource != null;
+        }
+
         private void SendLocalInput()
         {
+            if (!EnsureInputSource()) return;
+
             Vector2 move = isMovementBlocked ? Vector2.zero : inputSource.ReadMove();
             bool sprint = !isMovementBlocked && inputSource.ReadSprint() && move.sqrMagnitude > 0.01f;
             localSprintHeld = sprint;
@@ -195,6 +222,7 @@ namespace MultiplayFishing.Gameplay
         private float GetLocalWalkSpeedTarget()
         {
             if (isMovementBlocked) return 0f;
+            if (!EnsureInputSource()) return 0f;
 
             Vector2 move = inputSource.ReadMove();
             if (move.sqrMagnitude <= 0.01f) return 0f;
@@ -216,6 +244,16 @@ namespace MultiplayFishing.Gameplay
                     break;
                 }
             }
+        }
+
+        private void SetCharacterControllerActive(bool active)
+        {
+            if (characterController == null)
+            {
+                return;
+            }
+
+            characterController.enabled = active;
         }
 
         private static Vector3 FlattenOrFallback(Vector3 value, Vector3 fallback)

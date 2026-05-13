@@ -86,9 +86,15 @@ namespace MultiplayFishing.Gameplay
 
             GameObject sourceObject = fishingSplashParticle.gameObject;
             bool isSceneObject = sourceObject.scene.IsValid() && sourceObject.scene.isLoaded;
-            activeSplashParticle = isSceneObject
-                ? fishingSplashParticle
-                : Object.Instantiate(fishingSplashParticle);
+            if (isSceneObject)
+            {
+                activeSplashParticle = fishingSplashParticle;
+            }
+            else
+            {
+                GameObject splashInstance = Object.Instantiate(sourceObject);
+                activeSplashParticle = splashInstance.GetComponent<ParticleSystem>();
+            }
 
             activeSplashParticle.gameObject.name = $"{sourceObject.name} Runtime";
             activeSplashParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);

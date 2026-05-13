@@ -369,7 +369,11 @@ namespace MultiplayFishing.Gameplay
             Transform tip = FindChildRecursive(transform, "Tip") ?? transform.Find("Skeleton/Hand_R/Rod/Tip");
             Transform hook = FindChildRecursive(transform, "Hook") ?? (ropeTransform != null ? ropeTransform.Find("Hook") : null);
 
-            var splashParticle = GetComponentInChildren<ParticleSystem>();
+            ParticleSystem splashParticle = fishingController.FishingSplashParticle;
+            if (splashParticle == null)
+            {
+                splashParticle = GetComponentInChildren<ParticleSystem>();
+            }
             
             // 카메라 검색 (로컬 플레이어인 경우만 필요)
             Camera pCam = isLocalPlayer ? Camera.main : null;

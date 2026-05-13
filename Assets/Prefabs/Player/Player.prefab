@@ -1621,18 +1621,19 @@ MonoBehaviour:
   tipPoint: {fileID: 9101332650873501933}
   hookPoint: {fileID: 6280358915695032048}
   waterSurfaceTransform: {fileID: 0}
-  fishingSplashParticle: {fileID: 0}
+  fishingSplashParticle: {fileID: 9102416919201996325, guid: 0b912e9003fba894faa88cf964a6fb8a, type: 3}
   waterLayerMask:
     serializedVersion: 2
     m_Bits: 16
-  waterRayStartHeight: 1.5
-  downwardCastBias: 0.2
+  useCameraWaterRaycast: 1
+  waterRayStartHeight: 2
+  downwardCastBias: 0.5
   fallbackCastDistance: 6
-  maxCastDistance: 12
+  maxCastDistance: 50
   castStartDelay: 0.18
-  castDuration: 0.45
+  castDuration: 0.9
   reelDuration: 0.3
-  castArcHeight: 0.35
+  castArcHeight: 2.3
   reelArcHeight: 0.2
   idleRopeLength: 3
   castRopeLength: 3
@@ -1669,7 +1670,7 @@ MonoBehaviour:
   castHookOffset: {x: 0, y: 0, z: 3}
   castArcSegments: 16
   castLineArcHeight: 0.45
-  castLineArcDistanceRatio: 0.12
+  castLineArcDistanceRatio: 0.5
 --- !u!114 &-4883142771165559314
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1701,7 +1702,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Mirror.Components::Mirror.NetworkTransformReliable
   syncDirection: 0
   syncMode: 0
-  syncInterval: 0
+  syncInterval: 0.05
   target: {fileID: 1858787982920825635}
   syncPosition: 1
   syncRotation: 1
@@ -1716,10 +1717,10 @@ MonoBehaviour:
   showGizmos: 0
   showOverlay: 0
   overlayColor: {r: 0, g: 0, b: 0, a: 0.5}
-  onlySyncOnChangeCorrectionMultiplier: 2
-  useFixedUpdate: 1
+  onlySyncOnChangeCorrectionMultiplier: 1
+  useFixedUpdate: 0
   rotationSensitivity: 0.01
-  positionPrecision: 0.01
+  positionPrecision: 0.05
   scalePrecision: 0.01
 --- !u!114 &6176181355288108514
 MonoBehaviour:

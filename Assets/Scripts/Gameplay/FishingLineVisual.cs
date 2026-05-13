@@ -103,6 +103,7 @@ namespace MultiplayFishing.Gameplay
         public void SetHookControlledByRope(bool controlledByRope)
         {
             isHookControlledByRope = controlledByRope;
+            RefreshLines();
         }
 
         public Vector3 GetIdleHookWorldPosition()

@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 
 namespace MultiplayFishing.UI
@@ -6,45 +5,43 @@ namespace MultiplayFishing.UI
     [RequireComponent(typeof(AudioSource))]
     public class DelayedAudioStart : MonoBehaviour
     {
-        [SerializeField] private float startDelay = 0.2f;
+        [Min(0f)]
+        [SerializeField] private float startDelay = 0.3f;
 
         private AudioSource audioSource;
-        private Coroutine playRoutine;
 
         private void Awake()
         {
             audioSource = GetComponent<AudioSource>();
             audioSource.playOnAwake = false;
+            audioSource.Stop();
         }
 
-        private void OnEnable()
+        private void Start()
         {
-            playRoutine = StartCoroutine(PlayAfterDelay());
+            PlayDelayed();
         }
 
         private void OnDisable()
         {
-            if (playRoutine != null)
+            if (audioSource == null)
             {
-                StopCoroutine(playRoutine);
-                playRoutine = null;
+                return;
             }
+
+            audioSource.Stop();
         }
 
-        private IEnumerator PlayAfterDelay()
+        private void PlayDelayed()
         {
-            float delay = Mathf.Max(0f, startDelay);
-            if (delay > 0f)
+            if (audioSource == null || audioSource.clip == null)
             {
-                yield return new WaitForSeconds(delay);
+                return;
             }
 
-            if (audioSource != null && audioSource.clip != null && !audioSource.isPlaying)
-            {
-                audioSource.Play();
-            }
-
-            playRoutine = null;
+            audioSource.playOnAwake = false;
+            audioSource.Stop();
+            audioSource.PlayDelayed(Mathf.Max(0f, startDelay));
         }
     }
 }
