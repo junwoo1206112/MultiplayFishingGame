@@ -29,6 +29,8 @@ namespace MultiplayFishing.Gameplay
 
         private bool isFishingActive;
         private bool isHookControlledByRope;
+        private int lastCastArcPositionCount = -1;
+        private int lastFixedPositionCount = -1;
 
         public bool HasHookPoints => tipPoint != null && hookPoint != null;
         public bool IsConfiguredForRuntime => HasHookPoints && (rodLineFixed != null || rodLineCast != null);
@@ -171,7 +173,11 @@ namespace MultiplayFishing.Gameplay
 
             int guideCount = guidePoints == null ? 0 : guidePoints.Length;
             int pointCount = guideCount + 2;
-            rodLineFixed.positionCount = pointCount;
+            if (pointCount != lastFixedPositionCount)
+            {
+                rodLineFixed.positionCount = pointCount;
+                lastFixedPositionCount = pointCount;
+            }
             rodLineFixed.SetPosition(0, reelPoint.position);
 
             for (int i = 0; i < guideCount; i++)
@@ -201,7 +207,11 @@ namespace MultiplayFishing.Gameplay
 
         private void RefreshStraightCastLine()
         {
-            rodLineCast.positionCount = 2;
+            if (lastCastArcPositionCount != 2)
+            {
+                rodLineCast.positionCount = 2;
+                lastCastArcPositionCount = 2;
+            }
             rodLineCast.SetPosition(0, tipPoint.position);
             rodLineCast.SetPosition(1, hookPoint.position);
         }
@@ -209,7 +219,12 @@ namespace MultiplayFishing.Gameplay
         private void RefreshCastArcLine()
         {
             int segmentCount = Mathf.Max(2, castArcSegments);
-            rodLineCast.positionCount = segmentCount + 1;
+            int pointCount = segmentCount + 1;
+            if (pointCount != lastCastArcPositionCount)
+            {
+                rodLineCast.positionCount = pointCount;
+                lastCastArcPositionCount = pointCount;
+            }
 
             Vector3 start = tipPoint.position;
             Vector3 end = hookPoint.position;
