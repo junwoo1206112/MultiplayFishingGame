@@ -8,14 +8,38 @@ namespace MultiplayFishing.UI
 {
     public class InventorySlotUI : MonoBehaviour
     {
-        [Header("UI References")]
-        [SerializeField] private Image fishIcon;
-        [SerializeField] private TMP_Text nameText;
-        [SerializeField] private TMP_Text lengthText;
+        [Header("Fish Info")]
+        [SerializeField] private Image fishIconImage;
+        [SerializeField] private TMP_Text fishNameText;
+        [SerializeField] private TMP_Text sizeText;
+        [SerializeField] private TMP_Text sellPriceText;
+        [SerializeField] private TMP_Text descriptionText;
+
+        [Header("Rank Stars")]
+        [SerializeField] private RectTransform starContainer;
+        [SerializeField] private int maxStars = 5;
+
+        [Header("Slot Background")]
+        [SerializeField] private Image slotBackground;
+
+        [Header("Sell Button")]
         [SerializeField] private Button sellButton;
 
         private InventoryItem itemData;
         private IUserService userService;
+
+        private readonly Color activeStarColor = new Color(1f, 0.84f, 0f);
+        private readonly Color inactiveStarColor = new Color(0.5f, 0.5f, 0.5f);
+
+        // Grade 1~5 background colors
+        private readonly Color[] rankColors = new Color[]
+        {
+            new Color(0.976f, 0.890f, 0.725f),  // #f9e3b9 - Grade 1
+            new Color(0.769f, 1.0f, 0.780f),     // #c4ffc7 - Grade 2
+            new Color(0.780f, 0.945f, 1.0f),     // #c7f1ff - Grade 3
+            new Color(0.957f, 0.890f, 1.0f),     // #f4e3ff - Grade 4
+            new Color(0.957f, 0.890f, 1.0f),     // #f4e3ff - Grade 5
+        };
 
         public void Setup(InventoryItem item, FishDataSO fishInfo, IUserService userService)
         {
@@ -24,11 +48,30 @@ namespace MultiplayFishing.UI
 
             if (fishInfo != null)
             {
-                nameText.text = fishInfo.fishName;
-                fishIcon.sprite = fishInfo.fishIcon;
-            }
+                fishNameText.text = fishInfo.fishName;
+                fishIconImage.sprite = fishInfo.fishIcon;
 
-            lengthText.text = $"{item.length:F1} cm";
+                float randomSize = UnityEngine.Random.Range(fishInfo.minSize, fishInfo.maxSize);
+                sizeText.text = $"{randomSize:F1} cm";
+
+                sellPriceText.text = $"{fishInfo.sellPrice:N0} G";
+                descriptionText.text = fishInfo.description;
+
+                // 별 색상 적용
+                int starCount = FishDataSO.GetStarCount(fishInfo.rank);
+                for (int i = 0; i < starContainer.childCount; i++)
+                {
+                    var child = starContainer.GetChild(i).GetComponent<Image>();
+                    child.color = i < starCount ? activeStarColor : inactiveStarColor;
+                }
+
+                // 슬롯 배경색 (등급별)
+                if (slotBackground != null)
+                {
+                    int rankIndex = Mathf.Clamp(starCount - 1, 0, rankColors.Length - 1);
+                    slotBackground.color = rankColors[rankIndex];
+                }
+            }
 
             if (sellButton != null)
             {

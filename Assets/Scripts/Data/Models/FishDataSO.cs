@@ -25,5 +25,15 @@ namespace MultiplayFishing.Data.Models
         [Header("설명")]
         [TextArea(3, 10)]
         public string description;
+
+        /// <summary>
+        /// ★ 시리얼 문자열에서 별 개수 카운트
+        /// 예: "★★★★" → 4, "★★" → 2
+        /// </summary>
+        public static int GetStarCount(string rank)
+        {
+            if (string.IsNullOrEmpty(rank)) return 0;
+            return rank.Split('★').Length - 1;
+        }
     }
 }
