@@ -106,6 +106,16 @@ namespace MultiplayFishing.Gameplay
         private void HandleMovementInput()
         {
             if (Keyboard.current == null) return;
+            if (characterController == null) return;
+
+            if (isMovementBlocked)
+            {
+                if (characterController.isGrounded && velocity.y < 0f)
+                    velocity.y = groundedVelocity;
+                velocity.y += gravity * Time.deltaTime;
+                characterController.Move(new Vector3(0f, velocity.y, 0f) * Time.deltaTime);
+                return;
+            }
 
             Vector2 input = Vector2.zero;
             if (Keyboard.current.wKey.isPressed) input.y += 1f;
@@ -113,11 +123,9 @@ namespace MultiplayFishing.Gameplay
             if (Keyboard.current.aKey.isPressed) input.x -= 1f;
             if (Keyboard.current.dKey.isPressed) input.x += 1f;
 
-            if (isMovementBlocked) input = Vector2.zero;
-
             bool wantsToSprint = input.sqrMagnitude > 0.01f
                 && (Keyboard.current.leftShiftKey.isPressed || Keyboard.current.rightShiftKey.isPressed);
-            isSprinting = wantsToSprint && !isMovementBlocked;
+            isSprinting = wantsToSprint;
             currentSpeed = isSprinting ? sprintSpeed : walkSpeed;
 
             Vector3 move = (transform.forward * input.y) + (transform.right * input.x);
@@ -126,8 +134,7 @@ namespace MultiplayFishing.Gameplay
             if (characterController.isGrounded && velocity.y < 0f)
                 velocity.y = groundedVelocity;
 
-            bool jump = !isMovementBlocked && Keyboard.current.spaceKey.wasPressedThisFrame && characterController.isGrounded;
-            if (jump)
+            if (Keyboard.current.spaceKey.wasPressedThisFrame && characterController.isGrounded)
                 velocity.y = Mathf.Sqrt(jumpSpeed * -2f * gravity);
 
             velocity.y += gravity * Time.deltaTime;
