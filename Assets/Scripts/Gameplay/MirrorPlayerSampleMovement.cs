@@ -65,7 +65,7 @@ namespace MultiplayFishing.Gameplay
             // 원격 플레이어(다른 클라이언트의 캐릭터)는 NetworkTransform 보간으로
             // 위치를 받아 표시만 하면 되므로 CharacterController를 비활성화합니다.
             // 이를 통해 물리 엔진과 NetworkTransform의 위치 덮어쓰기 충돌을 방지합니다.
-            if (!isLocalPlayer)
+            if (!isServer && !isLocalPlayer)
             {
                 SetCharacterControllerActive(false);
             }
@@ -78,13 +78,12 @@ namespace MultiplayFishing.Gameplay
                 SendLocalInput();
             }
 
-            UpdateWalkAnimation();
-        }
+            if (isServer)
+            {
+                SimulateServerMovement(Time.deltaTime);
+            }
 
-        [ServerCallback]
-        private void FixedUpdate()
-        {
-            SimulateServerMovement(Time.fixedDeltaTime);
+            UpdateWalkAnimation();
         }
 
         public void SetMovementBlocked(bool blocked)
