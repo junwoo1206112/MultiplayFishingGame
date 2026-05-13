@@ -1,5 +1,6 @@
 using UnityEngine;
 using MultiplayFishing.Gameplay;
+using MultiplayFishing.UI;
 
 namespace MultiplayFishing.UI
 {
