@@ -28,16 +28,16 @@ namespace MultiplayFishing.Gameplay
 
         [Header("Casting Settings")]
         [SerializeField] private float minCastDistance = 2f;
-        [SerializeField] private float maxCastDistance = 15f;
-        [SerializeField] private float chargeSpeed = 10f;
+        [SerializeField] private float maxCastDistance = 35f;
+        [SerializeField] private float chargeSpeed = 20f;
         [SerializeField] private float fallbackCastDistance = 6f;
         [SerializeField] private Vector3 castTargetOffset = Vector3.zero;
         [SerializeField] private float castStartDelay = 0.18f;
-        [SerializeField] private float castDuration = 0.45f;
-        [SerializeField] private float castArcHeight = 0.35f;
-        [SerializeField] private float castArcDistanceRatio = 0.18f;
-        [SerializeField] private float castRopeLength = 1.8f;
-        [SerializeField] private float castRopeSlack = 0.05f;
+        [SerializeField] private float castDuration = 0.9f;
+        [SerializeField] private float castArcHeight = 2.3f;
+        [SerializeField] private float castArcDistanceRatio = 0.25f;
+        [SerializeField] private float castRopeLength = 3f;
+        [SerializeField] private float castRopeSlack = 1f;
         [SerializeField] private float hookWaterSubmergeDepth = 0.08f;
         [Header("Water Raycast Settings")]
         [SerializeField] private Transform waterSurfaceTransform;
@@ -95,6 +95,28 @@ namespace MultiplayFishing.Gameplay
         public event Action<float> OnChargeProgressChanged; // 0 ~ 1
         public event Action<float, float> OnCatchProgressChanged; // current, target
         public ParticleSystem FishingSplashParticle => fishingSplashParticle;
+
+        public void ConfigureCastSettings(
+            float configuredMinCastDistance,
+            float configuredMaxCastDistance,
+            float configuredChargeSpeed,
+            float configuredFallbackCastDistance,
+            float configuredCastDuration,
+            float configuredCastArcHeight,
+            float configuredCastArcDistanceRatio,
+            float configuredCastRopeLength,
+            float configuredCastRopeSlack)
+        {
+            minCastDistance = Mathf.Max(0f, configuredMinCastDistance);
+            maxCastDistance = Mathf.Max(minCastDistance, configuredMaxCastDistance);
+            chargeSpeed = Mathf.Max(0f, configuredChargeSpeed);
+            fallbackCastDistance = Mathf.Max(0f, configuredFallbackCastDistance);
+            castDuration = Mathf.Max(0.01f, configuredCastDuration);
+            castArcHeight = Mathf.Max(0f, configuredCastArcHeight);
+            castArcDistanceRatio = Mathf.Max(0f, configuredCastArcDistanceRatio);
+            castRopeLength = Mathf.Max(0f, configuredCastRopeLength);
+            castRopeSlack = Mathf.Max(0f, configuredCastRopeSlack);
+        }
 
         private Coroutine stateRoutine;
         private Vector3 targetPosition;
