@@ -47,6 +47,8 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private float waterRayStartHeight = 1.5f;
         [Min(0f)]
         [SerializeField] private float downwardCastBias = 0.2f;
+        [Min(0.1f)]
+        [SerializeField] private float maxPlayerToWaterDistance = 3f;
         [SerializeField] private bool showTipWaterRaycastGizmo = true;
         [SerializeField] private bool alwaysShowTipWaterRaycastGizmo;
         [SerializeField] private float waterSurfaceYOffset;
@@ -86,7 +88,12 @@ namespace MultiplayFishing.Gameplay
 
         [Header("Sound Effects")]
         [SerializeField] private AudioSource audioSource;
+        [SerializeField] private AudioClip castSwingSound;
+        [SerializeField] private float castSwingSoundDelay = 0.5f;
         [SerializeField] private AudioClip waterSplashSound;
+        [SerializeField] private AudioClip reelingSound;
+        [SerializeField] private float reelingSoundStartOffset;
+        [SerializeField] private float reelingSoundLeadTime = 0.1f;
         [SerializeField] private AudioClip biteSound;
         [SerializeField] private AudioClip successSound;
         [SerializeField] private AudioClip failureSound;
@@ -116,6 +123,33 @@ namespace MultiplayFishing.Gameplay
             castArcDistanceRatio = Mathf.Max(0f, configuredCastArcDistanceRatio);
             castRopeLength = Mathf.Max(0f, configuredCastRopeLength);
             castRopeSlack = Mathf.Max(0f, configuredCastRopeSlack);
+        }
+
+        public void ConfigureWaterSplashSound(AudioClip clip)
+        {
+            waterSplashSound = clip;
+        }
+
+        public void ConfigureCastSwingSound(AudioClip clip, float delay)
+        {
+            castSwingSound = clip;
+            castSwingSoundDelay = Mathf.Max(0f, delay);
+        }
+
+        public void ConfigureReelingSound(AudioClip clip)
+        {
+            reelingSound = clip;
+        }
+
+        public void ConfigureReelingSoundTiming(float startOffset, float leadTime)
+        {
+            reelingSoundStartOffset = Mathf.Max(0f, startOffset);
+            reelingSoundLeadTime = Mathf.Max(0f, leadTime);
+        }
+
+        public void ConfigureAudioSource(AudioSource source)
+        {
+            audioSource = source;
         }
 
         private Coroutine stateRoutine;
@@ -182,6 +216,60 @@ namespace MultiplayFishing.Gameplay
             {
                 audioSource.PlayOneShot(clip);
             }
+        }
+
+        private void PlaySound(AudioClip clip, float delay)
+        {
+            if (audioSource == null || clip == null)
+            {
+                return;
+            }
+
+            if (delay <= 0f)
+            {
+                audioSource.PlayOneShot(clip);
+                return;
+            }
+
+            StartCoroutine(PlaySoundDelayedRoutine(clip, delay));
+        }
+
+        private IEnumerator PlaySoundDelayedRoutine(AudioClip clip, float delay)
+        {
+            yield return new WaitForSeconds(delay);
+
+            if (audioSource != null && clip != null)
+            {
+                audioSource.PlayOneShot(clip);
+            }
+        }
+
+        private void StartReelingSound()
+        {
+            if (audioSource == null || reelingSound == null)
+            {
+                return;
+            }
+
+            audioSource.clip = reelingSound;
+            audioSource.loop = true;
+            if (reelingSoundStartOffset > 0f && reelingSound.length > 0f)
+            {
+                audioSource.time = Mathf.Min(reelingSoundStartOffset, reelingSound.length - 0.01f);
+            }
+            audioSource.Play();
+        }
+
+        private void StopReelingSound()
+        {
+            if (audioSource == null || audioSource.clip != reelingSound)
+            {
+                return;
+            }
+
+            audioSource.Stop();
+            audioSource.loop = false;
+            audioSource.clip = null;
         }
 
         private void Update()
@@ -539,6 +627,8 @@ namespace MultiplayFishing.Gameplay
 
         public void CancelFishingFromRodPutAway()
         {
+            StopReelingSound();
+
             if (CurrentState == FishingState.Idle)
             {
                 HideRodLineVisuals();
@@ -611,6 +701,7 @@ namespace MultiplayFishing.Gameplay
 
         private void Miss()
         {
+            StopReelingSound();
             waitingForCastRelease = false;
             StopCastReleaseFallback();
             fishingPlayer.CmdFishingMissed();
@@ -620,6 +711,7 @@ namespace MultiplayFishing.Gameplay
 
         private void EndFishing()
         {
+            StopReelingSound();
             waitingForCastRelease = false;
             StopCastReleaseFallback();
             if (stateRoutine != null) StopCoroutine(stateRoutine);
@@ -634,20 +726,28 @@ namespace MultiplayFishing.Gameplay
 
         private IEnumerator ReelToIdleRoutine()
         {
+            StartReelingSound();
+            if (reelingSoundLeadTime > 0f)
+            {
+                yield return new WaitForSeconds(reelingSoundLeadTime);
+            }
+
             yield return ropeController.MoveHook(
-                GetIdleHookPosition(),
-                0f,
-                reelDuration,
-                reelArcHeight,
-                idleRopeSlack,
-                idleRopeLength,
-                true,
-                true,
-                true,
-                false,
-                0f,
-                (Action<Vector3>)null,
-                fishingLineVisual);
+                    GetIdleHookPosition(),
+                    0f,
+                    reelDuration,
+                    reelArcHeight,
+                    idleRopeSlack,
+                    idleRopeLength,
+                    true,
+                    true,
+                    true,
+                    false,
+                    0f,
+                    (Action<Vector3>)null,
+                    fishingLineVisual);
+
+            StopReelingSound();
         }
 
         private void StartCastReleaseFallback(float fallbackDelay)
@@ -776,7 +876,8 @@ namespace MultiplayFishing.Gameplay
                 useCameraWaterRaycast,
                 waterRayStartHeight,
                 downwardCastBias,
-                maxCastDistance);
+                maxCastDistance,
+                maxPlayerToWaterDistance);
         }
 
         private void OnDrawGizmos()
@@ -983,17 +1084,26 @@ namespace MultiplayFishing.Gameplay
         {
             if (animator == null) return;
 
-            animator.ResetTrigger(fishingCastTriggerHash);
-            animator.SetTrigger(fishingCastTriggerHash);
-            SetFishingBool(false);
+            PlaySound(castSwingSound, castSwingSoundDelay);
+            SetFishingBool(true);
         }
 
         public void PlayCastAnimationRemote()
         {
-            if (animator == null || !hasFishingCastTrigger) return;
+            if (animator == null)
+            {
+                return;
+            }
+
+            if (!hasFishingCastTrigger)
+            {
+                SetFishingBool(true);
+                return;
+            }
 
             animator.ResetTrigger(fishingCastTriggerHash);
             animator.SetTrigger(fishingCastTriggerHash);
+            SetFishingBool(true);
         }
     }
 }

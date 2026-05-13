@@ -1629,7 +1629,7 @@ MonoBehaviour:
   reelDuration: 0.3
   castArcHeight: 2.3
   reelArcHeight: 0.2
-  idleRopeLength: 3
+  idleRopeLength: 1.8
   castRopeLength: 3
   idleRopeSlack: 0.1
   castRopeSlack: 1
@@ -1744,6 +1744,13 @@ MonoBehaviour:
   walkSpeed: 4.5
   sprintSpeed: 7.5
   fishingSplashParticle: {fileID: 9102416919201996325, guid: 0b912e9003fba894faa88cf964a6fb8a, type: 3}
+  fishingAudioSource: {fileID: 0}
+  castSwingSound: {fileID: 8300000, guid: 8f84d1342682d6b4887fc104ab5def3d, type: 3}
+  castSwingSoundDelay: 0.8
+  waterSplashSound: {fileID: 8300000, guid: 21f6ec7368f846a469b741dcda79d32e, type: 3}
+  reelingSound: {fileID: 8300000, guid: d27985bfcdb118e44a8f4f34beed16f6, type: 3}
+  reelingSoundStartOffset: 1
+  reelingSoundLeadTime: 0.5
   fishingMinCastDistance: 5
   fishingMaxCastDistance: 120
   fishingChargeSpeed: 70
@@ -1798,7 +1805,37 @@ MonoBehaviour:
   rodShowStateName: rod-in
   rodHideNormalizedTime: 0.95
   rodHideFallbackDelay: 0.65
-
+--- !u!114 &4166181079526703089
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1333185881400598937}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5504ef57653e7da4cb96eaf011832d70, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MultiplayFishing.Gameplay::MultiplayFishing.Gameplay.MirrorPlayerSampleMovement
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  moveSpeed: 4.5
+  runSpeed: 7.5
+  turnSnapSpeed: 12
+  gravity: -20
+  groundedVelocity: -2
+  animator: {fileID: 0}
+  walkParameter: WalkSpeed
+  walkAnimDampTime: 0.15
+  footstepAudioSource: {fileID: 0}
+  walkFootstepSound: {fileID: 8300000, guid: 81699a75efb904b4695a58e7d06a2c82, type: 3}
+  runFootstepSound: {fileID: 8300000, guid: ceacf059f2d852947b503e9a6daf92dc, type: 3}
+  walkFootstepInterval: 0.45
+  sprintFootstepInterval: 0.28
+  walkFootstepPitch: 1
+  sprintFootstepPitch: 1
+  footstepVolume: 0.75
 --- !u!4 &1858787982920825635 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 3a811e3da586c85409cd0dc401c61204, type: 3}
