@@ -31,6 +31,7 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private Renderer characterRenderer;
         [SerializeField] private float groundSnapSearchHeight = 5f;
         [SerializeField] private float groundSnapSearchDistance = 20f;
+        [SerializeField] private ParticleSystem fishingSplashParticle;
 
         [Header("Sprint UI")]
 
@@ -370,6 +371,11 @@ namespace MultiplayFishing.Gameplay
             Transform hook = FindChildRecursive(transform, "Hook") ?? (ropeTransform != null ? ropeTransform.Find("Hook") : null);
 
             ParticleSystem splashParticle = fishingController.FishingSplashParticle;
+            if (splashParticle == null)
+            {
+                splashParticle = fishingSplashParticle;
+            }
+
             if (splashParticle == null)
             {
                 splashParticle = GetComponentInChildren<ParticleSystem>();

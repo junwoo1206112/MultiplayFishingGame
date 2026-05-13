@@ -94,6 +94,15 @@ namespace MultiplayFishing.Gameplay
             {
                 GameObject splashInstance = Object.Instantiate(sourceObject);
                 activeSplashParticle = splashInstance.GetComponent<ParticleSystem>();
+                if (activeSplashParticle == null)
+                {
+                    activeSplashParticle = splashInstance.GetComponentInChildren<ParticleSystem>(true);
+                }
+            }
+
+            if (activeSplashParticle == null)
+            {
+                return null;
             }
 
             activeSplashParticle.gameObject.name = $"{sourceObject.name} Runtime";

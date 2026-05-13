@@ -1796,6 +1796,7 @@ MonoBehaviour:
   characterRenderer: {fileID: 0}
   groundSnapSearchHeight: 5
   groundSnapSearchDistance: 20
+  fishingSplashParticle: {fileID: 9102416919201996325, guid: 0b912e9003fba894faa88cf964a6fb8a, type: 3}
   sprintStatusText: {fileID: 0}
 --- !u!114 &-30323828382460919
 MonoBehaviour:
