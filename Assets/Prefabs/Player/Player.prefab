@@ -1500,6 +1500,9 @@ PrefabInstance:
       addedObject: {fileID: 3253675146479307882}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 3a811e3da586c85409cd0dc401c61204, type: 3}
       insertIndex: -1
+      addedObject: {fileID: 6176181355288108514}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 3a811e3da586c85409cd0dc401c61204, type: 3}
+      insertIndex: -1
       addedObject: {fileID: 7746059155678097895}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 3a811e3da586c85409cd0dc401c61204, type: 3}
       insertIndex: -1
@@ -1507,6 +1510,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 3a811e3da586c85409cd0dc401c61204, type: 3}
       insertIndex: -1
       addedObject: {fileID: 9049824956452848252}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 3a811e3da586c85409cd0dc401c61204, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4166181079526703089}
   m_SourcePrefab: {fileID: 100100000, guid: 3a811e3da586c85409cd0dc401c61204, type: 3}
 --- !u!1 &1333185881400598937 stripped
 GameObject:
@@ -1694,7 +1700,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8ff3ba0becae47b8b9381191598957c8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Mirror.Components::Mirror.NetworkTransformReliable
-  syncDirection: 2
+  syncDirection: 0
   syncMode: 0
   syncInterval: 0.05
   target: {fileID: 1858787982920825635}
@@ -1716,6 +1722,57 @@ MonoBehaviour:
   rotationSensitivity: 0.01
   positionPrecision: 0.05
   scalePrecision: 0.01
+--- !u!114 &6176181355288108514
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1333185881400598937}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 497221e839119e34b897d6c497cbc8e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror.Examples::Mirror.Examples.Common.Controllers.Player.PlayerControllerReliable
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  characterController: {fileID: 3853836795612083400}
+  ControllerUIPrefab: {fileID: 644766297742565710, guid: 7beee247444994f0281dadde274cc4af, type: 3}
+  moveKeys:
+    Forward: 119
+    Back: 115
+    StrafeLeft: 97
+    StrafeRight: 100
+    TurnLeft: 113
+    TurnRight: 101
+    Jump: 32
+  optionsKeys:
+    MouseSteer: 109
+    AutoRun: 114
+    ToggleUI: 117
+  controlOptions: 4
+  maxMoveSpeed: 8
+  inputSensitivity: 2
+  inputGravity: 2
+  maxTurnSpeed: 100
+  turnAcceleration: 3
+  initialJumpSpeed: 2.5
+  maxJumpSpeed: 3.5
+  jumpAcceleration: 4
+  runtimeData:
+    _horizontal: 0
+    _vertical: 0
+    _turnSpeed: 0
+    _jumpSpeed: 0
+    _animVelocity: 0
+    _animRotation: 0
+    _mouseInputX: 0
+    _mouseSensitivity: 0
+    _groundState: 0
+    _direction: {x: 0, y: 0, z: 0}
+    _velocity: {x: 0, y: 0, z: 0}
+    _controllerUI: {fileID: 0}
 --- !u!114 &7746059155678097895
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1739,10 +1796,6 @@ MonoBehaviour:
   characterRenderer: {fileID: 0}
   groundSnapSearchHeight: 5
   groundSnapSearchDistance: 20
-  walkStartSpeed: 0.12
-  walkStopSpeed: 0.04
-  walkSpeed: 4.5
-  sprintSpeed: 7.5
   fishingSplashParticle: {fileID: 9102416919201996325, guid: 0b912e9003fba894faa88cf964a6fb8a, type: 3}
   fishingMinCastDistance: 5
   fishingMaxCastDistance: 120
@@ -1753,6 +1806,7 @@ MonoBehaviour:
   fishingCastArcDistanceRatio: 0.25
   fishingCastRopeLength: 3
   fishingCastRopeSlack: 2
+  sprintStatusText: {fileID: 0}
 --- !u!114 &-30323828382460919
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1798,7 +1852,29 @@ MonoBehaviour:
   rodShowStateName: rod-in
   rodHideNormalizedTime: 0.95
   rodHideFallbackDelay: 0.65
-
+--- !u!114 &4166181079526703089
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1333185881400598937}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5504ef57653e7da4cb96eaf011832d70, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MultiplayFishing.Gameplay::MultiplayFishing.Gameplay.MirrorPlayerSampleMovement
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  moveSpeed: 4.5
+  runSpeed: 7.5
+  turnSnapSpeed: 12
+  gravity: -20
+  groundedVelocity: -2
+  animator: {fileID: 0}
+  walkParameter: WalkSpeed
+  walkAnimDampTime: 0.15
 --- !u!4 &1858787982920825635 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 3a811e3da586c85409cd0dc401c61204, type: 3}

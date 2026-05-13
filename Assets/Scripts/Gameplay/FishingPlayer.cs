@@ -33,8 +33,6 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private float groundSnapSearchDistance = 20f;
         [SerializeField] private ParticleSystem fishingSplashParticle;
 
-        private FishingPlayerController fishingPlayerController;
-
         [Header("Fishing Cast Settings")]
         [SerializeField] private float fishingMinCastDistance = 2f;
         [SerializeField] private float fishingMaxCastDistance = 35f;
@@ -45,16 +43,32 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private float fishingCastArcDistanceRatio = 0.25f;
         [SerializeField] private float fishingCastRopeLength = 3f;
         [SerializeField] private float fishingCastRopeSlack = 1f;
+
+        [Header("Sprint UI")]
+
         private CharacterController characterController;
+        private IPlayerMovementController movementController;
         private FishingRodVisibility rodVisibility;
         private MonoBehaviour playerController;
+        private FieldInfo maxMoveSpeedField;
+        private FieldInfo maxTurnSpeedField;
+        private FieldInfo moveKeysField;
+        private object originalMoveKeys;
+        private bool hasOriginalMoveKeys;
+        private float originalMaxTurnSpeed;
+        private bool hasOriginalMaxTurnSpeed;
+        private int walkParamHash;
+        private int walkSpeedParamHash;
         private int rodEquippedParamHash;
         private int rodTakeOutTriggerHash;
         private int rodPutAwayTriggerHash;
         private bool hasRodEquippedParam;
         private bool hasRodTakeOutTrigger;
         private bool hasRodPutAwayTrigger;
+        private bool isSprinting;
         private Vector3 lastPosition;
+        [SerializeField]         private TMPro.TMP_Text sprintStatusText;
+        private bool sprintUISearched;
 
         // 서비스 참조 (DI)
         private IDataService dataService;
@@ -130,6 +144,9 @@ namespace MultiplayFishing.Gameplay
             
             InitializeMovementController();
             SetupFishingController();
+
+            // Sprint UI 초기값 비움
+            UpdateSprintUI();
             
             StartCoroutine(SmartEscapeRoutine());
             string savedName = PlayerPrefs.GetString("PlayerName", $"낚시꾼 {UnityEngine.Random.Range(100, 999)}");
@@ -139,53 +156,30 @@ namespace MultiplayFishing.Gameplay
 
         private void InitializeMovementController()
         {
-            playerController = FindMirrorPlayerController();
-
-            if (playerController == null)
+            movementController = GetComponent<IPlayerMovementController>();
+            if (movementController == null)
             {
-                fishingPlayerController = GetComponent<FishingPlayerController>();
-                if (fishingPlayerController == null)
-                    fishingPlayerController = gameObject.AddComponent<FishingPlayerController>();
-                fishingPlayerController.enabled = isLocalPlayer;
+                movementController = gameObject.AddComponent<MirrorPlayerSampleMovement>();
             }
 
-            DisableCustomMovementControllers();
-        }
-
-        private MonoBehaviour FindMirrorPlayerController()
-        {
             Component[] components = GetComponents<Component>();
             foreach (Component component in components)
             {
-                if (component is not MonoBehaviour monoBehaviour) continue;
-                if (!monoBehaviour.enabled) continue;
-
                 string typeName = component.GetType().Name;
-                if (typeName == "PlayerControllerReliable" || typeName == "PlayerControllerBase")
+                if (typeName != "PlayerControllerReliable" &&
+                    typeName != "PlayerControllerBase" &&
+                    typeName != "SampleSceneLocalPlayerController")
                 {
-                    return monoBehaviour;
+                    continue;
                 }
-            }
 
-            return null;
-        }
-
-        private void DisableCustomMovementControllers()
-        {
-            Component[] components = GetComponents<Component>();
-            foreach (Component component in components)
-            {
-                if (component is not MonoBehaviour monoBehaviour) continue;
-
-                string typeName = component.GetType().Name;
-                if (typeName == "SampleSceneLocalPlayerController" ||
-                    typeName == "PlayerMovement" ||
-                    typeName == "FishingPlayerController")
+                if (component is MonoBehaviour monoBehaviour)
                 {
-                    if (monoBehaviour == fishingPlayerController) continue;
                     monoBehaviour.enabled = false;
                 }
             }
+
+            Debug.Log("[FishingPlayer] Mirror PlayerSample movement initialized.");
         }
         void OnPlayerNameChanged(string oldValue, string newValue) => OnPlayerNameChangedEvent?.Invoke(newValue);
         
@@ -296,18 +290,17 @@ namespace MultiplayFishing.Gameplay
             transform.position = position;
         }
 
+        // ==================== 달리기 시스템 ====================
+
         private void Update()
         {
-            UpdateMovementAnimation();
-
             if (!isLocalPlayer) return;
 
             HandleRodToggleInput();
-        }
 
-        private void UpdateMovementAnimation()
-        {
-            lastPosition = transform.position;
+            if (IsFishing) return;
+
+            UpdateSprintUI();
         }
 
         private void HandleRodToggleInput()
@@ -326,6 +319,35 @@ namespace MultiplayFishing.Gameplay
             CmdSetRodDrawn(true);
         }
 
+        private void HandleSprintInput()
+        {
+            if (movementController == null) return;
+
+            bool nextSprinting = movementController.IsSprinting;
+            if (nextSprinting != isSprinting)
+            {
+                isSprinting = nextSprinting;
+                UpdateSprintUI();
+            }
+        }
+
+        private void UpdateSprintUI()
+        {
+            if (sprintStatusText == null && !sprintUISearched)
+            {
+                GameObject sprintObj = GameObject.Find("SprintStatusText");
+                if (sprintObj != null)
+                {
+                    sprintStatusText = sprintObj.GetComponent<TMPro.TMP_Text>();
+                }
+                sprintUISearched = true;
+            }
+
+            if (sprintStatusText == null) return;
+            sprintStatusText.text = isSprinting ? "SPRINT ON" : "";
+        }
+
+        public bool IsSprinting => isSprinting;
         // ==================== 낚시 시스템 (네트워크) ====================
 
         private FishingController fishingController;
@@ -418,21 +440,20 @@ namespace MultiplayFishing.Gameplay
 
         private void OnFishingStateChanged(FishingState newState)
         {
+
+            // 낚시 시작 시 Sprint 해제
+            if (newState != FishingState.Idle && isSprinting)
+            {
+                isSprinting = false;
+                UpdateSprintUI();
+            }
+
             SetFishingMovementLocked(newState != FishingState.Idle);
         }
 
         private void SetFishingMovementLocked(bool locked)
         {
-            if (fishingPlayerController != null)
-            {
-                fishingPlayerController.SetMovementBlocked(locked);
-                return;
-            }
-
-            if (playerController != null && isLocalPlayer)
-            {
-                playerController.enabled = !locked;
-            }
+            movementController?.SetMovementBlocked(locked);
         }
 
         private Transform FindChildRecursive(Transform parent, string nameContains)
@@ -456,14 +477,6 @@ namespace MultiplayFishing.Gameplay
                 return;
             }
             serverFishingRoutine = StartCoroutine(ServerFishingTimer());
-            RpcPlayCastAnimation();
-        }
-
-        [ClientRpc]
-        private void RpcPlayCastAnimation()
-        {
-            if (fishingController != null)
-                fishingController.PlayCastAnimationRemote();
         }
 
         private IEnumerator ServerFishingTimer()
