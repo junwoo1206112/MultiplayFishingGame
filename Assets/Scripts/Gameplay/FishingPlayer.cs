@@ -29,8 +29,13 @@ namespace MultiplayFishing.Gameplay
         [Header("Setup References")]
         [SerializeField] private Animator animator;
         [SerializeField] private Renderer characterRenderer;
+        [SerializeField] private float walkStopDelay = 0.2f;
         [SerializeField] private float groundSnapSearchHeight = 5f;
         [SerializeField] private float groundSnapSearchDistance = 20f;
+        [SerializeField] private float walkStartSpeed = 0.12f;
+        [SerializeField] private float walkStopSpeed = 0.04f;
+        [SerializeField] private float walkSpeed = 4.5f;
+        [SerializeField] private float sprintSpeed = 7.5f;
 
         [Header("Sprint UI")]
 
@@ -38,13 +43,6 @@ namespace MultiplayFishing.Gameplay
         private IPlayerMovementController movementController;
         private FishingRodVisibility rodVisibility;
         private MonoBehaviour playerController;
-        private FieldInfo maxMoveSpeedField;
-        private FieldInfo maxTurnSpeedField;
-        private FieldInfo moveKeysField;
-        private object originalMoveKeys;
-        private bool hasOriginalMoveKeys;
-        private float originalMaxTurnSpeed;
-        private bool hasOriginalMaxTurnSpeed;
         private int walkParamHash;
         private int walkSpeedParamHash;
         private int rodEquippedParamHash;
@@ -53,7 +51,10 @@ namespace MultiplayFishing.Gameplay
         private bool hasRodEquippedParam;
         private bool hasRodTakeOutTrigger;
         private bool hasRodPutAwayTrigger;
+        private bool hasWalkSpeedParam;
         private bool isSprinting;
+        private float currentWalkSpeed;
+        private float stoppedTimer;
         private Vector3 lastPosition;
         [SerializeField]         private TMPro.TMP_Text sprintStatusText;
         private bool sprintUISearched;
@@ -144,30 +145,54 @@ namespace MultiplayFishing.Gameplay
 
         private void InitializeMovementController()
         {
+            playerController = FindMirrorPlayerController();
+            if (playerController != null)
+            {
+                DisableCustomMovementControllers();
+                Debug.Log("[FishingPlayer] Mirror PlayerController movement initialized.");
+                return;
+            }
+
             movementController = GetComponent<IPlayerMovementController>();
             if (movementController == null)
             {
                 movementController = gameObject.AddComponent<MirrorPlayerSampleMovement>();
             }
 
+            Debug.Log("[FishingPlayer] Mirror PlayerSample movement initialized.");
+        }
+
+        private MonoBehaviour FindMirrorPlayerController()
+        {
             Component[] components = GetComponents<Component>();
             foreach (Component component in components)
             {
-                string typeName = component.GetType().Name;
-                if (typeName != "PlayerControllerReliable" &&
-                    typeName != "PlayerControllerBase" &&
-                    typeName != "SampleSceneLocalPlayerController")
-                {
-                    continue;
-                }
+                if (component is not MonoBehaviour monoBehaviour) continue;
 
-                if (component is MonoBehaviour monoBehaviour)
+                string typeName = component.GetType().Name;
+                if (typeName == "PlayerControllerReliable" || typeName == "PlayerControllerBase")
+                {
+                    return monoBehaviour;
+                }
+            }
+
+            return null;
+        }
+
+        private void DisableCustomMovementControllers()
+        {
+            Component[] components = GetComponents<Component>();
+            foreach (Component component in components)
+            {
+                if (component is not MonoBehaviour monoBehaviour) continue;
+
+                string typeName = component.GetType().Name;
+                if (typeName == nameof(MirrorPlayerSampleMovement) ||
+                    typeName == "SampleSceneLocalPlayerController")
                 {
                     monoBehaviour.enabled = false;
                 }
             }
-
-            Debug.Log("[FishingPlayer] Mirror PlayerSample movement initialized.");
         }
         void OnPlayerNameChanged(string oldValue, string newValue) => OnPlayerNameChangedEvent?.Invoke(newValue);
         
@@ -282,6 +307,8 @@ namespace MultiplayFishing.Gameplay
 
         private void Update()
         {
+            UpdateMovementAnimation();
+
             if (!isLocalPlayer) return;
 
             HandleRodToggleInput();
@@ -289,6 +316,47 @@ namespace MultiplayFishing.Gameplay
             if (IsFishing) return;
 
             UpdateSprintUI();
+        }
+
+        private void UpdateMovementAnimation()
+        {
+            if (animator == null || !hasWalkSpeedParam)
+            {
+                lastPosition = transform.position;
+                return;
+            }
+
+            Vector3 delta = transform.position - lastPosition;
+            delta.y = 0f;
+            float speed = Time.deltaTime > 0f ? delta.magnitude / Time.deltaTime : 0f;
+
+            float targetWalkSpeed = 0f;
+            if (!IsFishing && speed >= walkStartSpeed)
+            {
+                float sprintThreshold = Mathf.Lerp(walkSpeed, sprintSpeed, 0.5f);
+                targetWalkSpeed = speed >= sprintThreshold ? 2f : 1f;
+                stoppedTimer = 0f;
+            }
+            else if (speed <= walkStopSpeed)
+            {
+                stoppedTimer += Time.deltaTime;
+                if (stoppedTimer >= walkStopDelay)
+                {
+                    targetWalkSpeed = 0f;
+                }
+                else
+                {
+                    targetWalkSpeed = currentWalkSpeed;
+                }
+            }
+            else
+            {
+                targetWalkSpeed = currentWalkSpeed;
+            }
+
+            currentWalkSpeed = Mathf.MoveTowards(currentWalkSpeed, targetWalkSpeed, Time.deltaTime * 8f);
+            animator.SetFloat(walkSpeedParamHash, currentWalkSpeed, 0.15f, Time.deltaTime);
+            lastPosition = transform.position;
         }
 
         private void HandleRodToggleInput()
@@ -309,9 +377,7 @@ namespace MultiplayFishing.Gameplay
 
         private void HandleSprintInput()
         {
-            if (movementController == null) return;
-
-            bool nextSprinting = movementController.IsSprinting;
+            bool nextSprinting = movementController != null && movementController.IsSprinting;
             if (nextSprinting != isSprinting)
             {
                 isSprinting = nextSprinting;
@@ -422,7 +488,16 @@ namespace MultiplayFishing.Gameplay
 
         private void SetFishingMovementLocked(bool locked)
         {
-            movementController?.SetMovementBlocked(locked);
+            if (movementController != null)
+            {
+                movementController.SetMovementBlocked(locked);
+                return;
+            }
+
+            if (playerController != null && isLocalPlayer)
+            {
+                playerController.enabled = !locked;
+            }
         }
 
         private Transform FindChildRecursive(Transform parent, string nameContains)
@@ -731,16 +806,22 @@ namespace MultiplayFishing.Gameplay
             hasRodEquippedParam = false;
             hasRodTakeOutTrigger = false;
             hasRodPutAwayTrigger = false;
+            hasWalkSpeedParam = false;
 
             if (animator == null) return;
 
             rodEquippedParamHash = Animator.StringToHash("RodEquipped");
             rodTakeOutTriggerHash = Animator.StringToHash("RodTakeOut");
             rodPutAwayTriggerHash = Animator.StringToHash("RodPutAway");
+            walkSpeedParamHash = Animator.StringToHash("WalkSpeed");
 
             foreach (AnimatorControllerParameter param in animator.parameters)
             {
-                if (param.type == AnimatorControllerParameterType.Bool && param.nameHash == rodEquippedParamHash)
+                if (param.type == AnimatorControllerParameterType.Float && param.nameHash == walkSpeedParamHash)
+                {
+                    hasWalkSpeedParam = true;
+                }
+                else if (param.type == AnimatorControllerParameterType.Bool && param.nameHash == rodEquippedParamHash)
                 {
                     hasRodEquippedParam = true;
                 }
