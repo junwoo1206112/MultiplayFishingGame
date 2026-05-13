@@ -42,6 +42,8 @@ namespace MultiplayFishing.Gameplay
         private bool isMovementBlocked;
         private bool localSprintHeld;
         private float nextFootstepTime;
+        private bool wasFootstepMoving;
+        private AudioClip currentFootstepClip;
 
         [SyncVar] private float syncedWalkSpeed;
         [SyncVar] private bool syncedSprint;
@@ -99,9 +101,19 @@ namespace MultiplayFishing.Gameplay
             UpdateFootstepSound();
         }
 
+        private void OnDisable()
+        {
+            StopFootstepSound();
+        }
+
         public void SetMovementBlocked(bool blocked)
         {
             isMovementBlocked = blocked;
+            if (blocked)
+            {
+                StopFootstepSound();
+            }
+
             if (isLocalPlayer)
             {
                 CmdSetMovementBlocked(blocked);
@@ -241,7 +253,7 @@ namespace MultiplayFishing.Gameplay
             float targetSpeed = isLocalPlayer ? GetLocalWalkSpeedTarget() : syncedWalkSpeed;
             if (targetSpeed <= 0.01f)
             {
-                nextFootstepTime = 0f;
+                StopFootstepSound();
                 return;
             }
 
@@ -249,12 +261,32 @@ namespace MultiplayFishing.Gameplay
             AudioClip footstepClip = sprinting && runFootstepSound != null ? runFootstepSound : walkFootstepSound;
             if (footstepClip == null) return;
 
+            if (wasFootstepMoving && currentFootstepClip != footstepClip)
+            {
+                StopFootstepSound();
+            }
+
+            wasFootstepMoving = true;
+            currentFootstepClip = footstepClip;
+
             float interval = sprinting ? sprintFootstepInterval : walkFootstepInterval;
             if (Time.time < nextFootstepTime) return;
 
             footstepAudioSource.pitch = sprinting ? sprintFootstepPitch : walkFootstepPitch;
             footstepAudioSource.PlayOneShot(footstepClip, footstepVolume);
             nextFootstepTime = Time.time + Mathf.Max(0.05f, interval);
+        }
+
+        private void StopFootstepSound()
+        {
+            nextFootstepTime = 0f;
+            wasFootstepMoving = false;
+            currentFootstepClip = null;
+
+            if (footstepAudioSource != null)
+            {
+                footstepAudioSource.Stop();
+            }
         }
 
         private float GetLocalWalkSpeedTarget()

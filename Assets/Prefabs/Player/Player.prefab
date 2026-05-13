@@ -1803,7 +1803,7 @@ MonoBehaviour:
   waterSplashSound: {fileID: 8300000, guid: 21f6ec7368f846a469b741dcda79d32e, type: 3}
   reelingSound: {fileID: 8300000, guid: d27985bfcdb118e44a8f4f34beed16f6, type: 3}
   reelingSoundStartOffset: 1
-  reelingSoundLeadTime: 3.5
+  reelingSoundLeadTime: 0.5
   fishingMinCastDistance: 5
   fishingMaxCastDistance: 120
   fishingChargeSpeed: 70
