@@ -1535,7 +1535,7 @@ Rigidbody:
     m_Bits: 0
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
-  m_UseGravity: 1
+  m_UseGravity: 0
   m_IsKinematic: 1
   m_Interpolate: 0
   m_Constraints: 0
@@ -1557,7 +1557,7 @@ CapsuleCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 2
   m_Radius: 0.5
   m_Height: 1.8786912
@@ -1743,6 +1743,7 @@ MonoBehaviour:
   walkStopSpeed: 0.04
   walkSpeed: 4.5
   sprintSpeed: 7.5
+  fishingSplashParticle: {fileID: 9102416919201996325, guid: 0b912e9003fba894faa88cf964a6fb8a, type: 3}
 --- !u!114 &-30323828382460919
 MonoBehaviour:
   m_ObjectHideFlags: 0

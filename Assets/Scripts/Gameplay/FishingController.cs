@@ -366,6 +366,21 @@ namespace MultiplayFishing.Gameplay
                 yield break;
             }
 
+            bool splashPlayed = false;
+            Action<Vector3> playSplashAtPosition = splashPosition =>
+            {
+                splashPlayed = true;
+                splashController?.UpdatePendingPosition(
+                    hasHit,
+                    splashPosition,
+                    target,
+                    splashWorldOffset,
+                    clampSplashToWaterSurface,
+                    minimumSplashHeightOffset);
+                splashController?.Play();
+                PlaySound(waterSplashSound);
+            };
+
             yield return ropeController.MoveHookDynamic(
                 target,
                 () => useCastReleaseAnimationEvent && castReleaseReceived ? 0f : castStartDelay,
@@ -378,19 +393,13 @@ namespace MultiplayFishing.Gameplay
                 true,
                 true,
                 GetCastWaterSurfaceY,
-                hitPosition =>
-                {
-                    splashController?.UpdatePendingPosition(
-                        hasHit,
-                        hitPosition,
-                        target,
-                        splashWorldOffset,
-                        clampSplashToWaterSurface,
-                        minimumSplashHeightOffset);
-                    splashController?.Play();
-                    PlaySound(waterSplashSound);
-                },
+                playSplashAtPosition,
                 fishingLineVisual);
+
+            if (hasHit && !splashPlayed)
+            {
+                playSplashAtPosition(hitPoint);
+            }
 
             ChangeState(FishingState.Waiting);
             fishingLineVisual?.SetFishingActiveVisualOnly(true);

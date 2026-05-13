@@ -36,6 +36,7 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private float walkStopSpeed = 0.04f;
         [SerializeField] private float walkSpeed = 4.5f;
         [SerializeField] private float sprintSpeed = 7.5f;
+        [SerializeField] private ParticleSystem fishingSplashParticle;
 
         private FishingPlayerController fishingPlayerController;
         private CharacterController characterController;
@@ -355,6 +356,11 @@ namespace MultiplayFishing.Gameplay
             Transform hook = FindChildRecursive(transform, "Hook") ?? (ropeTransform != null ? ropeTransform.Find("Hook") : null);
 
             ParticleSystem splashParticle = fishingController.FishingSplashParticle;
+            if (splashParticle == null)
+            {
+                splashParticle = fishingSplashParticle;
+            }
+
             if (splashParticle == null)
             {
                 splashParticle = GetComponentInChildren<ParticleSystem>();
