@@ -73,11 +73,10 @@ namespace MultiplayFishing.Gameplay
             if (TryGetSurfaceHit(owner, out RaycastHit hit))
             {
                 hasSurfaceHit = true;
-                surfaceHitPoint = hit.point;
+                fallbackTarget.y = hit.point.y + castTargetOffset.y;
+                surfaceHitPoint = fallbackTarget;
 
-                return hit.point
-                    + owner.right * castTargetOffset.x
-                    + owner.up * castTargetOffset.y;
+                return fallbackTarget;
             }
 
             hasSurfaceHit = false;

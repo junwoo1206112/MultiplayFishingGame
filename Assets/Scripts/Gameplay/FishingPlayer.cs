@@ -33,6 +33,17 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private float groundSnapSearchDistance = 20f;
         [SerializeField] private ParticleSystem fishingSplashParticle;
 
+        [Header("Fishing Cast Settings")]
+        [SerializeField] private float fishingMinCastDistance = 2f;
+        [SerializeField] private float fishingMaxCastDistance = 35f;
+        [SerializeField] private float fishingChargeSpeed = 20f;
+        [SerializeField] private float fishingFallbackCastDistance = 6f;
+        [SerializeField] private float fishingCastDuration = 0.9f;
+        [SerializeField] private float fishingCastArcHeight = 2.3f;
+        [SerializeField] private float fishingCastArcDistanceRatio = 0.25f;
+        [SerializeField] private float fishingCastRopeLength = 3f;
+        [SerializeField] private float fishingCastRopeSlack = 1f;
+
         [Header("Sprint UI")]
 
         private CharacterController characterController;
@@ -350,6 +361,16 @@ namespace MultiplayFishing.Gameplay
             
             fishingController = GetComponent<FishingController>();
             if (fishingController == null) fishingController = gameObject.AddComponent<FishingController>();
+            fishingController.ConfigureCastSettings(
+                fishingMinCastDistance,
+                fishingMaxCastDistance,
+                fishingChargeSpeed,
+                fishingFallbackCastDistance,
+                fishingCastDuration,
+                fishingCastArcHeight,
+                fishingCastArcDistanceRatio,
+                fishingCastRopeLength,
+                fishingCastRopeSlack);
 
             // AudioSource 보장
             if (GetComponent<AudioSource>() == null) gameObject.AddComponent<AudioSource>();

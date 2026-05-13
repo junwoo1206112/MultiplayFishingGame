@@ -1629,7 +1629,7 @@ MonoBehaviour:
   waterRayStartHeight: 2
   downwardCastBias: 0.5
   fallbackCastDistance: 6
-  maxCastDistance: 50
+  maxCastDistance: 60
   castStartDelay: 0.18
   castDuration: 0.9
   reelDuration: 0.3
@@ -1797,6 +1797,15 @@ MonoBehaviour:
   groundSnapSearchHeight: 5
   groundSnapSearchDistance: 20
   fishingSplashParticle: {fileID: 9102416919201996325, guid: 0b912e9003fba894faa88cf964a6fb8a, type: 3}
+  fishingMinCastDistance: 5
+  fishingMaxCastDistance: 120
+  fishingChargeSpeed: 70
+  fishingFallbackCastDistance: 6
+  fishingCastDuration: 0.9
+  fishingCastArcHeight: 3.6
+  fishingCastArcDistanceRatio: 0.25
+  fishingCastRopeLength: 3
+  fishingCastRopeSlack: 2
   sprintStatusText: {fileID: 0}
 --- !u!114 &-30323828382460919
 MonoBehaviour:
