@@ -190,7 +190,7 @@ namespace MultiplayFishing.Gameplay
                 return;
             }
 
-            if (isFishingActive || isHookControlledByRope)
+            if (isFishingActive)
             {
                 RefreshCastArcLine();
                 return;

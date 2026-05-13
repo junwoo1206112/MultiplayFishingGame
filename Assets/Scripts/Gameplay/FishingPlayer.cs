@@ -32,6 +32,13 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private float groundSnapSearchHeight = 5f;
         [SerializeField] private float groundSnapSearchDistance = 20f;
         [SerializeField] private ParticleSystem fishingSplashParticle;
+        [SerializeField] private AudioSource fishingAudioSource;
+        [SerializeField] private AudioClip castSwingSound;
+        [SerializeField] private float castSwingSoundDelay = 0.5f;
+        [SerializeField] private AudioClip waterSplashSound;
+        [SerializeField] private AudioClip reelingSound;
+        [SerializeField] private float reelingSoundStartOffset;
+        [SerializeField] private float reelingSoundLeadTime = 0.1f;
 
         [Header("Fishing Cast Settings")]
         [SerializeField] private float fishingMinCastDistance = 2f;
@@ -361,6 +368,7 @@ namespace MultiplayFishing.Gameplay
             
             fishingController = GetComponent<FishingController>();
             if (fishingController == null) fishingController = gameObject.AddComponent<FishingController>();
+            fishingController.ConfigureAudioSource(EnsureFishingAudioSource());
             fishingController.ConfigureCastSettings(
                 fishingMinCastDistance,
                 fishingMaxCastDistance,
@@ -371,9 +379,13 @@ namespace MultiplayFishing.Gameplay
                 fishingCastArcDistanceRatio,
                 fishingCastRopeLength,
                 fishingCastRopeSlack);
+            fishingController.ConfigureWaterSplashSound(waterSplashSound);
+            fishingController.ConfigureCastSwingSound(castSwingSound, castSwingSoundDelay);
+            fishingController.ConfigureReelingSound(reelingSound);
+            fishingController.ConfigureReelingSoundTiming(reelingSoundStartOffset, reelingSoundLeadTime);
 
             // AudioSource 보장
-            if (GetComponent<AudioSource>() == null) gameObject.AddComponent<AudioSource>();
+            EnsureFishingAudioSource();
 
             // 컴포넌트 및 오브젝트 검색 (방어적 코딩)
             var lineVisual = GetComponentInChildren<FishingLineVisual>();
@@ -436,6 +448,21 @@ namespace MultiplayFishing.Gameplay
 
             Debug.LogWarning("[FishingPlayer] FishingController is not ready.");
             return false;
+        }
+
+        private AudioSource EnsureFishingAudioSource()
+        {
+            if (fishingAudioSource != null)
+            {
+                return fishingAudioSource;
+            }
+
+            fishingAudioSource = gameObject.AddComponent<AudioSource>();
+            fishingAudioSource.playOnAwake = false;
+            fishingAudioSource.loop = false;
+            fishingAudioSource.spatialBlend = 0f;
+            fishingAudioSource.priority = 64;
+            return fishingAudioSource;
         }
 
         private void OnFishingStateChanged(FishingState newState)

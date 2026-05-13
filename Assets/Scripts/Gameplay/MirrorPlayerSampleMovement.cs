@@ -19,6 +19,16 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private string walkParameter = "WalkSpeed";
         [SerializeField] private float walkAnimDampTime = 0.15f;
 
+        [Header("Footstep Sound")]
+        [SerializeField] private AudioSource footstepAudioSource;
+        [SerializeField] private AudioClip walkFootstepSound;
+        [SerializeField] private AudioClip runFootstepSound;
+        [SerializeField] private float walkFootstepInterval = 0.45f;
+        [SerializeField] private float sprintFootstepInterval = 0.28f;
+        [SerializeField] private float walkFootstepPitch = 1f;
+        [SerializeField] private float sprintFootstepPitch = 1f;
+        [SerializeField] private float footstepVolume = 0.75f;
+
         private CharacterController characterController;
         private IPlayerMovementInputSource inputSource;
         private Vector3 velocity;
@@ -31,6 +41,7 @@ namespace MultiplayFishing.Gameplay
         private bool hasWalkParameter;
         private bool isMovementBlocked;
         private bool localSprintHeld;
+        private float nextFootstepTime;
 
         [SyncVar] private float syncedWalkSpeed;
         [SyncVar] private bool syncedSprint;
@@ -50,6 +61,7 @@ namespace MultiplayFishing.Gameplay
             walkParameterHash = Animator.StringToHash(walkParameter);
             ResolveInputSource();
             CacheAnimatorParameter();
+            EnsureFootstepAudioSource();
         }
 
         public override void OnStartServer()
@@ -84,6 +96,7 @@ namespace MultiplayFishing.Gameplay
             }
 
             UpdateWalkAnimation();
+            UpdateFootstepSound();
         }
 
         public void SetMovementBlocked(bool blocked)
@@ -218,6 +231,32 @@ namespace MultiplayFishing.Gameplay
             animator.SetFloat(walkParameterHash, targetSpeed, walkAnimDampTime, Time.deltaTime);
         }
 
+        private void UpdateFootstepSound()
+        {
+            if (!NetworkClient.active) return;
+
+            EnsureFootstepAudioSource();
+            if (footstepAudioSource == null) return;
+
+            float targetSpeed = isLocalPlayer ? GetLocalWalkSpeedTarget() : syncedWalkSpeed;
+            if (targetSpeed <= 0.01f)
+            {
+                nextFootstepTime = 0f;
+                return;
+            }
+
+            bool sprinting = isLocalPlayer ? localSprintHeld : syncedSprint;
+            AudioClip footstepClip = sprinting && runFootstepSound != null ? runFootstepSound : walkFootstepSound;
+            if (footstepClip == null) return;
+
+            float interval = sprinting ? sprintFootstepInterval : walkFootstepInterval;
+            if (Time.time < nextFootstepTime) return;
+
+            footstepAudioSource.pitch = sprinting ? sprintFootstepPitch : walkFootstepPitch;
+            footstepAudioSource.PlayOneShot(footstepClip, footstepVolume);
+            nextFootstepTime = Time.time + Mathf.Max(0.05f, interval);
+        }
+
         private float GetLocalWalkSpeedTarget()
         {
             if (isMovementBlocked) return 0f;
@@ -253,6 +292,16 @@ namespace MultiplayFishing.Gameplay
             }
 
             characterController.enabled = active;
+        }
+
+        private void EnsureFootstepAudioSource()
+        {
+            if (footstepAudioSource != null) return;
+
+            footstepAudioSource = gameObject.AddComponent<AudioSource>();
+            footstepAudioSource.playOnAwake = false;
+            footstepAudioSource.loop = false;
+            footstepAudioSource.spatialBlend = 1f;
         }
 
         private static Vector3 FlattenOrFallback(Vector3 value, Vector3 fallback)
