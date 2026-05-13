@@ -26,7 +26,6 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private float pitch = 18f;
         [SerializeField] private float followSharpness = 18f;
         [SerializeField] private float rotationSharpness = 20f;
-        [SerializeField] private float keyboardYawSpeed = 120f;
         [SerializeField] private float mouseYawSpeed = 0.12f;
 
         [Header("Scene Camera")]

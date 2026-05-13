@@ -29,27 +29,20 @@ namespace MultiplayFishing.Gameplay
         [Header("Setup References")]
         [SerializeField] private Animator animator;
         [SerializeField] private Renderer characterRenderer;
-        [SerializeField] private float walkStopDelay = 0.2f;
         [SerializeField] private float groundSnapSearchHeight = 5f;
         [SerializeField] private float groundSnapSearchDistance = 20f;
-        [SerializeField] private float walkStartSpeed = 0.12f;
-        [SerializeField] private float walkStopSpeed = 0.04f;
-        [SerializeField] private float walkSpeed = 4.5f;
-        [SerializeField] private float sprintSpeed = 7.5f;
         [SerializeField] private ParticleSystem fishingSplashParticle;
 
         private FishingPlayerController fishingPlayerController;
         private CharacterController characterController;
         private FishingRodVisibility rodVisibility;
         private MonoBehaviour playerController;
-        private int walkSpeedParamHash;
         private int rodEquippedParamHash;
         private int rodTakeOutTriggerHash;
         private int rodPutAwayTriggerHash;
         private bool hasRodEquippedParam;
         private bool hasRodTakeOutTrigger;
         private bool hasRodPutAwayTrigger;
-        private bool hasWalkSpeedParam;
         private Vector3 lastPosition;
 
         // 서비스 참조 (DI)
@@ -735,22 +728,16 @@ namespace MultiplayFishing.Gameplay
             hasRodEquippedParam = false;
             hasRodTakeOutTrigger = false;
             hasRodPutAwayTrigger = false;
-            hasWalkSpeedParam = false;
 
             if (animator == null) return;
 
             rodEquippedParamHash = Animator.StringToHash("RodEquipped");
             rodTakeOutTriggerHash = Animator.StringToHash("RodTakeOut");
             rodPutAwayTriggerHash = Animator.StringToHash("RodPutAway");
-            walkSpeedParamHash = Animator.StringToHash("WalkSpeed");
 
             foreach (AnimatorControllerParameter param in animator.parameters)
             {
-                if (param.type == AnimatorControllerParameterType.Float && param.nameHash == walkSpeedParamHash)
-                {
-                    hasWalkSpeedParam = true;
-                }
-                else if (param.type == AnimatorControllerParameterType.Bool && param.nameHash == rodEquippedParamHash)
+                if (param.type == AnimatorControllerParameterType.Bool && param.nameHash == rodEquippedParamHash)
                 {
                     hasRodEquippedParam = true;
                 }

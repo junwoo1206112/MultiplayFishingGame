@@ -60,7 +60,6 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private float nibbleReactionWindow = 3f;
         [SerializeField] private float catchingDuration = 10f;
         [SerializeField] private float reelDuration = 0.8f;
-        [SerializeField] private float reelDurationWithFish = 2f;
         [SerializeField] private float reelArcHeight = 0.2f;
         [SerializeField] private float idleRopeLength = 1.8f;
         [SerializeField] private float idleRopeSlack = 0.1f;
