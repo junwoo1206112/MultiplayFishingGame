@@ -746,7 +746,15 @@ namespace MultiplayFishing.Gameplay
         {
             if (animator == null || !hasFishingCastTrigger) return;
 
+            animator.ResetTrigger(fishingCastTriggerHash);
+            animator.SetTrigger(fishingCastTriggerHash);
             SetFishingBool(false);
+        }
+
+        public void PlayCastAnimationRemote()
+        {
+            if (animator == null || !hasFishingCastTrigger) return;
+
             animator.ResetTrigger(fishingCastTriggerHash);
             animator.SetTrigger(fishingCastTriggerHash);
         }

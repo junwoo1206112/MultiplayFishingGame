@@ -37,13 +37,10 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private float walkSpeed = 4.5f;
         [SerializeField] private float sprintSpeed = 7.5f;
 
-        [Header("Sprint UI")]
-
+        private FishingPlayerController fishingPlayerController;
         private CharacterController characterController;
-        private IPlayerMovementController movementController;
         private FishingRodVisibility rodVisibility;
         private MonoBehaviour playerController;
-        private int walkParamHash;
         private int walkSpeedParamHash;
         private int rodEquippedParamHash;
         private int rodTakeOutTriggerHash;
@@ -52,12 +49,7 @@ namespace MultiplayFishing.Gameplay
         private bool hasRodTakeOutTrigger;
         private bool hasRodPutAwayTrigger;
         private bool hasWalkSpeedParam;
-        private bool isSprinting;
-        private float currentWalkSpeed;
-        private float stoppedTimer;
         private Vector3 lastPosition;
-        [SerializeField]         private TMPro.TMP_Text sprintStatusText;
-        private bool sprintUISearched;
 
         // 서비스 참조 (DI)
         private IDataService dataService;
@@ -133,9 +125,6 @@ namespace MultiplayFishing.Gameplay
             
             InitializeMovementController();
             SetupFishingController();
-
-            // Sprint UI 초기값 비움
-            UpdateSprintUI();
             
             StartCoroutine(SmartEscapeRoutine());
             string savedName = PlayerPrefs.GetString("PlayerName", $"낚시꾼 {UnityEngine.Random.Range(100, 999)}");
@@ -146,20 +135,16 @@ namespace MultiplayFishing.Gameplay
         private void InitializeMovementController()
         {
             playerController = FindMirrorPlayerController();
-            if (playerController != null)
+
+            if (playerController == null)
             {
-                DisableCustomMovementControllers();
-                Debug.Log("[FishingPlayer] Mirror PlayerController movement initialized.");
-                return;
+                fishingPlayerController = GetComponent<FishingPlayerController>();
+                if (fishingPlayerController == null)
+                    fishingPlayerController = gameObject.AddComponent<FishingPlayerController>();
+                fishingPlayerController.enabled = isLocalPlayer;
             }
 
-            movementController = GetComponent<IPlayerMovementController>();
-            if (movementController == null)
-            {
-                movementController = gameObject.AddComponent<MirrorPlayerSampleMovement>();
-            }
-
-            Debug.Log("[FishingPlayer] Mirror PlayerSample movement initialized.");
+            DisableCustomMovementControllers();
         }
 
         private MonoBehaviour FindMirrorPlayerController()
@@ -168,6 +153,7 @@ namespace MultiplayFishing.Gameplay
             foreach (Component component in components)
             {
                 if (component is not MonoBehaviour monoBehaviour) continue;
+                if (!monoBehaviour.enabled) continue;
 
                 string typeName = component.GetType().Name;
                 if (typeName == "PlayerControllerReliable" || typeName == "PlayerControllerBase")
@@ -187,9 +173,11 @@ namespace MultiplayFishing.Gameplay
                 if (component is not MonoBehaviour monoBehaviour) continue;
 
                 string typeName = component.GetType().Name;
-                if (typeName == nameof(MirrorPlayerSampleMovement) ||
-                    typeName == "SampleSceneLocalPlayerController")
+                if (typeName == "SampleSceneLocalPlayerController" ||
+                    typeName == "PlayerMovement" ||
+                    typeName == "FishingPlayerController")
                 {
+                    if (monoBehaviour == fishingPlayerController) continue;
                     monoBehaviour.enabled = false;
                 }
             }
@@ -303,8 +291,6 @@ namespace MultiplayFishing.Gameplay
             transform.position = position;
         }
 
-        // ==================== 달리기 시스템 ====================
-
         private void Update()
         {
             UpdateMovementAnimation();
@@ -312,50 +298,10 @@ namespace MultiplayFishing.Gameplay
             if (!isLocalPlayer) return;
 
             HandleRodToggleInput();
-
-            if (IsFishing) return;
-
-            UpdateSprintUI();
         }
 
         private void UpdateMovementAnimation()
         {
-            if (animator == null || !hasWalkSpeedParam)
-            {
-                lastPosition = transform.position;
-                return;
-            }
-
-            Vector3 delta = transform.position - lastPosition;
-            delta.y = 0f;
-            float speed = Time.deltaTime > 0f ? delta.magnitude / Time.deltaTime : 0f;
-
-            float targetWalkSpeed = 0f;
-            if (!IsFishing && speed >= walkStartSpeed)
-            {
-                float sprintThreshold = Mathf.Lerp(walkSpeed, sprintSpeed, 0.5f);
-                targetWalkSpeed = speed >= sprintThreshold ? 2f : 1f;
-                stoppedTimer = 0f;
-            }
-            else if (speed <= walkStopSpeed)
-            {
-                stoppedTimer += Time.deltaTime;
-                if (stoppedTimer >= walkStopDelay)
-                {
-                    targetWalkSpeed = 0f;
-                }
-                else
-                {
-                    targetWalkSpeed = currentWalkSpeed;
-                }
-            }
-            else
-            {
-                targetWalkSpeed = currentWalkSpeed;
-            }
-
-            currentWalkSpeed = Mathf.MoveTowards(currentWalkSpeed, targetWalkSpeed, Time.deltaTime * 8f);
-            animator.SetFloat(walkSpeedParamHash, currentWalkSpeed, 0.15f, Time.deltaTime);
             lastPosition = transform.position;
         }
 
@@ -375,33 +321,6 @@ namespace MultiplayFishing.Gameplay
             CmdSetRodDrawn(true);
         }
 
-        private void HandleSprintInput()
-        {
-            bool nextSprinting = movementController != null && movementController.IsSprinting;
-            if (nextSprinting != isSprinting)
-            {
-                isSprinting = nextSprinting;
-                UpdateSprintUI();
-            }
-        }
-
-        private void UpdateSprintUI()
-        {
-            if (sprintStatusText == null && !sprintUISearched)
-            {
-                GameObject sprintObj = GameObject.Find("SprintStatusText");
-                if (sprintObj != null)
-                {
-                    sprintStatusText = sprintObj.GetComponent<TMPro.TMP_Text>();
-                }
-                sprintUISearched = true;
-            }
-
-            if (sprintStatusText == null) return;
-            sprintStatusText.text = isSprinting ? "SPRINT ON" : "";
-        }
-
-        public bool IsSprinting => isSprinting;
         // ==================== 낚시 시스템 (네트워크) ====================
 
         private FishingController fishingController;
@@ -475,22 +394,14 @@ namespace MultiplayFishing.Gameplay
 
         private void OnFishingStateChanged(FishingState newState)
         {
-
-            // 낚시 시작 시 Sprint 해제
-            if (newState != FishingState.Idle && isSprinting)
-            {
-                isSprinting = false;
-                UpdateSprintUI();
-            }
-
             SetFishingMovementLocked(newState != FishingState.Idle);
         }
 
         private void SetFishingMovementLocked(bool locked)
         {
-            if (movementController != null)
+            if (fishingPlayerController != null)
             {
-                movementController.SetMovementBlocked(locked);
+                fishingPlayerController.SetMovementBlocked(locked);
                 return;
             }
 
@@ -521,6 +432,14 @@ namespace MultiplayFishing.Gameplay
                 return;
             }
             serverFishingRoutine = StartCoroutine(ServerFishingTimer());
+            RpcPlayCastAnimation();
+        }
+
+        [ClientRpc]
+        private void RpcPlayCastAnimation()
+        {
+            if (fishingController != null)
+                fishingController.PlayCastAnimationRemote();
         }
 
         private IEnumerator ServerFishingTimer()
