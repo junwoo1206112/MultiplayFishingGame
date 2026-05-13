@@ -2,6 +2,10 @@ using UnityEngine;
 
 namespace MultiplayFishing.Gameplay
 {
+    /// <summary>
+    /// Renders a fishing line in two segments:
+    /// fixed rod path (reel -> guides -> tip) and cast path (tip -> hook).
+    /// </summary>
     public class FishingLineVisual : MonoBehaviour
     {
         [Header("Renderers")]
@@ -25,8 +29,6 @@ namespace MultiplayFishing.Gameplay
 
         private bool isFishingActive;
         private bool isHookControlledByRope;
-        private int lastCastArcPositionCount;
-        private int lastFixedPositionCount;
 
         public bool HasHookPoints => tipPoint != null && hookPoint != null;
         public bool IsConfiguredForRuntime => HasHookPoints && (rodLineFixed != null || rodLineCast != null);
@@ -169,11 +171,7 @@ namespace MultiplayFishing.Gameplay
 
             int guideCount = guidePoints == null ? 0 : guidePoints.Length;
             int pointCount = guideCount + 2;
-            if (pointCount != lastFixedPositionCount)
-            {
-                rodLineFixed.positionCount = pointCount;
-                lastFixedPositionCount = pointCount;
-            }
+            rodLineFixed.positionCount = pointCount;
             rodLineFixed.SetPosition(0, reelPoint.position);
 
             for (int i = 0; i < guideCount; i++)
@@ -203,11 +201,7 @@ namespace MultiplayFishing.Gameplay
 
         private void RefreshStraightCastLine()
         {
-            if (lastCastArcPositionCount != 2)
-            {
-                rodLineCast.positionCount = 2;
-                lastCastArcPositionCount = 2;
-            }
+            rodLineCast.positionCount = 2;
             rodLineCast.SetPosition(0, tipPoint.position);
             rodLineCast.SetPosition(1, hookPoint.position);
         }
@@ -215,12 +209,7 @@ namespace MultiplayFishing.Gameplay
         private void RefreshCastArcLine()
         {
             int segmentCount = Mathf.Max(2, castArcSegments);
-            int pointCount = segmentCount + 1;
-            if (pointCount != lastCastArcPositionCount)
-            {
-                rodLineCast.positionCount = pointCount;
-                lastCastArcPositionCount = pointCount;
-            }
+            rodLineCast.positionCount = segmentCount + 1;
 
             Vector3 start = tipPoint.position;
             Vector3 end = hookPoint.position;

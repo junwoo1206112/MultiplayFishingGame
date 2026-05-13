@@ -286,8 +286,7 @@ namespace MultiplayFishing.Gameplay
         {
             if (!fishingPlayer.IsRodDrawn)
             {
-                fishingPlayer.DrawRodForFishing();
-                StartAutoDrawCast();
+                Debug.LogWarning("[FishingController] Cast ignored because the fishing rod is not drawn.");
                 return;
             }
 
@@ -984,28 +983,17 @@ namespace MultiplayFishing.Gameplay
         {
             if (animator == null) return;
 
-            if (hasFishingCastTrigger)
-            {
-                animator.ResetTrigger(fishingCastTriggerHash);
-                animator.SetTrigger(fishingCastTriggerHash);
-            }
-
-            SetFishingBool(true);
+            animator.ResetTrigger(fishingCastTriggerHash);
+            animator.SetTrigger(fishingCastTriggerHash);
+            SetFishingBool(false);
         }
 
         public void PlayCastAnimationRemote()
         {
-            if (animator == null) return;
-
-            if (!hasFishingCastTrigger)
-            {
-                SetFishingBool(true);
-                return;
-            }
+            if (animator == null || !hasFishingCastTrigger) return;
 
             animator.ResetTrigger(fishingCastTriggerHash);
             animator.SetTrigger(fishingCastTriggerHash);
-            SetFishingBool(true);
         }
     }
 }
