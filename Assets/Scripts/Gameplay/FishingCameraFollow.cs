@@ -113,13 +113,8 @@ namespace MultiplayFishing.Gameplay
                 hasManualYaw = true;
             }
 
-            if (Keyboard.current != null)
-            {
-                float keyboardYawInput = 0f;
-                if (Keyboard.current.qKey.isPressed) keyboardYawInput -= 1f;
-                if (Keyboard.current.eKey.isPressed) keyboardYawInput += 1f;
-                manualYaw += keyboardYawInput * keyboardYawSpeed * Time.deltaTime;
-            }
+            // Track player's facing direction so camera follows Q/E rotation
+            manualYaw = Mathf.LerpAngle(manualYaw, cameraTarget.eulerAngles.y, 1f - Mathf.Exp(-rotationSharpness * Time.deltaTime));
 
             if (Mouse.current != null && Mouse.current.rightButton.isPressed)
             {
