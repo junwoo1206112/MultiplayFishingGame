@@ -44,8 +44,8 @@ namespace MultiplayFishing.Gameplay
 
         [Header("Fishing Cast Settings")]
         [SerializeField] private float fishingMinCastDistance = 2f;
-        [SerializeField] private float fishingMaxCastDistance = 35f;
-        [SerializeField] private float fishingChargeSpeed = 20f;
+        [SerializeField] private float fishingMaxCastDistance = 20f;
+        [SerializeField] private float fishingChargeSpeed = 35f;
         [SerializeField] private float fishingFallbackCastDistance = 6f;
         [SerializeField] private float fishingCastDuration = 0.9f;
         [SerializeField] private float fishingCastArcHeight = 2.3f;
@@ -191,6 +191,12 @@ namespace MultiplayFishing.Gameplay
                 {
                     if (monoBehaviour == fishingPlayerController) continue;
                     monoBehaviour.enabled = false;
+                    continue;
+                }
+
+                if (typeName == "PlayerControllerReliable" || typeName == "PlayerControllerBase")
+                {
+                    Destroy(monoBehaviour);
                 }
             }
         }
@@ -403,6 +409,7 @@ namespace MultiplayFishing.Gameplay
             var biteSystem = GetComponentInChildren<FishingBiteSystem>();
 
             fishingController.Initialize(this, animator, lineVisual, ropeController, splashController, null, catchPresenter, biteSystem);
+            SetupHookWaterContact(hook, fishingController);
             
             // 낚시 상태 변경 시 PlayerController 토글 (낚시 중 이동 차단)
             if (isLocalPlayer)
@@ -414,6 +421,39 @@ namespace MultiplayFishing.Gameplay
             {
                 Debug.LogWarning($"[FishingPlayer] {playerName}의 낚시 포인트(Tip:{tip != null}, Hook:{hook != null}) 일부가 누락되었습니다. 연출이 제한될 수 있습니다.");
             }
+        }
+
+        private void SetupHookWaterContact(Transform hook, FishingController controller)
+        {
+            if (hook == null || controller == null)
+            {
+                return;
+            }
+
+            FishingHookWaterContact hookWaterContact = hook.GetComponent<FishingHookWaterContact>();
+            if (hookWaterContact == null)
+            {
+                hookWaterContact = hook.gameObject.AddComponent<FishingHookWaterContact>();
+            }
+
+            hookWaterContact.Initialize(controller, ResolveWaterLayerMask());
+        }
+
+        private static LayerMask ResolveWaterLayerMask()
+        {
+            int waterLayer = LayerMask.NameToLayer("Water");
+            if (waterLayer >= 0)
+            {
+                return 1 << waterLayer;
+            }
+
+            int oceanLayer = LayerMask.NameToLayer("Ocean");
+            if (oceanLayer >= 0)
+            {
+                return 1 << oceanLayer;
+            }
+
+            return Physics.DefaultRaycastLayers;
         }
 
         private bool EnsureFishingController()

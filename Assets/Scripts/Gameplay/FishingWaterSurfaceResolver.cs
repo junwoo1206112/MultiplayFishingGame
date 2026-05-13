@@ -14,6 +14,7 @@ namespace MultiplayFishing.Gameplay
         private readonly float waterRayStartHeight;
         private readonly float downwardCastBias;
         private readonly float maxCastDistance;
+        private readonly float maxPlayerToWaterDistance;
 
         public Transform WaterSurfaceTransform { get; private set; }
 
@@ -26,7 +27,8 @@ namespace MultiplayFishing.Gameplay
             bool useCameraWaterRaycast,
             float waterRayStartHeight,
             float downwardCastBias,
-            float maxCastDistance)
+            float maxCastDistance,
+            float maxPlayerToWaterDistance)
         {
             this.playerCamera = playerCamera;
             this.tipPoint = tipPoint;
@@ -38,6 +40,7 @@ namespace MultiplayFishing.Gameplay
             this.waterRayStartHeight = waterRayStartHeight;
             this.downwardCastBias = downwardCastBias;
             this.maxCastDistance = maxCastDistance;
+            this.maxPlayerToWaterDistance = maxPlayerToWaterDistance;
         }
 
         public FishingWaterSurfaceResolver(
@@ -48,7 +51,8 @@ namespace MultiplayFishing.Gameplay
             bool useCameraWaterRaycast,
             float waterRayStartHeight,
             float downwardCastBias,
-            float maxCastDistance)
+            float maxCastDistance,
+            float maxPlayerToWaterDistance)
             : this(
                 playerCamera,
                 tipPoint,
@@ -58,7 +62,8 @@ namespace MultiplayFishing.Gameplay
                 useCameraWaterRaycast,
                 waterRayStartHeight,
                 downwardCastBias,
-                maxCastDistance)
+                maxCastDistance,
+                maxPlayerToWaterDistance)
         {
         }
 
@@ -70,6 +75,20 @@ namespace MultiplayFishing.Gameplay
             out Vector3 surfaceHitPoint)
         {
             Vector3 fallbackTarget = GetFallbackCastTarget(owner, castTargetOffset, fallbackCastDistance);
+
+            if (!IsPlayerNearWater(owner))
+            {
+                hasSurfaceHit = false;
+                surfaceHitPoint = Vector3.zero;
+
+                if (TryGetSurfaceHeight(out float fallbackWaterY))
+                {
+                    fallbackTarget.y = fallbackWaterY + castTargetOffset.y;
+                }
+
+                return fallbackTarget;
+            }
+
             if (TryGetSurfaceHit(owner, out RaycastHit hit))
             {
                 hasSurfaceHit = true;
@@ -82,12 +101,22 @@ namespace MultiplayFishing.Gameplay
             hasSurfaceHit = false;
             surfaceHitPoint = Vector3.zero;
 
-            if (TryGetSurfaceHeight(out float fallbackWaterSurfaceY))
+            if (TryGetSurfaceHeight(out float heightY))
             {
-                fallbackTarget.y = fallbackWaterSurfaceY + castTargetOffset.y;
+                fallbackTarget.y = heightY + castTargetOffset.y;
             }
 
             return fallbackTarget;
+        }
+
+        private bool IsPlayerNearWater(Transform owner)
+        {
+            Collider[] hits = Physics.OverlapSphere(
+                owner.position,
+                maxPlayerToWaterDistance,
+                waterLayerMask,
+                QueryTriggerInteraction.Collide);
+            return hits != null && hits.Length > 0;
         }
 
         public bool TryGetSurfaceHeight(out float waterSurfaceY)

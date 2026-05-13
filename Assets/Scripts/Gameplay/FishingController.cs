@@ -55,6 +55,7 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private Vector3 splashWorldOffset = new Vector3(0f, 0.01f, 0f);
         [SerializeField] private bool clampSplashToWaterSurface = true;
         [SerializeField] private float minimumSplashHeightOffset = 0.02f;
+        [SerializeField] private float splashReplayCooldown = 0.15f;
         [SerializeField] private ParticleSystem fishingSplashParticle;
         private float currentChargeDistance;
 
@@ -171,6 +172,7 @@ namespace MultiplayFishing.Gameplay
         private Coroutine autoDrawCastRoutine;
         private bool waitingForCastRelease;
         private bool castReleaseReceived;
+        private float lastSplashTime = -999f;
         private readonly List<RaycastResult> uiRaycastResults = new List<RaycastResult>();
 
         public void Initialize(
@@ -374,7 +376,8 @@ namespace MultiplayFishing.Gameplay
         {
             if (!fishingPlayer.IsRodDrawn)
             {
-                Debug.LogWarning("[FishingController] Cast ignored because the fishing rod is not drawn.");
+                fishingPlayer.DrawRodForFishing();
+                StartAutoDrawCast();
                 return;
             }
 
@@ -479,15 +482,7 @@ namespace MultiplayFishing.Gameplay
             Action<Vector3> playSplashAtPosition = splashPosition =>
             {
                 splashPlayed = true;
-                splashController?.UpdatePendingPosition(
-                    hasHit,
-                    splashPosition,
-                    target,
-                    splashWorldOffset,
-                    clampSplashToWaterSurface,
-                    minimumSplashHeightOffset);
-                splashController?.Play();
-                PlaySound(waterSplashSound);
+                PlaySplashAtPosition(hasHit, splashPosition, target);
             };
 
             yield return ropeController.MoveHookDynamic(
@@ -512,6 +507,35 @@ namespace MultiplayFishing.Gameplay
 
             ChangeState(FishingState.Waiting);
             fishingLineVisual?.SetFishingActiveVisualOnly(true);
+        }
+
+        public void PlayHookWaterSplash(Vector3 splashPosition)
+        {
+            if (CurrentState == FishingState.Idle)
+            {
+                return;
+            }
+
+            PlaySplashAtPosition(true, splashPosition, splashPosition);
+        }
+
+        private void PlaySplashAtPosition(bool hasSurfaceHit, Vector3 splashPosition, Vector3 fallbackPosition)
+        {
+            if (Time.time - lastSplashTime < splashReplayCooldown)
+            {
+                return;
+            }
+
+            lastSplashTime = Time.time;
+            splashController?.UpdatePendingPosition(
+                hasSurfaceHit,
+                splashPosition,
+                fallbackPosition,
+                splashWorldOffset,
+                clampSplashToWaterSurface,
+                minimumSplashHeightOffset);
+            splashController?.Play();
+            PlaySound(waterSplashSound);
         }
 
         private void TryHooking()
@@ -1085,15 +1109,19 @@ namespace MultiplayFishing.Gameplay
             if (animator == null) return;
 
             PlaySound(castSwingSound, castSwingSoundDelay);
+
+            if (hasFishingCastTrigger)
+            {
+                animator.ResetTrigger(fishingCastTriggerHash);
+                animator.SetTrigger(fishingCastTriggerHash);
+            }
+
             SetFishingBool(true);
         }
 
         public void PlayCastAnimationRemote()
         {
-            if (animator == null)
-            {
-                return;
-            }
+            if (animator == null) return;
 
             if (!hasFishingCastTrigger)
             {

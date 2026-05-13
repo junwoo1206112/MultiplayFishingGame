@@ -87,6 +87,11 @@ namespace MultiplayFishing.Network
             }
         }
 
+        public override void OnServerDisconnect(NetworkConnectionToClient conn)
+        {
+            base.OnServerDisconnect(conn);
+        }
+
         public override void OnClientDisconnect()
         {
             base.OnClientDisconnect();

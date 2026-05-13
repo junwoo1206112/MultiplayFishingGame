@@ -12,10 +12,13 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private float jumpSpeed = 5f;
         [SerializeField] private float gravity = -20f;
         [SerializeField] private float groundedVelocity = -2f;
+        [SerializeField] private float groundSnapSearchHeight = 3f;
+        [SerializeField] private float groundSnapSearchDistance = 8f;
 
         [Header("Rotation")]
         [SerializeField] private float maxTurnSpeed = 100f;
         [SerializeField] private float turnAcceleration = 3f;
+        [SerializeField] private bool allowRotationWhileMovementBlocked = true;
 
         [Header("Animation")]
         [SerializeField] private Animator animator;
@@ -72,7 +75,7 @@ namespace MultiplayFishing.Gameplay
         private void HandleRotationInput()
         {
             if (Keyboard.current == null) return;
-            if (isMovementBlocked) return;
+            if (isMovementBlocked && !allowRotationWhileMovementBlocked) return;
 
             if (Keyboard.current.mKey.wasPressedThisFrame)
             {
@@ -110,10 +113,9 @@ namespace MultiplayFishing.Gameplay
 
             if (isMovementBlocked)
             {
-                if (characterController.isGrounded && velocity.y < 0f)
-                    velocity.y = groundedVelocity;
-                velocity.y += gravity * Time.deltaTime;
-                characterController.Move(new Vector3(0f, velocity.y, 0f) * Time.deltaTime);
+                velocity = Vector3.zero;
+                isSprinting = false;
+                currentSpeed = 0f;
                 return;
             }
 
@@ -164,6 +166,61 @@ namespace MultiplayFishing.Gameplay
         public void SetMovementBlocked(bool blocked)
         {
             isMovementBlocked = blocked;
+            if (!blocked)
+            {
+                return;
+            }
+
+            velocity = Vector3.zero;
+            isSprinting = false;
+            currentSpeed = 0f;
+            turnSpeed = 0f;
+            SnapToGround();
+        }
+
+        private void SnapToGround()
+        {
+            if (characterController == null) return;
+
+            Vector3 rayOrigin = transform.position + Vector3.up * groundSnapSearchHeight;
+            int groundMask = Physics.DefaultRaycastLayers & ~LayerMask.GetMask("Water");
+            RaycastHit[] hits = Physics.RaycastAll(
+                rayOrigin,
+                Vector3.down,
+                groundSnapSearchDistance,
+                groundMask,
+                QueryTriggerInteraction.Ignore);
+
+            if (hits == null || hits.Length == 0)
+            {
+                return;
+            }
+
+            RaycastHit bestHit = default;
+            bool hasHit = false;
+            float bestDistance = float.MaxValue;
+
+            foreach (RaycastHit hit in hits)
+            {
+                if (hit.transform == null || hit.transform.IsChildOf(transform)) continue;
+                if (hit.collider != null && hit.collider.gameObject.layer == LayerMask.NameToLayer("Water")) continue;
+                if (hit.distance >= bestDistance) continue;
+
+                bestHit = hit;
+                bestDistance = hit.distance;
+                hasHit = true;
+            }
+
+            if (!hasHit)
+            {
+                return;
+            }
+
+            float controllerBottomOffset = characterController.center.y - characterController.height * 0.5f;
+            Vector3 targetPosition = transform.position;
+            targetPosition.y = bestHit.point.y - controllerBottomOffset;
+            Vector3 displacement = targetPosition - transform.position;
+            characterController.Move(displacement);
         }
 
         private void CacheAnimatorParameter()

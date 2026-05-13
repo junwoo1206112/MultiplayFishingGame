@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using MultiplayFishing.Network;
+using MultiplayFishing.Gameplay;
 
 namespace MultiplayFishing.UI
 {
@@ -30,6 +31,8 @@ namespace MultiplayFishing.UI
         [SerializeField] private TMP_Text connectionInfoText;
 
         private const string PlayerNameKey = "PlayerName";
+
+        private bool showConnectionInfo = true;
 
         private Canvas rootCanvas;
         private Transform searchRoot;
@@ -287,6 +290,11 @@ namespace MultiplayFishing.UI
 
             if (manager == null) return;
 
+            if (Input.GetKeyDown(KeyCode.Alpha1))
+            {
+                showConnectionInfo = !showConnectionInfo;
+            }
+
             bool isHost = NetworkServer.active && NetworkClient.active;
             bool isWaiting = isHost && !manager.IsRelayReady;
             string joinCode = manager.CurrentJoinCode;
@@ -306,19 +314,21 @@ namespace MultiplayFishing.UI
 
             if (connectionInfoText != null)
             {
-                if (isHost && !string.IsNullOrEmpty(joinCode))
+                if (!isOffline && showConnectionInfo)
                 {
-                    connectionInfoText.text =
-                        $"[ 인원: {manager.ConnectedClientCount}/{manager.maxConnections} ]\n" +
-                        $"참가 코드: {joinCode}";
+                    int playerCount = isHost
+                        ? NetworkServer.connections.Count
+                        : FindObjectsByType<FishingPlayer>(FindObjectsSortMode.None).Length;
+                    string text = $"[ 인원: {playerCount}/{manager.maxConnections} ]";
+                    if (isHost && !string.IsNullOrEmpty(joinCode))
+                    {
+                        text += $"\n참가 코드: {joinCode}";
+                    }
+                    connectionInfoText.text = text;
                 }
-                else if (isHost)
+                else
                 {
-                    connectionInfoText.text = "릴레이 서버 할당 대기 중...";
-                }
-                else if (!isOffline)
-                {
-                    connectionInfoText.text = "서버에 연결 중...";
+                    connectionInfoText.text = "";
                 }
             }
         }

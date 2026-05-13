@@ -40,6 +40,7 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private float downwardCastBias = 0.2f;
         [SerializeField] private float fallbackCastDistance = 6f;
         [SerializeField] private float maxCastDistance = 12f;
+        [SerializeField] private float maxPlayerToWaterDistance = 3f;
         [SerializeField] private float castStartDelay = 0.18f;
         [SerializeField] private float castDuration = 0.45f;
         [SerializeField] private float reelDuration = 0.8f;
@@ -115,7 +116,8 @@ namespace MultiplayFishing.Gameplay
                 useCameraWaterRaycast,
                 waterRayStartHeight,
                 downwardCastBias,
-                maxCastDistance);
+                maxCastDistance,
+                maxPlayerToWaterDistance);
             fishingRopeController = new FishingRopeController(tipPoint, hookPoint, fishingRopeObject, fishingRopeComponent);
             fishingSplashController = new FishingSplashController(fishingSplashParticle);
 

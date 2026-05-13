@@ -102,9 +102,10 @@ namespace MultiplayFishing.Gameplay
             if (!manualCameraConfigured)
             {
                 DisableCinemachine();
-                DestroyMirrorControllerUI();
                 manualCameraConfigured = true;
             }
+
+            DestroyMirrorControllerUI();
 
             if (!hasManualYaw)
             {

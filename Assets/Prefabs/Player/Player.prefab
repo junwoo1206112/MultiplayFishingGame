@@ -1624,6 +1624,7 @@ MonoBehaviour:
   downwardCastBias: 0.5
   fallbackCastDistance: 6
   maxCastDistance: 60
+  maxPlayerToWaterDistance: 3
   castStartDelay: 0.18
   castDuration: 0.9
   reelDuration: 0.3
@@ -1694,7 +1695,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8ff3ba0becae47b8b9381191598957c8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Mirror.Components::Mirror.NetworkTransformReliable
-  syncDirection: 2
+  syncDirection: 1
   syncMode: 0
   syncInterval: 0.05
   target: {fileID: 1858787982920825635}
@@ -1739,10 +1740,6 @@ MonoBehaviour:
   characterRenderer: {fileID: 0}
   groundSnapSearchHeight: 5
   groundSnapSearchDistance: 20
-  walkStartSpeed: 0.12
-  walkStopSpeed: 0.04
-  walkSpeed: 4.5
-  sprintSpeed: 7.5
   fishingSplashParticle: {fileID: 9102416919201996325, guid: 0b912e9003fba894faa88cf964a6fb8a, type: 3}
   fishingAudioSource: {fileID: 0}
   castSwingSound: {fileID: 8300000, guid: 8f84d1342682d6b4887fc104ab5def3d, type: 3}
@@ -1752,8 +1749,8 @@ MonoBehaviour:
   reelingSoundStartOffset: 1
   reelingSoundLeadTime: 0.5
   fishingMinCastDistance: 5
-  fishingMaxCastDistance: 120
-  fishingChargeSpeed: 70
+  fishingMaxCastDistance: 20
+  fishingChargeSpeed: 35
   fishingFallbackCastDistance: 6
   fishingCastDuration: 0.9
   fishingCastArcHeight: 3.6
@@ -1784,7 +1781,6 @@ MonoBehaviour:
   pitch: 18
   followSharpness: 18
   rotationSharpness: 20
-  keyboardYawSpeed: 120
   mouseYawSpeed: 0.12
   disableExtraCameras: 1
 --- !u!114 &9049824956452848252
@@ -1812,7 +1808,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1333185881400598937}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5504ef57653e7da4cb96eaf011832d70, type: 3}
   m_Name: 
