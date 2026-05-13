@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace MultiplayFishing.Gameplay
@@ -6,7 +7,10 @@ namespace MultiplayFishing.Gameplay
     {
         private readonly Camera playerCamera;
         private readonly Transform tipPoint;
+        private readonly Transform[] tipRayOrigins;
         private readonly LayerMask waterLayerMask;
+        private readonly LayerMask waterBlockerLayerMask;
+        private readonly bool useCameraWaterRaycast;
         private readonly float waterRayStartHeight;
         private readonly float downwardCastBias;
         private readonly float maxCastDistance;
@@ -16,19 +20,46 @@ namespace MultiplayFishing.Gameplay
         public FishingWaterSurfaceResolver(
             Camera playerCamera,
             Transform tipPoint,
+            Transform[] tipRayOrigins,
             Transform waterSurfaceTransform,
             LayerMask waterLayerMask,
+            bool useCameraWaterRaycast,
             float waterRayStartHeight,
             float downwardCastBias,
             float maxCastDistance)
         {
             this.playerCamera = playerCamera;
             this.tipPoint = tipPoint;
+            this.tipRayOrigins = tipRayOrigins ?? Array.Empty<Transform>();
             WaterSurfaceTransform = waterSurfaceTransform;
             this.waterLayerMask = waterLayerMask;
+            waterBlockerLayerMask = ResolveWaterBlockerLayerMask(waterLayerMask);
+            this.useCameraWaterRaycast = useCameraWaterRaycast;
             this.waterRayStartHeight = waterRayStartHeight;
             this.downwardCastBias = downwardCastBias;
             this.maxCastDistance = maxCastDistance;
+        }
+
+        public FishingWaterSurfaceResolver(
+            Camera playerCamera,
+            Transform tipPoint,
+            Transform waterSurfaceTransform,
+            LayerMask waterLayerMask,
+            bool useCameraWaterRaycast,
+            float waterRayStartHeight,
+            float downwardCastBias,
+            float maxCastDistance)
+            : this(
+                playerCamera,
+                tipPoint,
+                tipPoint != null ? new[] { tipPoint } : Array.Empty<Transform>(),
+                waterSurfaceTransform,
+                waterLayerMask,
+                useCameraWaterRaycast,
+                waterRayStartHeight,
+                downwardCastBias,
+                maxCastDistance)
+        {
         }
 
         public Vector3 ResolveCastTarget(
@@ -44,21 +75,9 @@ namespace MultiplayFishing.Gameplay
                 hasSurfaceHit = true;
                 surfaceHitPoint = hit.point;
 
-                Vector3 targetPosition = hit.point
+                return hit.point
                     + owner.right * castTargetOffset.x
-                    + owner.up * castTargetOffset.y
-                    + owner.forward * castTargetOffset.z;
-
-                if (TryGetSurfaceHeight(out float waterSurfaceY))
-                {
-                    targetPosition.y = waterSurfaceY + castTargetOffset.y;
-                }
-                else if (tipPoint != null)
-                {
-                    targetPosition.y = Mathf.Min(targetPosition.y, tipPoint.position.y);
-                }
-
-                return targetPosition;
+                    + owner.up * castTargetOffset.y;
             }
 
             hasSurfaceHit = false;
@@ -88,10 +107,27 @@ namespace MultiplayFishing.Gameplay
 
         private bool TryGetSurfaceHit(Transform owner, out RaycastHit hit)
         {
-            if (playerCamera != null)
+            for (int i = 0; i < tipRayOrigins.Length; i++)
+            {
+                Transform tipRayOrigin = tipRayOrigins[i];
+                if (tipRayOrigin == null) continue;
+
+                if (TryGetUnblockedWaterHit(tipRayOrigin.position, Vector3.down, out hit))
+                {
+                    return true;
+                }
+            }
+
+            if (tipRayOrigins.Length > 0)
+            {
+                hit = default;
+                return false;
+            }
+
+            if (useCameraWaterRaycast && playerCamera != null)
             {
                 Ray screenCenterRay = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
-                if (Physics.Raycast(screenCenterRay, out hit, maxCastDistance, waterLayerMask, QueryTriggerInteraction.Ignore))
+                if (TryGetUnblockedWaterHit(screenCenterRay.origin, screenCenterRay.direction, out hit))
                 {
                     return true;
                 }
@@ -101,22 +137,41 @@ namespace MultiplayFishing.Gameplay
             Vector3 forwardDirection = owner.forward;
             Vector3 biasedDirection = (forwardDirection + Vector3.down * downwardCastBias).normalized;
 
-            if (Physics.Raycast(rayOrigin, biasedDirection, out hit, maxCastDistance, waterLayerMask, QueryTriggerInteraction.Ignore))
+            if (TryGetUnblockedWaterHit(rayOrigin, biasedDirection, out hit))
             {
                 return true;
             }
 
-            if (tipPoint != null)
+            hit = default;
+            return false;
+        }
+
+        private bool TryGetUnblockedWaterHit(Vector3 origin, Vector3 direction, out RaycastHit hit)
+        {
+            if (Physics.Raycast(origin, direction, out hit, maxCastDistance, waterBlockerLayerMask, QueryTriggerInteraction.Ignore))
             {
-                Vector3 tipBiasedDirection = (tipPoint.forward + Vector3.down * downwardCastBias).normalized;
-                if (Physics.Raycast(tipPoint.position, tipBiasedDirection, out hit, maxCastDistance, waterLayerMask, QueryTriggerInteraction.Ignore))
-                {
-                    return true;
-                }
+                return IsInLayerMask(hit.collider.gameObject.layer, waterLayerMask);
             }
 
             hit = default;
             return false;
+        }
+
+        private static LayerMask ResolveWaterBlockerLayerMask(LayerMask waterMask)
+        {
+            int blockerMask = waterMask.value;
+            int groundLayer = LayerMask.NameToLayer("Ground");
+            if (groundLayer >= 0)
+            {
+                blockerMask |= 1 << groundLayer;
+            }
+
+            return blockerMask;
+        }
+
+        private static bool IsInLayerMask(int layer, LayerMask layerMask)
+        {
+            return (layerMask.value & (1 << layer)) != 0;
         }
 
         private Vector3 GetFallbackCastTarget(Transform owner, Vector3 castTargetOffset, float fallbackCastDistance)

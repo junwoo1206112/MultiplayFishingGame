@@ -55,6 +55,7 @@
     <Compile Include="Assets\Scripts\UI\PlayerNameDisplay.cs" />
     <Compile Include="Assets\Scripts\UI\InventoryUI.cs" />
     <Compile Include="Assets\Scripts\UI\ShopDetailPanel.cs" />
+    <Compile Include="Assets\Scripts\UI\DelayedAudioStart.cs" />
     <Compile Include="Assets\Scripts\UI\EncyclopediaSlotUI.cs" />
     <Compile Include="Assets\Scripts\UI\NetworkMenuUI.cs" />
     <Compile Include="Assets\Scripts\UI\NotificationUI.cs" />
@@ -65,6 +66,7 @@
     <Compile Include="Assets\Scripts\UI\StartSceneTransition.cs" />
     <Compile Include="Assets\Scripts\UI\ShopSlotUI.cs" />
     <Compile Include="Assets\Scripts\UI\PlayerStatusUI.cs" />
+    <Compile Include="Assets\Scripts\UI\LobbyBgmOnHostReady.cs" />
     <Compile Include="Assets\Scripts\UI\UIManager.cs" />
     <Compile Include="Assets\Scripts\UI\ShopUI.cs" />
   </ItemGroup>

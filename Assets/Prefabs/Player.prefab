@@ -219,10 +219,14 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0
   playerName: '""'
-  score: 0
-  isReady: 0
   playerColor: {r: 1, g: 1, b: 1, a: 1}
+  equippedRodId: 
+  equippedBaitId: 
+  animator: {fileID: 0}
   characterRenderer: {fileID: 5836162597908699151}
+  groundSnapSearchHeight: 5
+  groundSnapSearchDistance: 20
+  sprintStatusText: {fileID: 0}
 --- !u!114 &6013565671132341320
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -323,7 +327,7 @@ CharacterController:
     m_Bits: 0
   m_LayerOverridePriority: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 3
   m_Height: 2
   m_Radius: 0.5
@@ -339,7 +343,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7000919361490744284}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 497221e839119e34b897d6c497cbc8e5, type: 3}
   m_Name: 
@@ -348,7 +352,7 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0
   characterController: {fileID: 7069699543539147480}
-  ControllerUIPrefab: {fileID: 0}
+  ControllerUIPrefab: {fileID: 644766297742565710, guid: 7beee247444994f0281dadde274cc4af, type: 3}
   moveKeys:
     Forward: 119
     Back: 115
@@ -395,7 +399,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b54773aee58b2bc4c87b37ff06655f04, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MultiplayFishing.Gameplay::MultiplayFishing.Gameplay.FishingCameraFollow
-  syncDirection: 0
-  syncMode: 0
-  syncInterval: 0
-  cameraTarget: {fileID: 4858416452004315528}
+  playerVcam: {fileID: 0}
+  playerVcamName: PlayerVcam
+  cameraTargetName: CameraTarget
+  useManualCamera: 1
+  cameraDistance: 8
+  shoulderHeight: 2
+  verticalArmLength: 1
+  lookAtHeight: 1.5
+  fallbackTargetOffset: {x: 0, y: 1.6, z: 0.1}
+  pitch: 18
+  followSharpness: 18
+  rotationSharpness: 20
+  keyboardYawSpeed: 120
+  mouseYawSpeed: 0.12
+  disableExtraCameras: 1

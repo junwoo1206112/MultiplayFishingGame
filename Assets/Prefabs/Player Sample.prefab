@@ -1401,6 +1401,9 @@ MonoBehaviour:
   hookPoint: {fileID: 357577035313628902}
   idleHookOffset: {x: 0, y: 0, z: 0.1}
   castHookOffset: {x: 0, y: 0, z: 3}
+  castArcSegments: 16
+  castLineArcHeight: 0.45
+  castLineArcDistanceRatio: 0.12
 --- !u!114 &296195286698845221
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1477,13 +1480,49 @@ MonoBehaviour:
   m_EditorClassIdentifier: MultiplayFishing.Gameplay::MultiplayFishing.Gameplay.FishingController
   CurrentState: 0
   minCastDistance: 2
-  maxCastDistance: 12
+  maxCastDistance: 2
   chargeSpeed: 10
+  fallbackCastDistance: 6
+  castTargetOffset: {x: 0, y: 0, z: 0}
+  castStartDelay: 0.18
+  castDuration: 0.45
+  castArcHeight: 0.35
+  castArcDistanceRatio: 0.18
+  castRopeLength: 1.8
+  castRopeSlack: 0.05
+  hookWaterSubmergeDepth: 0.08
+  waterSurfaceTransform: {fileID: 0}
+  waterLayerMask:
+    serializedVersion: 2
+    m_Bits: 0
+  useCameraWaterRaycast: 1
+  waterRayStartHeight: 1.5
+  downwardCastBias: 0.2
+  showTipWaterRaycastGizmo: 1
+  alwaysShowTipWaterRaycastGizmo: 0
+  waterSurfaceYOffset: 0
+  splashWorldOffset: {x: 0, y: 0.01, z: 0}
+  clampSplashToWaterSurface: 1
+  minimumSplashHeightOffset: 0.02
+  fishingSplashParticle: {fileID: 0}
   nibbleReactionWindow: 3
   catchingDuration: 10
+  reelDuration: 0.8
+  reelDurationWithFish: 2
+  reelArcHeight: 0.2
+  idleRopeLength: 1.8
+  idleRopeSlack: 0.1
+  idleHookOffset: {x: 0, y: 0, z: 0.1}
   blockCastWhileMoving: 1
+  useCastReleaseAnimationEvent: 1
   castInputLockDuration: 1
   castReleaseFallbackDelay: 2.1
+  autoDrawCastDelay: 0.25
+  audioSource: {fileID: 0}
+  waterSplashSound: {fileID: 0}
+  biteSound: {fileID: 0}
+  successSound: {fileID: 0}
+  failureSound: {fileID: 0}
 --- !u!114 &2895638865676939351
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1520,6 +1559,7 @@ MonoBehaviour:
   rodHideStateName: rod-out
   rodShowStateName: rod-in
   rodHideNormalizedTime: 0.95
+  rodHideFallbackDelay: 0.65
 --- !u!1 &2453267273373660918
 GameObject:
   m_ObjectHideFlags: 0

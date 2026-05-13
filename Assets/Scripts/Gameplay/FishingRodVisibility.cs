@@ -42,6 +42,14 @@ namespace MultiplayFishing.Gameplay
             }
         }
 
+        public void ApplyImmediate(bool visible)
+        {
+            rodHideStartedAt = -1f;
+            wasInRodHideState = false;
+            wasInRodShowState = false;
+            SetRodVisible(visible);
+        }
+
         // Called by Animation Events on rod-in/rod-out.
         public void HideRodEvent()
         {

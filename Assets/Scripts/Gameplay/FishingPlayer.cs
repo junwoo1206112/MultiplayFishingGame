@@ -354,7 +354,11 @@ namespace MultiplayFishing.Gameplay
             Transform tip = FindChildRecursive(transform, "Tip") ?? transform.Find("Skeleton/Hand_R/Rod/Tip");
             Transform hook = FindChildRecursive(transform, "Hook") ?? (ropeTransform != null ? ropeTransform.Find("Hook") : null);
 
-            var splashParticle = GetComponentInChildren<ParticleSystem>();
+            ParticleSystem splashParticle = fishingController.FishingSplashParticle;
+            if (splashParticle == null)
+            {
+                splashParticle = GetComponentInChildren<ParticleSystem>();
+            }
             
             // 카메라 검색 (로컬 플레이어인 경우만 필요)
             Camera pCam = isLocalPlayer ? Camera.main : null;
@@ -770,14 +774,18 @@ namespace MultiplayFishing.Gameplay
             {
                 if (hasRodPutAwayTrigger) animator.ResetTrigger(rodPutAwayTriggerHash);
                 if (hasRodEquippedParam) animator.SetBool(rodEquippedParamHash, true);
-                rodVisibility?.SetRodVisible(true);
+                fishingController?.ShowRodLineVisuals();
                 animator.SetTrigger(rodTakeOutTriggerHash);
             }
             else if (playTrigger && !equipped && hasRodPutAwayTrigger)
             {
                 if (hasRodTakeOutTrigger) animator.ResetTrigger(rodTakeOutTriggerHash);
                 if (hasRodEquippedParam) animator.SetBool(rodEquippedParamHash, false);
-                fishingController?.CancelFishingFromRodPutAway();
+                if (fishingController != null)
+                {
+                    fishingController.CancelFishingFromRodPutAway();
+                    fishingController.HideRodLineVisuals();
+                }
                 animator.SetTrigger(rodPutAwayTriggerHash);
             }
             else if (hasRodEquippedParam)
@@ -787,7 +795,15 @@ namespace MultiplayFishing.Gameplay
 
             if (!playTrigger)
             {
-                rodVisibility?.SetRodVisible(equipped);
+                rodVisibility?.ApplyImmediate(equipped);
+                if (!equipped)
+                {
+                    fishingController?.HideRodLineVisuals();
+                }
+                else
+                {
+                    fishingController?.ShowRodLineVisuals();
+                }
             }
         }
     }

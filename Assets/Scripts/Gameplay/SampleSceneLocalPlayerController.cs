@@ -35,6 +35,7 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private Transform waterSurfaceTransform;
         [SerializeField] private ParticleSystem fishingSplashParticle;
         [SerializeField] private LayerMask waterLayerMask;
+        [SerializeField] private bool useCameraWaterRaycast = true;
         [SerializeField] private float waterRayStartHeight = 1.5f;
         [SerializeField] private float downwardCastBias = 0.2f;
         [SerializeField] private float fallbackCastDistance = 6f;
@@ -111,6 +112,7 @@ namespace MultiplayFishing.Gameplay
                 tipPoint,
                 waterSurfaceTransform,
                 waterLayerMask,
+                useCameraWaterRaycast,
                 waterRayStartHeight,
                 downwardCastBias,
                 maxCastDistance);

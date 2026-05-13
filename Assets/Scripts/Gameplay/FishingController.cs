@@ -35,17 +35,25 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private float castStartDelay = 0.18f;
         [SerializeField] private float castDuration = 0.45f;
         [SerializeField] private float castArcHeight = 0.35f;
+        [SerializeField] private float castArcDistanceRatio = 0.18f;
         [SerializeField] private float castRopeLength = 1.8f;
         [SerializeField] private float castRopeSlack = 0.05f;
         [SerializeField] private float hookWaterSubmergeDepth = 0.08f;
+        [Header("Water Raycast Settings")]
         [SerializeField] private Transform waterSurfaceTransform;
         [SerializeField] private LayerMask waterLayerMask;
+        [SerializeField] private bool useCameraWaterRaycast = true;
+        [Min(0f)]
         [SerializeField] private float waterRayStartHeight = 1.5f;
+        [Min(0f)]
         [SerializeField] private float downwardCastBias = 0.2f;
+        [SerializeField] private bool showTipWaterRaycastGizmo = true;
+        [SerializeField] private bool alwaysShowTipWaterRaycastGizmo;
         [SerializeField] private float waterSurfaceYOffset;
         [SerializeField] private Vector3 splashWorldOffset = new Vector3(0f, 0.01f, 0f);
         [SerializeField] private bool clampSplashToWaterSurface = true;
         [SerializeField] private float minimumSplashHeightOffset = 0.02f;
+        [SerializeField] private ParticleSystem fishingSplashParticle;
         private float currentChargeDistance;
 
         [Header("Timing Settings")]
@@ -87,6 +95,7 @@ namespace MultiplayFishing.Gameplay
         public event Action<FishingState> OnStateChanged;
         public event Action<float> OnChargeProgressChanged; // 0 ~ 1
         public event Action<float, float> OnCatchProgressChanged; // current, target
+        public ParticleSystem FishingSplashParticle => fishingSplashParticle;
 
         private Coroutine stateRoutine;
         private Vector3 targetPosition;
@@ -138,6 +147,7 @@ namespace MultiplayFishing.Gameplay
             if (waterDetector == null) waterDetector = gameObject.AddComponent<WaterDetector>();
 
             CacheAnimatorParameters();
+            EnsureAnimationEventRelay();
 
             if (catchPresenter != null && animator != null)
             {
@@ -245,7 +255,8 @@ namespace MultiplayFishing.Gameplay
 
         private static bool IsFishingLoopState(FishingState state)
         {
-            return state == FishingState.Waiting
+            return state == FishingState.Casting
+                || state == FishingState.Waiting
                 || state == FishingState.Nibble
                 || state == FishingState.Catching;
         }
@@ -254,8 +265,7 @@ namespace MultiplayFishing.Gameplay
         {
             if (!fishingPlayer.IsRodDrawn)
             {
-                fishingPlayer.DrawRodForFishing();
-                StartAutoDrawCast();
+                Debug.LogWarning("[FishingController] Cast ignored because the fishing rod is not drawn.");
                 return;
             }
 
@@ -321,7 +331,11 @@ namespace MultiplayFishing.Gameplay
             PlayCastAnimation();
             waitingForCastRelease = true;
             castReleaseReceived = false;
-            StartCastReleaseFallback();
+
+            float fallbackDelay = useCastReleaseAnimationEvent && animator != null && hasFishingBool
+                ? castReleaseFallbackDelay
+                : castStartDelay;
+            StartCastReleaseFallback(fallbackDelay);
         }
 
         public void OnCastRelease()
@@ -356,10 +370,10 @@ namespace MultiplayFishing.Gameplay
                 target,
                 () => useCastReleaseAnimationEvent && castReleaseReceived ? 0f : castStartDelay,
                 () => castDuration,
-                () => castArcHeight,
+                () => GetCastArcHeight(target),
                 () => castRopeSlack,
                 () => castRopeLength,
-                true,
+                false,
                 false,
                 true,
                 true,
@@ -379,6 +393,7 @@ namespace MultiplayFishing.Gameplay
                 fishingLineVisual);
 
             ChangeState(FishingState.Waiting);
+            fishingLineVisual?.SetFishingActiveVisualOnly(true);
         }
 
         private void TryHooking()
@@ -494,7 +509,11 @@ namespace MultiplayFishing.Gameplay
 
         public void CancelFishingFromRodPutAway()
         {
-            if (CurrentState == FishingState.Idle) return;
+            if (CurrentState == FishingState.Idle)
+            {
+                HideRodLineVisuals();
+                return;
+            }
 
             waitingForCastRelease = false;
             StopCastReleaseFallback();
@@ -511,15 +530,28 @@ namespace MultiplayFishing.Gameplay
                 biteSystem.StopBiteLogic();
             }
 
-            ropeController?.RestoreHookToRod();
-            ropeController?.SetVisible(false);
-            fishingLineVisual?.SetFishingActive(false);
+            HideRodLineVisuals();
             ChangeState(FishingState.Idle);
 
             if (fishingPlayer != null && fishingPlayer.isLocalPlayer)
             {
                 fishingPlayer.CmdFishingMissed();
             }
+        }
+
+        public void HideRodLineVisuals()
+        {
+            ropeController?.RestoreHookToRod();
+            ropeController?.SetVisible(false);
+            fishingLineVisual?.SetFishingActive(false);
+            fishingLineVisual?.SetVisible(false);
+        }
+
+        public void ShowRodLineVisuals()
+        {
+            fishingLineVisual?.SetVisible(true);
+            fishingLineVisual?.SetFishingActive(false);
+            ropeController?.RestoreHookToRod();
         }
 
         private IEnumerator SuccessRoutine()
@@ -588,10 +620,10 @@ namespace MultiplayFishing.Gameplay
                 fishingLineVisual);
         }
 
-        private void StartCastReleaseFallback()
+        private void StartCastReleaseFallback(float fallbackDelay)
         {
             StopCastReleaseFallback();
-            castReleaseFallbackRoutine = StartCoroutine(CastReleaseFallbackRoutine());
+            castReleaseFallbackRoutine = StartCoroutine(CastReleaseFallbackRoutine(fallbackDelay));
         }
 
         private void StopCastReleaseFallback()
@@ -610,9 +642,9 @@ namespace MultiplayFishing.Gameplay
             autoDrawCastRoutine = null;
         }
 
-        private IEnumerator CastReleaseFallbackRoutine()
+        private IEnumerator CastReleaseFallbackRoutine(float fallbackDelay)
         {
-            yield return new WaitForSeconds(castReleaseFallbackDelay);
+            yield return new WaitForSeconds(Mathf.Max(0f, fallbackDelay));
             castReleaseFallbackRoutine = null;
 
             if (waitingForCastRelease && CurrentState == FishingState.Casting)
@@ -623,40 +655,70 @@ namespace MultiplayFishing.Gameplay
 
         private Vector3 GetCastTargetPosition(out bool hasSurfaceHit, out Vector3 surfaceHitPoint)
         {
-            if (waterResolver == null)
-            {
-                waterResolver = CreateWaterSurfaceResolver();
-            }
+            waterResolver = CreateWaterSurfaceResolver();
 
             Vector3 offset = castTargetOffset;
             offset.z = Mathf.Approximately(offset.z, 0f) ? currentChargeDistance : offset.z;
 
-            Vector3 target = waterResolver.ResolveCastTarget(
+            Vector3 resolvedTarget = waterResolver.ResolveCastTarget(
                 transform,
                 offset,
                 Mathf.Max(fallbackCastDistance, currentChargeDistance),
                 out hasSurfaceHit,
                 out surfaceHitPoint);
 
-            if (waterResolver.TryGetSurfaceHeight(out float waterSurfaceY))
+            if (!hasSurfaceHit)
             {
-                target.y = waterSurfaceY + waterSurfaceYOffset - hookWaterSubmergeDepth;
-                if (!hasSurfaceHit)
-                {
-                    surfaceHitPoint = target;
-                    hasSurfaceHit = true;
-                }
+                return GetPlanarCastTarget(offset);
             }
 
-            return target;
+            resolvedTarget.y += waterSurfaceYOffset - hookWaterSubmergeDepth;
+            surfaceHitPoint = resolvedTarget;
+            return resolvedTarget;
+        }
+
+        private Vector3 GetPlanarCastTarget(Vector3 offset)
+        {
+            Vector3 start = ropeController != null && ropeController.GetTipPoint() != null
+                ? ropeController.GetTipPoint().position
+                : transform.position;
+            Vector3 forward = GetPlanarCastForward();
+            Vector3 right = Vector3.Cross(Vector3.up, forward).normalized;
+
+            return start
+                + right * offset.x
+                + Vector3.up * offset.y
+                + forward * Mathf.Max(minCastDistance, offset.z);
+        }
+
+        private Vector3 GetPlanarCastForward()
+        {
+            Camera playerCamera = fishingPlayer != null && fishingPlayer.isLocalPlayer ? Camera.main : null;
+            Vector3 forward = playerCamera != null ? playerCamera.transform.forward : transform.forward;
+            forward.y = 0f;
+
+            if (forward.sqrMagnitude < 0.001f)
+            {
+                forward = transform.forward;
+                forward.y = 0f;
+            }
+
+            return forward.sqrMagnitude > 0.001f ? forward.normalized : Vector3.forward;
+        }
+
+        private float GetCastArcHeight(Vector3 target)
+        {
+            Transform tipPoint = ropeController != null ? ropeController.GetTipPoint() : null;
+            Vector3 start = tipPoint != null ? tipPoint.position : transform.position;
+            float distance = Vector3.Distance(start, target);
+            float verticalDrop = Mathf.Max(0f, start.y - target.y);
+            return Mathf.Max(castArcHeight, distance * castArcDistanceRatio, verticalDrop * 0.6f);
         }
 
         private float GetCastWaterSurfaceY()
         {
-            if (waterResolver == null)
-            {
-                waterResolver = CreateWaterSurfaceResolver();
-            }
+            waterResolver = CreateWaterSurfaceResolver();
+
             return waterResolver.TryGetSurfaceHeight(out float waterSurfaceY)
                 ? waterSurfaceY + waterSurfaceYOffset - hookWaterSubmergeDepth
                 : targetPosition.y;
@@ -678,11 +740,140 @@ namespace MultiplayFishing.Gameplay
             return new FishingWaterSurfaceResolver(
                 playerCamera,
                 tipPoint,
+                CollectTipRayOrigins(tipPoint),
                 waterSurfaceTransform,
                 resolvedWaterLayerMask,
+                useCameraWaterRaycast,
                 waterRayStartHeight,
                 downwardCastBias,
                 maxCastDistance);
+        }
+
+        private void OnDrawGizmos()
+        {
+            if (!alwaysShowTipWaterRaycastGizmo)
+            {
+                return;
+            }
+
+            DrawTipWaterRaycastGizmo();
+        }
+
+        private void OnDrawGizmosSelected()
+        {
+            if (!showTipWaterRaycastGizmo)
+            {
+                return;
+            }
+
+            DrawTipWaterRaycastGizmo();
+        }
+
+        private void DrawTipWaterRaycastGizmo()
+        {
+            Transform tipPoint = ropeController != null ? ropeController.GetTipPoint() : null;
+            if (tipPoint == null)
+            {
+                tipPoint = FindChildByName(transform, "TipPoint");
+            }
+
+            Transform[] tipRayOrigins = CollectTipRayOrigins(tipPoint);
+            if (tipRayOrigins.Length == 0)
+            {
+                return;
+            }
+
+            float rayLength = Mathf.Max(0.1f, maxCastDistance);
+
+            Gizmos.color = Color.cyan;
+            for (int i = 0; i < tipRayOrigins.Length; i++)
+            {
+                Transform tipRayOrigin = tipRayOrigins[i];
+                if (tipRayOrigin == null) continue;
+
+                DrawRayGizmo(tipRayOrigin.position, Vector3.down, rayLength);
+            }
+
+            Vector3 ownerOrigin = transform.position + Vector3.up * waterRayStartHeight;
+            Vector3 ownerDirection = (transform.forward + Vector3.down * downwardCastBias).normalized;
+            Gizmos.color = Color.yellow;
+            DrawRayGizmo(ownerOrigin, ownerDirection, rayLength);
+
+            Vector3 tipDirection = (transform.forward + Vector3.down * downwardCastBias).normalized;
+            Gizmos.color = Color.magenta;
+            DrawRayGizmo(tipPoint.position, tipDirection, rayLength);
+
+            if (useCameraWaterRaycast && Camera.main != null)
+            {
+                Ray cameraRay = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+                Gizmos.color = Color.green;
+                DrawRayGizmo(cameraRay.origin, cameraRay.direction, rayLength);
+            }
+        }
+
+        private Transform[] CollectTipRayOrigins(Transform primaryTipPoint)
+        {
+            List<Transform> tipRayOrigins = new List<Transform>();
+
+            if (primaryTipPoint != null)
+            {
+                tipRayOrigins.Add(primaryTipPoint);
+            }
+
+            foreach (Transform child in transform.GetComponentsInChildren<Transform>(true))
+            {
+                if (child.name != "TipPoint") continue;
+                if (tipRayOrigins.Contains(child)) continue;
+
+                tipRayOrigins.Add(child);
+            }
+
+            tipRayOrigins.Sort(CompareTipRayOriginForward);
+            return tipRayOrigins.ToArray();
+        }
+
+        private int CompareTipRayOriginForward(Transform left, Transform right)
+        {
+            if (left == null && right == null) return 0;
+            if (left == null) return 1;
+            if (right == null) return -1;
+
+            Vector3 origin = transform.position;
+            float leftForward = Vector3.Dot(transform.forward, left.position - origin);
+            float rightForward = Vector3.Dot(transform.forward, right.position - origin);
+            return rightForward.CompareTo(leftForward);
+        }
+
+        private static void DrawRayGizmo(Vector3 origin, Vector3 direction, float length)
+        {
+            if (direction.sqrMagnitude < 0.001f)
+            {
+                return;
+            }
+
+            Vector3 normalizedDirection = direction.normalized;
+            Vector3 end = origin + normalizedDirection * length;
+            Gizmos.DrawLine(origin, end);
+            Gizmos.DrawSphere(origin, 0.08f);
+            Gizmos.DrawWireSphere(end, 0.12f);
+        }
+
+        private static Transform FindChildByName(Transform root, string childName)
+        {
+            if (root == null)
+            {
+                return null;
+            }
+
+            foreach (Transform child in root.GetComponentsInChildren<Transform>(true))
+            {
+                if (child.name == childName)
+                {
+                    return child;
+                }
+            }
+
+            return null;
         }
 
         private LayerMask ResolveWaterLayerMask()
@@ -728,6 +919,22 @@ namespace MultiplayFishing.Gameplay
             }
         }
 
+        private void EnsureAnimationEventRelay()
+        {
+            if (animator == null)
+            {
+                return;
+            }
+
+            FishingAnimationEventRelay relay = animator.GetComponent<FishingAnimationEventRelay>();
+            if (relay == null)
+            {
+                relay = animator.gameObject.AddComponent<FishingAnimationEventRelay>();
+            }
+
+            relay.Initialize(this);
+        }
+
         private void SetFishingBool(bool value)
         {
             if (animator == null || !hasFishingBool) return;
@@ -744,7 +951,7 @@ namespace MultiplayFishing.Gameplay
 
         private void PlayCastAnimation()
         {
-            if (animator == null || !hasFishingCastTrigger) return;
+            if (animator == null) return;
 
             animator.ResetTrigger(fishingCastTriggerHash);
             animator.SetTrigger(fishingCastTriggerHash);

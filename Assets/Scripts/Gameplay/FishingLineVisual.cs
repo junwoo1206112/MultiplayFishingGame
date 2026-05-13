@@ -22,6 +22,11 @@ namespace MultiplayFishing.Gameplay
         [SerializeField] private Vector3 idleHookOffset = new Vector3(0f, 0f, 0.1f);
         [SerializeField] private Vector3 castHookOffset = new Vector3(0f, 0f, 3f);
 
+        [Header("Cast Arc")]
+        [SerializeField, Min(2)] private int castArcSegments = 16;
+        [SerializeField] private float castLineArcHeight = 0.45f;
+        [SerializeField] private float castLineArcDistanceRatio = 0.12f;
+
         private bool isFishingActive;
         private bool isHookControlledByRope;
 
@@ -57,7 +62,10 @@ namespace MultiplayFishing.Gameplay
                 return;
             }
 
-            ApplyHookPosition();
+            if (!isFishingActive)
+            {
+                ApplyHookPosition();
+            }
             RefreshLines();
         }
 
@@ -70,13 +78,32 @@ namespace MultiplayFishing.Gameplay
                 return;
             }
 
-            ApplyHookPosition();
+            RefreshLines();
+        }
+
+        public void SetVisible(bool visible)
+        {
+            if (rodLineFixed != null)
+            {
+                rodLineFixed.enabled = visible;
+            }
+
+            if (rodLineCast != null)
+            {
+                rodLineCast.enabled = visible;
+            }
+        }
+
+        public void SetFishingActiveVisualOnly(bool active)
+        {
+            isFishingActive = active;
             RefreshLines();
         }
 
         public void SetHookControlledByRope(bool controlledByRope)
         {
             isHookControlledByRope = controlledByRope;
+            RefreshLines();
         }
 
         public Vector3 GetIdleHookWorldPosition()
@@ -163,9 +190,46 @@ namespace MultiplayFishing.Gameplay
                 return;
             }
 
+            if (isFishingActive || isHookControlledByRope)
+            {
+                RefreshCastArcLine();
+                return;
+            }
+
+            RefreshStraightCastLine();
+        }
+
+        private void RefreshStraightCastLine()
+        {
             rodLineCast.positionCount = 2;
             rodLineCast.SetPosition(0, tipPoint.position);
             rodLineCast.SetPosition(1, hookPoint.position);
+        }
+
+        private void RefreshCastArcLine()
+        {
+            int segmentCount = Mathf.Max(2, castArcSegments);
+            rodLineCast.positionCount = segmentCount + 1;
+
+            Vector3 start = tipPoint.position;
+            Vector3 end = hookPoint.position;
+            Vector3 control = Vector3.Lerp(start, end, 0.5f);
+            float distanceArcHeight = Vector3.Distance(start, end) * castLineArcDistanceRatio;
+            control.y = Mathf.Max(start.y, end.y) + Mathf.Max(castLineArcHeight, distanceArcHeight);
+
+            for (int i = 0; i <= segmentCount; i++)
+            {
+                float t = i / (float)segmentCount;
+                rodLineCast.SetPosition(i, EvaluateQuadraticBezier(start, control, end, t));
+            }
+        }
+
+        private static Vector3 EvaluateQuadraticBezier(Vector3 start, Vector3 control, Vector3 end, float t)
+        {
+            float oneMinusT = 1f - t;
+            return oneMinusT * oneMinusT * start
+                + 2f * oneMinusT * t * control
+                + t * t * end;
         }
     }
 }
