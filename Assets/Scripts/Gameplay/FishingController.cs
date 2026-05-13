@@ -286,6 +286,7 @@ namespace MultiplayFishing.Gameplay
         {
             if (Mouse.current == null) return;
             if (IsPointerOverUI()) return;
+            if (Keyboard.current != null && Keyboard.current.tabKey.isPressed) return;
 
             wasLockedThisFrame = Time.time < inputLockedUntil;
             bool leftPressed = Mouse.current.leftButton.wasPressedThisFrame;
