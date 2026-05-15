@@ -355,10 +355,10 @@ TextureImporter:
       name: Inventory_Atlas_11
       rect:
         serializedVersion: 2
-        x: 1462
-        y: 222
-        width: 414
-        height: 636
+        x: 1205
+        y: 758
+        width: 92
+        height: 92
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -377,10 +377,10 @@ TextureImporter:
       name: Inventory_Atlas_12
       rect:
         serializedVersion: 2
-        x: 75
-        y: 498
-        width: 104
-        height: 151
+        x: 1462
+        y: 222
+        width: 414
+        height: 636
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -399,10 +399,10 @@ TextureImporter:
       name: Inventory_Atlas_13
       rect:
         serializedVersion: 2
-        x: 1073
-        y: 427
-        width: 139
-        height: 139
+        x: 75
+        y: 498
+        width: 104
+        height: 151
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -421,10 +421,10 @@ TextureImporter:
       name: Inventory_Atlas_14
       rect:
         serializedVersion: 2
-        x: 1233
-        y: 427
-        width: 139
-        height: 139
+        x: 1193
+        y: 649
+        width: 92
+        height: 92
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -465,10 +465,10 @@ TextureImporter:
       name: Inventory_Atlas_16
       rect:
         serializedVersion: 2
-        x: 1080
-        y: 305
-        width: 218
-        height: 97
+        x: 1073
+        y: 427
+        width: 139
+        height: 139
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -487,6 +487,50 @@ TextureImporter:
       name: Inventory_Atlas_17
       rect:
         serializedVersion: 2
+        x: 1233
+        y: 427
+        width: 139
+        height: 139
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d76efd369c33eca49b6216f2b1ecc63f
+      internalID: -872099122
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Inventory_Atlas_18
+      rect:
+        serializedVersion: 2
+        x: 1080
+        y: 305
+        width: 218
+        height: 97
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b4a22031e55a1f24994296693d8909c2
+      internalID: 206133287
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Inventory_Atlas_19
+      rect:
+        serializedVersion: 2
         x: 1072
         y: 222
         width: 335
@@ -499,8 +543,30 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: d76efd369c33eca49b6216f2b1ecc63f
-      internalID: -872099122
+      spriteID: 019aa5cc419adee46886ca37c0aaf679
+      internalID: 1496159686
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Inventory_Atlas_20
+      rect:
+        serializedVersion: 2
+        x: 178
+        y: 60
+        width: 1231
+        height: 132
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e034086047cb88a44bbb6823a6ae6bf9
+      internalID: -579993604
       vertices: []
       indices: 
       edges: []
@@ -531,7 +597,10 @@ TextureImporter:
       Inventory_Atlas_15: -1855059220
       Inventory_Atlas_16: 307030495
       Inventory_Atlas_17: -872099122
+      Inventory_Atlas_18: 206133287
+      Inventory_Atlas_19: 1496159686
       Inventory_Atlas_2: 836016035
+      Inventory_Atlas_20: -579993604
       Inventory_Atlas_3: 1044540136
       Inventory_Atlas_4: 1350495739
       Inventory_Atlas_5: -1432150228
