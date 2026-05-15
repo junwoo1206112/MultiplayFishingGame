@@ -30,6 +30,12 @@ namespace MultiplayFishing.UI
         private Color cachedPanelOriginalColor;
 
         public event System.Action<int> OnTopTabIndexChanged;
+        public event System.Action<int> OnSideTabIndexChanged;
+
+        public Button[] TopButtons => topButtons;
+        public Button[] SideButtons => sideButtons;
+        public int CurrentTopIndex => currentTopIndex;
+        public int CurrentSideIndex => currentSideIndex;
 
         private void Start()
         {
@@ -98,6 +104,7 @@ namespace MultiplayFishing.UI
             currentSideIndex = index;
 
             HandlePanelColor(index);
+            OnSideTabIndexChanged?.Invoke(index);
         }
 
         private void HandleSideTabsVisibility(int topIndex)

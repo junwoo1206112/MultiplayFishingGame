@@ -48,21 +48,22 @@ namespace MultiplayFishing.UI
 
             if (fishInfo != null)
             {
-                fishNameText.text = fishInfo.fishName;
-                fishIconImage.sprite = fishInfo.fishIcon;
-
-                float randomSize = UnityEngine.Random.Range(fishInfo.minSize, fishInfo.maxSize);
-                sizeText.text = $"{randomSize:F1} cm";
-
-                sellPriceText.text = $"{fishInfo.sellPrice:N0} G";
-                descriptionText.text = fishInfo.description;
+                if (fishNameText != null) fishNameText.text = fishInfo.fishName;
+                if (fishIconImage != null) fishIconImage.sprite = fishInfo.fishIcon;
+                if (sizeText != null) sizeText.text = $"{item.length:F1} cm";
+                if (sellPriceText != null) sellPriceText.text = $"{fishInfo.sellPrice:N0} G";
+                if (descriptionText != null) descriptionText.text = fishInfo.description;
 
                 // 별 색상 적용
                 int starCount = FishDataSO.GetStarCount(fishInfo.rank);
-                for (int i = 0; i < starContainer.childCount; i++)
+                if (starContainer != null)
                 {
-                    var child = starContainer.GetChild(i).GetComponent<Image>();
-                    child.color = i < starCount ? activeStarColor : inactiveStarColor;
+                    for (int i = 0; i < starContainer.childCount; i++)
+                    {
+                        var child = starContainer.GetChild(i).GetComponent<Image>();
+                        if (child != null)
+                            child.color = i < starCount ? activeStarColor : inactiveStarColor;
+                    }
                 }
 
                 // 슬롯 배경색 (등급별)

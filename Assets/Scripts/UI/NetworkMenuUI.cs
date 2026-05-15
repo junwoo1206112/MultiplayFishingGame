@@ -290,7 +290,7 @@ namespace MultiplayFishing.UI
 
             if (manager == null) return;
 
-            if (Input.GetKeyDown(KeyCode.Alpha1))
+            if (UnityEngine.Input.GetKeyDown(KeyCode.Alpha1))
             {
                 showConnectionInfo = !showConnectionInfo;
             }

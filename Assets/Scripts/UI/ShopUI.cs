@@ -13,7 +13,7 @@ namespace MultiplayFishing.UI
     {
         [Header("Window")]
         [SerializeField] private GameObject windowRoot;
-        [SerializeField] private KeyCode toggleKey = KeyCode.B;
+        [SerializeField] private KeyCode toggleKey = KeyCode.Tab;
 
         [Header("Top Bar")]
         [SerializeField] private TMP_Text goldText;
@@ -46,8 +46,43 @@ namespace MultiplayFishing.UI
         private enum TabType { Rods, Baits, Sell }
         private TabType currentTab = TabType.Rods;
 
+        private void ApplyDefaultLayout()
+        {
+            CanvasScaler scaler = GetComponent<CanvasScaler>();
+            if (scaler != null)
+            {
+                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+                scaler.referenceResolution = new Vector2(1920f, 1080f);
+                scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+                scaler.matchWidthOrHeight = 0.5f;
+            }
+
+            RectTransform root = transform as RectTransform;
+            if (root != null)
+            {
+                root.anchorMin = Vector2.zero;
+                root.anchorMax = Vector2.one;
+                root.pivot = new Vector2(0.5f, 0.5f);
+                root.anchoredPosition = Vector2.zero;
+                root.sizeDelta = Vector2.zero;
+                root.localScale = Vector3.one;
+            }
+
+            RectTransform windowRect = windowRoot != null ? windowRoot.transform as RectTransform : null;
+            if (windowRect == null) return;
+
+            windowRect.anchorMin = new Vector2(0.5f, 0.5f);
+            windowRect.anchorMax = new Vector2(0.5f, 0.5f);
+            windowRect.pivot = new Vector2(0.5f, 0.5f);
+            windowRect.anchoredPosition = Vector2.zero;
+            windowRect.sizeDelta = new Vector2(1400f, 800f);
+            windowRect.localScale = Vector3.one;
+        }
+
         private void Start()
         {
+            ApplyDefaultLayout();
+
             userService = DIContainer.Resolve<IUserService>();
             dataService = DIContainer.Resolve<IDataService>();
 

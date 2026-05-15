@@ -51,11 +51,13 @@
   <ItemGroup>
     <Compile Include="Assets\Scripts\UI\ShopInventoryPanel.cs" />
     <Compile Include="Assets\Scripts\UI\EncyclopediaUI.cs" />
+    <Compile Include="Assets\Scripts\UI\TabButton.cs" />
     <Compile Include="Assets\Scripts\UI\InventorySlotUI.cs" />
     <Compile Include="Assets\Scripts\UI\PlayerNameDisplay.cs" />
     <Compile Include="Assets\Scripts\UI\InventoryUI.cs" />
     <Compile Include="Assets\Scripts\UI\ShopDetailPanel.cs" />
     <Compile Include="Assets\Scripts\UI\DelayedAudioStart.cs" />
+    <Compile Include="Assets\Scripts\UI\InfiniteScrollAdapter.cs" />
     <Compile Include="Assets\Scripts\UI\EncyclopediaSlotUI.cs" />
     <Compile Include="Assets\Scripts\UI\NetworkMenuUI.cs" />
     <Compile Include="Assets\Scripts\UI\NotificationUI.cs" />
