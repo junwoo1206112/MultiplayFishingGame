@@ -1,12 +1,14 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using TMPro;
 using MultiplayFishing.Data.Models;
 using MultiplayFishing.Core;
+using System;
 
 namespace MultiplayFishing.UI
 {
-    public class InventorySlotUI : MonoBehaviour
+    public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
     {
         [Header("Fish Info")]
         [SerializeField] private Image fishIconImage;
@@ -22,8 +24,7 @@ namespace MultiplayFishing.UI
         [Header("Slot Background")]
         [SerializeField] private Image slotBackground;
 
-        [Header("Sell Button")]
-        [SerializeField] private Button sellButton;
+        public event Action<string> onRightClick;
 
         private InventoryItem itemData;
         private IUserService userService;
@@ -31,14 +32,13 @@ namespace MultiplayFishing.UI
         private readonly Color activeStarColor = new Color(1f, 0.84f, 0f);
         private readonly Color inactiveStarColor = new Color(0.5f, 0.5f, 0.5f);
 
-        // Grade 1~5 background colors
         private readonly Color[] rankColors = new Color[]
         {
-            new Color(0.976f, 0.890f, 0.725f),  // #f9e3b9 - Grade 1
-            new Color(0.769f, 1.0f, 0.780f),     // #c4ffc7 - Grade 2
-            new Color(0.780f, 0.945f, 1.0f),     // #c7f1ff - Grade 3
-            new Color(0.957f, 0.890f, 1.0f),     // #f4e3ff - Grade 4
-            new Color(0.957f, 0.890f, 1.0f),     // #f4e3ff - Grade 5
+            new Color(0.976f, 0.890f, 0.725f),
+            new Color(0.769f, 1.0f, 0.780f),
+            new Color(0.780f, 0.945f, 1.0f),
+            new Color(0.957f, 0.890f, 1.0f),
+            new Color(1.0f, 0.843f, 0.0f),
         };
 
         public void Setup(InventoryItem item, FishDataSO fishInfo, IUserService userService)
@@ -57,7 +57,6 @@ namespace MultiplayFishing.UI
                 sellPriceText.text = $"{fishInfo.sellPrice:N0} G";
                 descriptionText.text = fishInfo.description;
 
-                // 별 색상 적용
                 int starCount = FishDataSO.GetStarCount(fishInfo.rank);
                 for (int i = 0; i < starContainer.childCount; i++)
                 {
@@ -65,24 +64,23 @@ namespace MultiplayFishing.UI
                     child.color = i < starCount ? activeStarColor : inactiveStarColor;
                 }
 
-                // 슬롯 배경색 (등급별)
                 if (slotBackground != null)
                 {
                     int rankIndex = Mathf.Clamp(starCount - 1, 0, rankColors.Length - 1);
                     slotBackground.color = rankColors[rankIndex];
                 }
             }
-
-            if (sellButton != null)
-            {
-                sellButton.onClick.RemoveAllListeners();
-                sellButton.onClick.AddListener(OnSellClicked);
-            }
         }
 
-        private void OnSellClicked()
+        public void OnPointerClick(PointerEventData eventData)
         {
-            userService.SellFish(itemData.instanceId);
+            if (eventData.button == PointerEventData.InputButton.Right)
+            {
+                if (itemData != null && !string.IsNullOrEmpty(itemData.instanceId))
+                {
+                    onRightClick?.Invoke(itemData.instanceId);
+                }
+            }
         }
     }
 }

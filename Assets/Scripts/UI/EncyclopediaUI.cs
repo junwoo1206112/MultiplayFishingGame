@@ -51,7 +51,7 @@ namespace MultiplayFishing.UI
             }
         }
 
-        public void ToggleWindow()
+public void ToggleWindow()
         {
             if (windowRoot == null) return;
             bool nextState = !windowRoot.activeSelf;
@@ -65,8 +65,7 @@ namespace MultiplayFishing.UI
             }
             else
             {
-                Cursor.lockState = CursorLockMode.Locked;
-                Cursor.visible = false;
+                Cursor.visible = true;
             }
         }
 

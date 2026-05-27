@@ -63,9 +63,28 @@ namespace MultiplayFishing.UI
             }
             else
             {
-                Cursor.lockState = CursorLockMode.Locked;
-                Cursor.visible = false;
+                Cursor.visible = true;
             }
+        }
+
+        public void OpenWindow()
+        {
+            if (windowRoot == null) return;
+            if (windowRoot.activeSelf) return;
+
+            windowRoot.SetActive(true);
+            RefreshList();
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+
+        public void CloseWindow()
+        {
+            if (windowRoot == null) return;
+            if (!windowRoot.activeSelf) return;
+
+            windowRoot.SetActive(false);
+            Cursor.visible = true;
         }
 
         public void OnSellAllClicked()
@@ -75,7 +94,7 @@ namespace MultiplayFishing.UI
 
         public void OnExitClicked()
         {
-            ToggleWindow();
+            CloseWindow();
         }
 
         public void RefreshList()
