@@ -114,15 +114,6 @@ namespace MultiplayFishing.UI
             sideTabGroup.gameObject.SetActive(false);
         }
 
-        private void ResetSideTabSelection()
-        {
-            currentSideIndex = -1;
-            if (sideTabPanelImage != null)
-            {
-                sideTabPanelImage.color = cachedPanelOriginalColor;
-            }
-        }
-
         private void HandlePanelColor(int sideIndex)
         {
             if (sideTabPanelImage == null) return;

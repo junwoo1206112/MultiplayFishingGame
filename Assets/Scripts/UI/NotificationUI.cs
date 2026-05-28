@@ -2,11 +2,10 @@ using UnityEngine;
 using TMPro;
 using System.Collections;
 using MultiplayFishing.Gameplay;
-using MultiplayFishing.Core;
 
 namespace MultiplayFishing.UI
 {
-    public class NotificationUI : MonoBehaviour, INotificationService
+    public class NotificationUI : MonoBehaviour
     {
         [SerializeField] private GameObject messagePrefab;
         [SerializeField] private Transform container;

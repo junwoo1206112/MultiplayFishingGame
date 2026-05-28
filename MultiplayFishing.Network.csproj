@@ -50,7 +50,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\Network\FishingNetworkManager.cs" />
-    <Compile Include="Assets\Scripts\Network\Messages.cs" />
     <Compile Include="Assets\Scripts\Network\UnityRelayTransport.cs" />
     <Compile Include="Assets\Scripts\Network\FishingRoomManager.cs" />
   </ItemGroup>

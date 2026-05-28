@@ -431,25 +431,6 @@ namespace MultiplayFishing.Gameplay
             hasExpectedHookPosition = true;
         }
 
-        private void WarnIfHookPositionWasOverwritten(string phase)
-        {
-            if (!hasExpectedHookPosition || hookPoint == null)
-            {
-                return;
-            }
-
-            float delta = Vector3.Distance(hookPoint.position, lastExpectedHookPosition);
-            if (delta <= 0.02f)
-            {
-                return;
-            }
-
-            Debug.LogWarning(
-                $"[HookTrace] HookPoint overwritten during {phase}. " +
-                $"expected={lastExpectedHookPosition:F3}, actual={hookPoint.position:F3}, delta={delta:F3}, " +
-                $"parent={(hookPoint.parent != null ? hookPoint.parent.name : "null")}");
-        }
-
         private Vector3 GetArcControlPoint(Vector3 startPosition, Vector3 targetPosition, float baseArcHeight)
         {
             Vector3 controlPoint = Vector3.Lerp(startPosition, targetPosition, 0.5f);

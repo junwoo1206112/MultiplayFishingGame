@@ -123,15 +123,7 @@ namespace MultiplayFishing.UI
             }
         }
 
-        private void OnTimerKeyDown()
-        {
-            if (isTimerRunning)
-                StopTimer();
-            else
-                StartTimer();
-        }
-
-private void StopTimer()
+        private void StopTimer()
         {
             isTimerRunning = false;
             Debug.Log("[TEST] Timer stopped!");
