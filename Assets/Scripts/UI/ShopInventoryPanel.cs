@@ -15,6 +15,7 @@ namespace MultiplayFishing.UI
         [SerializeField] private Button sellAllButton;
         [SerializeField] private TMP_Text emptyText;
         [SerializeField] private ConfirmDialog confirmDialog;
+        [SerializeField] private ScrollRect scrollRect;
 
         private IUserService userService;
         private IDataService dataService;
@@ -63,6 +64,13 @@ namespace MultiplayFishing.UI
                     slotUI.Setup(item, fishInfo, userService, confirmDialog);
                     activeSlots.Add(slotUI);
                 }
+            }
+
+            if (scrollRect != null)
+            {
+                scrollRect.StopMovement();
+                LayoutRebuilder.ForceRebuildLayoutImmediate(contentParent as RectTransform);
+                scrollRect.verticalNormalizedPosition = 1f;
             }
         }
 

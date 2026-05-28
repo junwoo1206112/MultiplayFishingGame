@@ -111,13 +111,7 @@ namespace MultiplayFishing.UI
         {
             if (sideTabGroup == null) return;
 
-            bool showSideTabs = topIndex == 1;
-            sideTabGroup.gameObject.SetActive(showSideTabs);
-
-            if (showSideTabs)
-            {
-                ResetSideTabSelection();
-            }
+            sideTabGroup.gameObject.SetActive(false);
         }
 
         private void ResetSideTabSelection()

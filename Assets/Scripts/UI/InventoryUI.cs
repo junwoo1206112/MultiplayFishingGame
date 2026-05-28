@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,6 +10,8 @@ namespace MultiplayFishing.UI
 {
     public class InventoryUI : MonoBehaviour
     {
+        private enum InventoryMode { Fish, Rod, Bait }
+
         [Header("Settings")]
         [SerializeField] private GameObject windowRoot;
         [SerializeField] private KeyCode toggleKey = KeyCode.I;
@@ -30,10 +33,10 @@ namespace MultiplayFishing.UI
 
         private IUserService userService;
         private IDataService dataService;
-        private int currentFilterIndex = 0;
+        private InventoryMode currentMode = InventoryMode.Fish;
         private List<InventorySlotUI> activeSlots = new List<InventorySlotUI>();
 
-        private readonly string[] rankLabels = { "전체", "하급", "중급", "상급" };
+        private readonly string[] categoryLabels = { "물고기", "낚싯대", "미끼", "전체" };
         private Color filterNormalColor = Color.white;
         private Color filterSelectedColor = new Color(0.847f, 0.918f, 0.180f);
 
@@ -73,7 +76,7 @@ namespace MultiplayFishing.UI
             if (rightPanel != null)
             {
                 detailIconImage = FindComponentInChild<Image>(rightPanel, "Item_Image");
-                detailNameText = FindComponentInChild<TMP_Text>(rightPanel, "Item_Name");
+                detailNameText = FindComponentInChildren<TMP_Text>(rightPanel, "Item_Name");
                 detailDescText = FindComponentInChild<TMP_Text>(rightPanel, "Text_Description");
                 detailPriceText = FindComponentInChild<TMP_Text>(rightPanel, "Price");
                 detailSizeText = FindComponentInChild<TMP_Text>(rightPanel, "Text_Size");
@@ -90,12 +93,12 @@ namespace MultiplayFishing.UI
             if (tabButton != null)
                 tabButton.OnTopTabIndexChanged += OnFilterChanged;
 
-            for (int i = 0; i < topFilterButtons.Length && i < rankLabels.Length; i++)
+            for (int i = 0; i < topFilterButtons.Length && i < categoryLabels.Length; i++)
             {
                 var btn = topFilterButtons[i];
                 if (btn == null) continue;
                 TMP_Text label = btn.GetComponentInChildren<TMP_Text>();
-                if (label != null) label.text = rankLabels[i];
+                if (label != null) label.text = categoryLabels[i];
             }
 
             UpdateFilterHighlight(0);
@@ -103,7 +106,13 @@ namespace MultiplayFishing.UI
 
         private void OnFilterChanged(int index)
         {
-            currentFilterIndex = index;
+            switch (index)
+            {
+                case 0: currentMode = InventoryMode.Fish; break;
+                case 1: currentMode = InventoryMode.Rod; break;
+                case 2: currentMode = InventoryMode.Bait; break;
+                default: currentMode = InventoryMode.Fish; break;
+            }
             UpdateFilterHighlight(index);
             RefreshList();
         }
@@ -191,6 +200,22 @@ namespace MultiplayFishing.UI
             ClearSlots();
             if (contentParent == null || slotPrefab == null) return;
 
+            switch (currentMode)
+            {
+                case InventoryMode.Fish:
+                    RefreshFishList();
+                    break;
+                case InventoryMode.Rod:
+                    RefreshRodList();
+                    break;
+                case InventoryMode.Bait:
+                    RefreshBaitList();
+                    break;
+            }
+        }
+
+        private void RefreshFishList()
+        {
             var inventory = userService.UserData.inventory;
             if (inventory.Count == 0)
             {
@@ -203,28 +228,73 @@ namespace MultiplayFishing.UI
             {
                 var fishInfo = dataService.GetFishData(item.fishId);
                 if (fishInfo == null) continue;
-                if (!PassesRankFilter(fishInfo)) continue;
 
                 GameObject obj = Instantiate(slotPrefab, contentParent);
                 InventorySlotUI slotUI = obj.GetComponent<InventorySlotUI>();
                 if (slotUI != null)
                 {
                     slotUI.Setup(item, fishInfo, userService);
+                    var capturedItem = item;
+                    var capturedFish = fishInfo;
+                    slotUI.onSlotClicked = () => ShowItemDetail(capturedItem, capturedFish);
                     activeSlots.Add(slotUI);
                 }
             }
         }
 
-        private bool PassesRankFilter(FishDataSO fishInfo)
+        private void RefreshRodList()
         {
-            int starCount = FishDataSO.GetStarCount(fishInfo.rank);
-            switch (currentFilterIndex)
+            var rodIds = userService.UserData.ownedRodIds;
+            if (rodIds.Count == 0)
             {
-                case 0: return true;
-                case 1: return starCount >= 1 && starCount <= 2;
-                case 2: return starCount >= 3 && starCount <= 4;
-                case 3: return starCount >= 5;
-                default: return true;
+                if (inventoryEmptyText != null) inventoryEmptyText.SetActive(true);
+                return;
+            }
+            if (inventoryEmptyText != null) inventoryEmptyText.SetActive(false);
+
+            foreach (var rodId in rodIds)
+            {
+                var rodData = dataService.GetRodData(rodId);
+                if (rodData == null) continue;
+
+                GameObject obj = Instantiate(slotPrefab, contentParent);
+                InventorySlotUI slotUI = obj.GetComponent<InventorySlotUI>();
+                if (slotUI != null)
+                {
+                    bool isEquipped = rodId == userService.UserData.equippedRodId;
+                    slotUI.SetupRod(rodData, isEquipped, userService);
+                    var capturedRod = rodData;
+                    slotUI.onSlotClicked = () => ShowItemDetail(capturedRod);
+                    activeSlots.Add(slotUI);
+                }
+            }
+        }
+
+        private void RefreshBaitList()
+        {
+            var baitIds = userService.UserData.ownedBaitIds;
+            if (baitIds.Count == 0)
+            {
+                if (inventoryEmptyText != null) inventoryEmptyText.SetActive(true);
+                return;
+            }
+            if (inventoryEmptyText != null) inventoryEmptyText.SetActive(false);
+
+            foreach (var baitId in baitIds)
+            {
+                var baitData = dataService.GetBaitData(baitId);
+                if (baitData == null) continue;
+
+                GameObject obj = Instantiate(slotPrefab, contentParent);
+                InventorySlotUI slotUI = obj.GetComponent<InventorySlotUI>();
+                if (slotUI != null)
+                {
+                    bool isEquipped = baitId == userService.UserData.equippedBaitId;
+                    slotUI.SetupBait(baitData, isEquipped, userService);
+                    var capturedBait = baitData;
+                    slotUI.onSlotClicked = () => ShowItemDetail(capturedBait);
+                    activeSlots.Add(slotUI);
+                }
             }
         }
 
@@ -235,10 +305,48 @@ namespace MultiplayFishing.UI
             activeSlots.Clear();
         }
 
+        private void ShowItemDetail(InventoryItem item, FishDataSO fishInfo)
+        {
+            if (detailRoot != null) detailRoot.SetActive(true);
+            if (detailIconImage != null) detailIconImage.sprite = fishInfo.fishIcon;
+            if (detailNameText != null) detailNameText.text = fishInfo.fishName;
+            if (detailDescText != null) detailDescText.text = fishInfo.description;
+            if (detailPriceText != null) detailPriceText.text = $"{fishInfo.sellPrice:N0} G";
+            if (detailSizeText != null) detailSizeText.text = $"{item.length:F1} cm";
+        }
+
+        private void ShowItemDetail(RodDataSO rodData)
+        {
+            if (detailRoot != null) detailRoot.SetActive(true);
+            if (detailIconImage != null) detailIconImage.sprite = rodData.icon;
+            if (detailNameText != null) detailNameText.text = rodData.rodName;
+            if (detailDescText != null) detailDescText.text = rodData.description;
+            if (detailPriceText != null) detailPriceText.text = $"{rodData.price:N0} G";
+            if (detailSizeText != null)
+                detailSizeText.text = $"사거리 +{rodData.castDistanceBonus:F1}m | 포획률 +{rodData.catchChanceBonus * 100:F0}% | 내구도 {rodData.durability:F0}";
+        }
+
+        private void ShowItemDetail(BaitDataSO baitData)
+        {
+            if (detailRoot != null) detailRoot.SetActive(true);
+            if (detailIconImage != null) detailIconImage.sprite = baitData.icon;
+            if (detailNameText != null) detailNameText.text = baitData.baitName;
+            if (detailDescText != null) detailDescText.text = baitData.description;
+            if (detailPriceText != null) detailPriceText.text = $"{baitData.price:N0} G";
+            if (detailSizeText != null)
+                detailSizeText.text = $"포획률 +{baitData.catchChanceBonus * 100:F0}% | 유인 어종 {baitData.attractionFishIds.Length}종";
+        }
+
         private static T FindComponentInChild<T>(Transform parent, string childName) where T : Component
         {
             Transform child = FindDeepChild(parent, childName);
             return child != null ? child.GetComponent<T>() : null;
+        }
+
+        private static T FindComponentInChildren<T>(Transform parent, string childName) where T : Component
+        {
+            Transform child = FindDeepChild(parent, childName);
+            return child != null ? child.GetComponentInChildren<T>() : null;
         }
 
         private static GameObject FindInChild(Transform parent, string childName)

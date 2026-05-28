@@ -29,6 +29,7 @@ namespace MultiplayFishing.UI
         [Header("Item List")]
         [SerializeField] private Transform itemContentParent;
         [SerializeField] private GameObject itemSlotPrefab;
+        [SerializeField] private ScrollRect itemScrollRect;
 
         [Header("Detail Panel")]
         [SerializeField] private ShopDetailPanel detailPanel;
@@ -209,6 +210,13 @@ namespace MultiplayFishing.UI
 
             if (activeSlots.Count > 0)
                 activeSlots[0].Select();
+
+            if (itemScrollRect != null)
+            {
+                itemScrollRect.StopMovement();
+                LayoutRebuilder.ForceRebuildLayoutImmediate(itemContentParent as RectTransform);
+                itemScrollRect.verticalNormalizedPosition = 1f;
+            }
         }
 
         private void OnItemSelected(string itemId, ShopItemType itemType)
